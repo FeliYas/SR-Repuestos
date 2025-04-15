@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import 'tailwindcss';
 
 @plugin 'tailwindcss-animate';
@@ -6,6 +7,14 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
 @custom-variant dark (&:is(.dark *));
+
+button {
+    cursor: pointer;
+}
+
+* {
+    font-family: 'Inter', sans-serif;
+}
 
 @theme {
     --font-sans:
@@ -17,7 +26,7 @@
 
     --color-background: var(--background);
     --color-foreground: var(--foreground);
-
+    --color-primary-orange: #FB7F01;
     --color-card: var(--card);
     --color-card-foreground: var(--card-foreground);
 
