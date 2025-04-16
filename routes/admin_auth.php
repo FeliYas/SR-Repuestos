@@ -19,7 +19,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::put('admin/update/{id}', [AdminController::class, 'update'])->name('admin.update');
     Route::delete('admin/destroy/{id}', [AdminController::class, 'destroy'])->name('admin.destroy');
     Route::get('admin/bannerportada', [BannerPortadaController::class, 'index'])->name('admin.bannerportada');
-    Route::put('admin/bannerportada/{id}', [BannerPortadaController::class, 'update'])->name('admin.bannerportada.update');
+    Route::post('admin/bannerportada', [BannerPortadaController::class, 'update'])->name('admin.bannerportada.update');
 
     Route::get('/admin/dashboard', function () {
         return Inertia::render('admin/dashboard'); // Cambia esto a tu página de dashboard

@@ -40,6 +40,7 @@ class AdminController extends Controller
 
     public function update(Request $request, Admin $admin)
     {
+
         $request->validate([
             'name' => 'required|unique:admins,name,' . $admin->id,
             'password' => 'sometimes|min:6',

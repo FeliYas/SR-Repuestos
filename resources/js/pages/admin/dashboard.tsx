@@ -52,7 +52,9 @@ export default function Dashboard({ children }) {
             title: "Inicio",
             icon: faHouse,
             href: "#",
-            subHref: [{ title: "Contenido", href: "bannerportada" }],
+            subHref: [{ title: "Contenido", href: "bannerportada" },
+                { title: "Marcas", href: "marcas" }
+            ],
         },
         {
             id: "nuestros-productos",
