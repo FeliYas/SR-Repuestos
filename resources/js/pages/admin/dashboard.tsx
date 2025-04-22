@@ -8,142 +8,149 @@ import {
     faLock,
     faNewspaper,
     faShield,
+    faStar,
     faUser,
     faUsers,
-} from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Link, router, usePage } from "@inertiajs/react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import logo from "../../../../resources/images/logos/logo.png";
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Link, router, usePage } from '@inertiajs/react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useState } from 'react';
+import { Toaster } from 'react-hot-toast';
+import logo from '../../../../resources/images/logos/logo.png';
 
 /* import bronzenLogo from "../assets/logos/bronzen-logo.png"; */
 
 export default function Dashboard({ children }) {
     const { auth } = usePage().props;
-    const { admin } = auth;
-
-    useEffect(() => {
-        // Ya no necesitamos fetchProductos y fetchSubProductos
-        // Los datos vienen por props desde el servidor
-    }, []);
+    const { user } = auth;
 
     const [sidebar, setSidebar] = useState(true);
-    
+
     const MotionFontAwesomeIcon = motion(FontAwesomeIcon);
     const MotionLink = motion.create(Link);
 
     // Obtenemos la ruta actual desde Inertia
     const currentRoute = usePage().url;
-    
+
     // Procesamos la ruta para mostrar el título de la página
-    const cleanPathname = currentRoute
-        .replace(/^\/+/, "")
-        .replace(/-/g, " ")
-        .split("/");
+    const cleanPathname = currentRoute.replace(/^\/+/, '').replace(/-/g, ' ').split('/');
 
     cleanPathname.shift();
-    const finalPath = cleanPathname.join("/");
+    const finalPath = cleanPathname.join('/');
 
     const [dropdowns, setDropdowns] = useState([
         {
-            id: "inicio",
+            id: 'inicio',
             open: false,
-            title: "Inicio",
+            title: 'Inicio',
             icon: faHouse,
-            href: "#",
-            subHref: [{ title: "Contenido", href: "bannerportada" },
-                { title: "Marcas", href: "marcas" }
-            ],
-        },
-        {
-            id: "nuestros-productos",
-            open: false,
-            title: "Nuestros Productos",
-            icon: faBoxArchive,
-            href: "#",
+            href: '#',
             subHref: [
-                { title: "Categorias", href: "/dashboard/categorias" },
-                { title: "Sub-categorias", href: "/dashboard/sub-categorias" },
-                {
-                    title: "Productos",
-                    href: "/dashboard/productos",
-                },
-                { title: "Sub-productos", href: "/dashboard/sub-productos" },
+                { title: 'Contenido', href: 'bannerportada' },
+                { title: 'Marcas', href: 'marcas' },
+                { title: 'Instagram', href: 'instagram' },
             ],
         },
         {
-            id: "catalogo",
+            id: 'nosotros',
             open: false,
-            title: "Catalogo",
-            icon: faEnvelope,
-            href: "/dashboard/catalogo",
-            subHref: [],
-        },
-        {
-            id: "somos-bronzen",
-            open: false,
-            title: "Somos Bronzen",
+            title: 'Nosotros',
             icon: faUsers,
-            href: "/dashboard/somos-bronzen",
-            subHref: [],
-        },
-        {
-            id: "contacto",
-            open: false,
-            title: "Contacto",
-            icon: faEnvelope,
-            href: "/dashboard/contacto",
-            subHref: [],
-        },
-        {
-            id: "zonaprivada",
-            open: false,
-            title: "Zona Privada",
-            icon: faLock,
-            href: "#",
+            href: 'nosotros',
             subHref: [
-                { title: "Clientes", href: "/dashboard/clientes" },
+                { title: 'Contenido', href: 'nosotros' },
+                { title: 'Valores', href: 'valores' },
+            ],
+        },
+        {
+            id: 'productos',
+            open: false,
+            title: 'Productos',
+            icon: faBoxArchive,
+            href: '#',
+            subHref: [
+                { title: 'Categorias', href: 'categorias' },
+                { title: 'Marcas', href: 'marcas' },
                 {
-                    title: "Pedidos/Presupuestos",
-                    href: "/dashboard/pedidos-privada",
+                    title: 'Productos',
+                    href: 'productos',
+                },
+                { title: 'Sub-productos', href: 'sub-productos' },
+            ],
+        },
+        {
+            id: 'calidad',
+            open: false,
+            title: 'Calidad',
+            icon: faStar,
+            href: 'calidad',
+            subHref: [],
+        },
+        {
+            id: 'novedades',
+            open: false,
+            title: 'Novedades',
+            icon: faNewspaper,
+            href: 'novedades',
+            subHref: [],
+        },
+        {
+            id: 'contacto',
+            open: false,
+            title: 'Contacto',
+            icon: faEnvelope,
+            href: 'contacto',
+            subHref: [],
+        },
+        {
+            id: 'zonaprivada',
+            open: false,
+            title: 'Zona Privada',
+            icon: faLock,
+            href: '#',
+            subHref: [
+                { title: 'Clientes', href: '/dashboard/clientes' },
+                {
+                    title: 'Pedidos/Presupuestos',
+                    href: '/dashboard/pedidos-privada',
                 },
                 {
-                    title: "Mis Pedidos",
-                    href: "/dashboard/mis-pedidos",
+                    title: 'Mis Pedidos',
+                    href: '/dashboard/mis-pedidos',
                 },
                 {
-                    title: "Mis Facturas",
-                    href: "/dashboard/mis-facturas",
+                    title: 'Mis Facturas',
+                    href: '/dashboard/mis-facturas',
                 },
                 {
-                    title: "Informacion y descuento",
-                    href: "/dashboard/informacion",
+                    title: 'Informacion y descuento',
+                    href: '/dashboard/informacion',
                 },
             ],
         },
         {
-            id: "administradores",
+            id: 'administradores',
             open: false,
-            title: "Administradores",
+            title: 'Administradores',
             icon: faShield,
-            href: "administradores",
+            href: 'administradores',
             subHref: [],
         },
         {
-            id: "metadatos",
+            id: 'metadatos',
             open: false,
-            title: "Metadatos",
+            title: 'Metadatos',
             icon: faGear,
-            href: "/dashboard/metadatos",
+            href: '/dashboard/metadatos',
             subHref: [],
         },
         {
-            id: "excel",
+            id: 'excel',
             open: false,
-            title: "excel",
+            title: 'excel',
             icon: faGear,
-            href: "/dashboard/excel",
+            href: '/dashboard/excel',
             subHref: [],
         },
     ]);
@@ -155,22 +162,26 @@ export default function Dashboard({ children }) {
             prevDropdowns.map((drop) => ({
                 ...drop,
                 open: drop.id === id ? !drop.open : false,
-            }))
+            })),
         );
     };
 
     const logout = () => {
         // Usando Inertia para el logout
-        router.post('/logout', {}, {
-            onSuccess: () => {
-                // No es necesario manejar la redirección, Inertia lo hará automáticamente
+        router.post(
+            '/logout',
+            {},
+            {
+                onSuccess: () => {
+                    // No es necesario manejar la redirección, Inertia lo hará automáticamente
+                },
+                onError: (error) => {
+                    console.error('Error during logout:', error);
+                    // Incluso si hay error, podemos intentar navegar manualmente
+                    router.visit('/adm');
+                },
             },
-            onError: (error) => {
-                console.error("Error during logout:", error);
-                // Incluso si hay error, podemos intentar navegar manualmente
-                router.visit('/adm');
-            }
-        });
+        );
     };
 
     // Reemplazamos la verificación de token por la verificación de autenticación de Inertia
@@ -181,90 +192,79 @@ export default function Dashboard({ children }) {
     } */
 
     return (
-        <div className="flex flex-row font-red-hat">
+        <div className="font-red-hat flex flex-row">
+            <Toaster />
+            {/* Sidebar */}
             <AnimatePresence>
                 {sidebar && (
                     <motion.div
                         initial={{ x: -300 }}
                         animate={{ x: 0 }}
                         exit={{ x: -300 }}
-                        transition={{ ease: "linear", duration: 0.2 }}
-                        className="flex flex-col h-screen w-[300px] bg-white text-black overflow-y-auto scrollbar-hide"
+                        transition={{ ease: 'linear', duration: 0.2 }}
+                        className="scrollbar-hide flex h-screen w-[300px] flex-col overflow-y-auto bg-white text-black"
                     >
-                        <Link href={"/"} className="w-full p-6">
-                            <img
-                                className="w-full h-full object-cover"
-                                src={logo}
-                                alt=""
-                            />
+                        <Link href={'/'} className="w-full p-6">
+                            <img className="h-full w-full object-cover" src={logo} alt="" />
                         </Link>
                         <nav className="">
                             <ul className="">
                                 <AnimatePresence>
                                     {dropdowns.map((drop) => (
                                         <li key={drop.id}>
-                                            <button
-                                                onClick={() => {
-                                                    if (drop.subHref.length === 0) {
-                                                        router.visit(drop.href);
-                                                    }
-                                                    toggleDropdown(drop.id);
-                                                }}
-                                                className="flex flex-row w-full justify-between items-center p-4"
-                                            >
-                                                <div className="flex flex-row gap-2 items-center">
-                                                    <button
-                                                        type="button"
-                                                        className="w-4 h-4 flex items-center justify-center"
-                                                    >
-                                                        <FontAwesomeIcon
-                                                            size="sm"
-                                                            icon={drop.icon}
-                                                            color="#ff9e19"
-                                                        />
-                                                    </button>
+                                            {drop?.subHref.length > 0 ? (
+                                                <button
+                                                    onClick={() => {
+                                                        toggleDropdown(drop.id);
+                                                    }}
+                                                    className="flex w-full flex-row items-center justify-between p-4"
+                                                >
+                                                    <div className="flex flex-row items-center gap-2">
+                                                        <div className="flex h-4 w-4 items-center justify-center">
+                                                            <FontAwesomeIcon size="sm" icon={drop.icon} color="#ff9e19" />
+                                                        </div>
 
-                                                    <Link href={drop.href}>
-                                                        {drop.title}
-                                                    </Link>
-                                                </div>
-                                                {drop.subHref.length > 0 && (
+                                                        <p>{drop.title}</p>
+                                                    </div>
+
                                                     <MotionFontAwesomeIcon
                                                         animate={{
-                                                            rotate: drop.open
-                                                                ? 90
-                                                                : 0,
+                                                            rotate: drop.open ? 90 : 0,
                                                         }}
                                                         transition={{
-                                                            ease: "linear",
+                                                            ease: 'linear',
                                                             duration: 0.1,
                                                         }}
                                                         size="xs"
                                                         icon={faChevronRight}
                                                     />
-                                                )}
-                                            </button>
+                                                </button>
+                                            ) : (
+                                                <Link href={drop.href} className="flex w-full flex-row items-center justify-between p-4">
+                                                    <div className="flex flex-row items-center gap-2">
+                                                        <div className="flex h-4 w-4 items-center justify-center">
+                                                            <FontAwesomeIcon size="sm" icon={drop.icon} color="#ff9e19" />
+                                                        </div>
+
+                                                        <p>{drop.title}</p>
+                                                    </div>
+                                                </Link>
+                                            )}
+
                                             <AnimatePresence>
-                                                {drop.open &&
-                                                    drop.subHref.length > 0 && (
-                                                        <ul className="flex flex-col gap-2 overflow-hidden py-2 h-fit border-l border-primary-orange ml-6">
-                                                            {drop.subHref.map(
-                                                                (sub, index) => (
-                                                                    <MotionLink
-                                                                        className="mx-4 px-1"
-                                                                        whileHover={{
-                                                                            backgroundColor: "#000",
-                                                                            color: "#fff",
-                                                                        }}
-                                                                        key={index}
-                                                                        href={sub.href}
-                                                                    >
-                                                                        {sub.title}
-                                                                    </MotionLink>
-                                                                )
-                                                            )}
-                                                        </ul>
-                                                    )}
+                                                {drop.open && drop.subHref.length > 0 && (
+                                                    <ul className="border-primary-orange ml-6 flex h-fit flex-col gap-2 overflow-hidden border-l py-2">
+                                                        {drop.subHref.map((sub, index) => (
+                                                            <Link
+                                                                className="hover:bg-primary-orange mx-4 rounded-full px-2 py-1 transition duration-200 hover:text-white"
+                                                                key={index}
+                                                                href={sub.href}
+                                                            >
+                                                                {sub.title}
+                                                            </Link>
+                                                        ))}
+                                                    </ul>
+                                                )}
                                             </AnimatePresence>
                                         </li>
                                     ))}
@@ -274,32 +274,20 @@ export default function Dashboard({ children }) {
                     </motion.div>
                 )}
             </AnimatePresence>
-            <div className="w-full flex flex-col overflow-y-auto h-screen bg-[#f5f5f5]">
-                <div className="sticky top-0 bg-white shadow-md py-3 flex flex-row justify-between items-center px-6 z-50">
+            <div className="flex h-screen w-full flex-col overflow-y-auto bg-[#f5f5f5]">
+                <div className="sticky top-0 z-50 flex flex-row items-center justify-between bg-white px-6 py-3 shadow-md">
                     <div className="flex flex-row gap-3">
                         <button onClick={() => setSidebar(!sidebar)}>
-                            <FontAwesomeIcon
-                                icon={faBars}
-                                size="lg"
-                                color="#000"
-                            />
+                            <FontAwesomeIcon icon={faBars} size="lg" color="#000" />
                         </button>
-                        <h1 className="text-2xl">
-                            {finalPath.charAt(0).toUpperCase() +
-                                finalPath.slice(1) || "Bienvenido al Dashboard"}
-                        </h1>
+                        <h1 className="text-2xl">{finalPath.charAt(0).toUpperCase() + finalPath.slice(1) || 'Bienvenido al Dashboard'}</h1>
                     </div>
 
                     <div className="flex flex-row gap-3">
                         <div className="">
-                            <h2 className="font-medium">
-                                {admin?.name?.toUpperCase()}
-                            </h2>
+                            <h2 className="font-medium">{user?.name?.toUpperCase()}</h2>
                         </div>
-                        <button
-                            className="relative"
-                            onClick={() => setUserMenu(!userMenu)}
-                        >
+                        <button className="relative" onClick={() => setUserMenu(!userMenu)}>
                             <FontAwesomeIcon color="#000" icon={faUser} />
                         </button>
                         <AnimatePresence>
@@ -310,16 +298,11 @@ export default function Dashboard({ children }) {
                                     exit={{ opacity: 0, y: -30 }}
                                     transition={{
                                         duration: 0.1,
-                                        ease: "linear",
+                                        ease: 'linear',
                                     }}
-                                    className="flex flex-col items-start absolute border-2 shadow- w-[300px] h-fit right-2 top-10 p-4 bg-white gap-4"
+                                    className="shadow- absolute top-10 right-2 flex h-fit w-[300px] flex-col items-start gap-4 border-2 bg-white p-4"
                                 >
-                                    <Link
-                                    method="post"
-                                    href={route("admin.logout")}
-                                    
-                                        className="bg-primary-gray text-white w-full h-[40px]"
-                                    >
+                                    <Link method="post" href={route('admin.logout')} className="bg-primary-gray h-[40px] w-full text-white">
                                         Cerrar Sesion
                                     </Link>
                                 </motion.div>

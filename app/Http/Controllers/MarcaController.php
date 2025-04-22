@@ -31,6 +31,7 @@ class MarcaController extends Controller
     {
 
         $data = $request->validate([
+            'name' => 'required|string|max:255',
             'order' => 'nullable|string|max:255',
             'image' => 'required|file',
         ]);
@@ -59,6 +60,7 @@ class MarcaController extends Controller
         }
 
         $data = $request->validate([
+            'name' => 'sometimes|string|max:255',
             'order' => 'nullable|string|max:255',
             'image' => 'sometimes|file',
         ]);

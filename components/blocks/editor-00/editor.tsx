@@ -1,5 +1,3 @@
-'use client'
-
 import {
   InitialConfigType,
   LexicalComposer,
@@ -7,8 +5,6 @@ import {
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin'
 import { EditorState, SerializedEditorState } from 'lexical'
 
-import { FloatingLinkContext } from '@/components/editor/context/floating-link-context'
-import { SharedAutocompleteContext } from '@/components/editor/context/shared-autocomplete-context'
 import { editorTheme } from '@/components/editor/themes/editor-theme'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
@@ -47,19 +43,15 @@ export function Editor({
         }}
       >
         <TooltipProvider>
-          <SharedAutocompleteContext>
-            <FloatingLinkContext>
-              <Plugins />
+          <Plugins />
 
-              <OnChangePlugin
-                ignoreSelectionChange={true}
-                onChange={(editorState) => {
-                  onChange?.(editorState)
-                  onSerializedChange?.(editorState.toJSON())
-                }}
-              />
-            </FloatingLinkContext>
-          </SharedAutocompleteContext>
+          <OnChangePlugin
+            ignoreSelectionChange={true}
+            onChange={(editorState) => {
+              onChange?.(editorState)
+              onSerializedChange?.(editorState.toJSON())
+            }}
+          />
         </TooltipProvider>
       </LexicalComposer>
     </div>
