@@ -12,24 +12,34 @@ class MarcaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $marca = Marca::first();
-        if ($marca && $marca->image) {
-            $marca->image = url("storage/" . $marca->image);
+
+        $perPage = $request->input('per_page', 10);
+
+        $query = Marca::query()->orderBy('order', 'asc');
+
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
         }
 
-        return Inertia::render('admin/marca', ['marca' => $marca]);
+        $marcas = $query->paginate($perPage);
+
+        foreach ($marcas as $item) {
+            $item->image = url('storage/' . $item->image);
+        }
+
+        return Inertia::render('admin/marcasAdmin', [
+            'marcas' => $marcas,
+        ]);
     }
-
-
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'order' => 'nullable|string|max:255',
@@ -45,16 +55,12 @@ class MarcaController extends Controller
         Marca::create($data);
     }
 
-
-
-
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request)
     {
-
-        $marca = Marca::first();
+        $marca = Marca::findOrFail($request->id);
         if (!$marca) {
             return redirect()->back()->with('error', 'No se encontró la marca.');
         }
@@ -81,8 +87,21 @@ class MarcaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Marca $marca)
+    public function destroy(Request $request)
     {
-        //
+        $marca = Marca::findOrFail($request->id);
+        if (!$marca) {
+            return redirect()->back()->with('error', 'No se encontró la marca.');
+        }
+
+        // Eliminar la imagen del almacenamiento
+        $absolutePath = public_path('storage/' . $marca->image);
+        if (File::exists($absolutePath)) {
+            File::delete($absolutePath);
+        }
+
+        $marca->delete();
+
+        return redirect()->back()->with('success', 'Marca eliminada correctamente.');
     }
 }

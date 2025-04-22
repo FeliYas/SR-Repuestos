@@ -11,9 +11,19 @@ class CategoriaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $categorias = Categoria::all();
+
+        $perPage = $request->input('per_page', 10);
+
+        $query = Categoria::query()->orderBy('order', 'asc');
+
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+        }
+
+        $categorias = $query->paginate($perPage);
 
         foreach ($categorias as $categoria) {
             if ($categoria->image) {
@@ -52,9 +62,9 @@ class CategoriaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        $categoria = Categoria::findOrFail($id);
+        $categoria = Categoria::findOrFail($request->id);
 
         // Check if the category entry exists
         if (!$categoria) {
@@ -89,9 +99,9 @@ class CategoriaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(Request $request)
     {
-        $categoria = Categoria::findOrFail($id);
+        $categoria = Categoria::findOrFail($request->id);
 
         // Check if the category entry exists
         if (!$categoria) {

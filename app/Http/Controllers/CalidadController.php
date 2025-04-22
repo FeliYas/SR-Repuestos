@@ -2,27 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Nosotros;
+use App\Models\Calidad;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
-class NosotrosController extends Controller
+class CalidadController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
-        $nosotros = Nosotros::first();
+        $calidad = Calidad::first();
 
-        if ($nosotros->image) {
-            $nosotros->image = url("storage/" . $nosotros->image);
+        if ($calidad->image) {
+            $calidad->image = url("storage/" . $calidad->image);
         }
-        if ($nosotros->banner) {
-            $nosotros->banner = url("storage/" . $nosotros->banner);
+        if ($calidad->banner) {
+            $calidad->banner = url("storage/" . $calidad->banner);
         }
 
-        return Inertia::render('admin/nosotrosAdmin', ['nosotros' => $nosotros]);
+        return inertia('admin/calidadAdmin', ['calidad' => $calidad]);
     }
 
 
@@ -32,13 +29,12 @@ class NosotrosController extends Controller
      */
     public function update(Request $request)
     {
-        $nosotros = Nosotros::first();
 
+        $calidad = Calidad::first();
 
-
-        // Check if the Nosotros entry exists
-        if (!$nosotros) {
-            return redirect()->back()->with('error', 'Nosotros not found.');
+        // Check if the Calidad entry exists
+        if (!$calidad) {
+            return redirect()->back()->with('error', 'Calidad not found.');
         }
 
         $data = $request->validate([
@@ -51,8 +47,8 @@ class NosotrosController extends Controller
         // Handle file upload if image exists
         if ($request->hasFile('image')) {
             // Delete the old image if it exists
-            if ($nosotros->image) {
-                $absolutePath = public_path('storage/' . $nosotros->image);
+            if ($calidad->image) {
+                $absolutePath = public_path('storage/' . $calidad->image);
                 if (file_exists($absolutePath)) {
                     unlink($absolutePath);
                 }
@@ -64,17 +60,18 @@ class NosotrosController extends Controller
         // Handle file upload if banner exists
         if ($request->hasFile('banner')) {
             // Delete the old banner if it exists
-            if ($nosotros->banner) {
-                $absolutePath = public_path('storage/' . $nosotros->banner);
+            if ($calidad->banner) {
+                $absolutePath = public_path('storage/' . $calidad->banner);
                 if (file_exists($absolutePath)) {
                     unlink($absolutePath);
                 }
             }
+            // Store the new banner
             $data['banner'] = $request->file('banner')->store('images', 'public');
         }
 
-        $nosotros->update($data);
+        $calidad->update($data);
 
-        return redirect()->back()->with('success', 'Nosotros updated successfully.');
+        return redirect()->back()->with('success', 'Calidad updated successfully.');
     }
 }

@@ -1,5 +1,201 @@
+import InstagramAdminRow from '@/components/instagramAdminRow';
+import { useForm, usePage } from '@inertiajs/react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
 import Dashboard from './dashboard';
 
-export default function InstagramAdmin() {
-    return <Dashboard>instagram</Dashboard>;
+export default function MarcasAdmin() {
+    const { publicaciones } = usePage().props;
+
+    const { data, setData, post, reset } = useForm({
+        link: '',
+    });
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
+    const itemsPerPage = 10;
+    const [createView, setCreateView] = useState(false);
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        post(route('admin.instagram.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Publicacion creada correctamente');
+                reset();
+                setCreateView(false);
+            },
+            onError: (errors) => {
+                toast.error('Error al crear publicacion');
+                console.log(errors);
+            },
+        });
+    };
+
+    const filteredCategorias = publicaciones?.sort((a, b) => {
+        // Verificar si alguno de los valores es null o undefined
+        const aOrdenIsNull = a?.orden === null || a?.orden === undefined;
+        const bOrdenIsNull = b?.orden === null || b?.orden === undefined;
+
+        // Si ambos son null/undefined, no importa el orden entre ellos
+        if (aOrdenIsNull && bOrdenIsNull) return 0;
+
+        // Si solo a es null/undefined, va después de b
+        if (aOrdenIsNull) return 1;
+
+        // Si solo b es null/undefined, va después de a
+        if (bOrdenIsNull) return -1;
+
+        // Si ambos son números, ordenar numéricamente
+        if (!isNaN(Number(a.orden)) && !isNaN(Number(b.orden))) {
+            return Number(a.orden) - Number(b.orden);
+        }
+
+        // Orden alfabético como fallback
+        return String(a.orden).localeCompare(String(b.orden), undefined, {
+            numeric: true,
+        });
+    });
+
+    // Calcular los datos a mostrar en la página actual
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredCategorias?.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math?.ceil(filteredCategorias?.length / itemsPerPage);
+
+    return (
+        <Dashboard>
+            <div className="flex w-full flex-col p-6">
+                <AnimatePresence>
+                    {createView && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed top-0 left-0 z-50 flex h-full w-full items-center justify-center bg-black/50 text-left"
+                        >
+                            <form onSubmit={handleSubmit} method="POST" className="text-black">
+                                <div className="w-[500px] rounded-md bg-white p-4">
+                                    <h2 className="mb-4 text-2xl font-semibold">Crear Marca</h2>
+                                    <div className="flex flex-col gap-4">
+                                        <label htmlFor="ordennn">Orden</label>
+                                        <input
+                                            className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
+                                            type="text"
+                                            name="ordennn"
+                                            id="ordennn"
+                                            onChange={(e) => setData('order', e.target.value)}
+                                        />
+                                        <label htmlFor="nombree">
+                                            Link <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
+                                            type="text"
+                                            name="nombree"
+                                            id="nombree"
+                                            onChange={(e) => setData('link', e.target.value)}
+                                        />
+                                        <label htmlFor="imagenn">Imagen</label>
+
+                                        <span className="text-base font-normal">Resolucion recomendada: 501x181px</span>
+                                        <div className="flex flex-row">
+                                            <input
+                                                type="file"
+                                                name="imagen"
+                                                id="imagenn"
+                                                onChange={(e) => setData('image', e.target.files[0])}
+                                                className="hidden"
+                                            />
+                                            <label
+                                                className="border-primary-orange text-primary-orange hover:bg-primary-orange cursor-pointer rounded-md border px-2 py-1 transition duration-300 hover:text-white"
+                                                htmlFor="imagenn"
+                                            >
+                                                Elegir imagen
+                                            </label>
+                                            <p className="self-center px-2">{data?.image?.name}</p>
+                                        </div>
+
+                                        <div className="flex justify-end gap-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => setCreateView(false)}
+                                                className="border-primary-orange text-primary-orange hover:bg-primary-orange rounded-md border px-2 py-1 transition duration-300 hover:text-white"
+                                            >
+                                                Cancelar
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                className="border-primary-orange text-primary-orange hover:bg-primary-orange rounded-md border px-2 py-1 transition duration-300 hover:text-white"
+                                            >
+                                                Guardar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                <div className="mx-auto flex w-full flex-col gap-3">
+                    <h2 className="border-primary-orange text-primary-orange text-bold w-full border-b-2 text-2xl">Publicaciones</h2>
+                    <div className="flex h-fit w-full flex-row gap-5">
+                        <input
+                            type="text"
+                            placeholder="Buscar publicacion..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full rounded-md border border-gray-300 px-3"
+                        />
+                        <button
+                            onClick={() => setCreateView(true)}
+                            className="bg-primary-orange w-[200px] rounded px-4 py-1 font-bold text-white hover:bg-orange-400"
+                        >
+                            Crear Publicacion
+                        </button>
+                    </div>
+
+                    <div className="flex w-full justify-center">
+                        <table className="w-full border text-left text-sm text-gray-500 rtl:text-right dark:text-gray-400">
+                            <thead className="bg-gray-300 text-sm font-medium text-black uppercase">
+                                <tr>
+                                    <td className="text-center">ORDEN</td>
+
+                                    <td className="text-center">LINK</td>
+                                    <td className="w-[400px] px-3 py-2 text-center">IMAGEN</td>
+
+                                    <td className="text-center">EDITAR</td>
+                                </tr>
+                            </thead>
+                            <tbody className="text-center">
+                                {currentItems?.map((publicacion) => <InstagramAdminRow key={publicacion.id} publicacion={publicacion} />)}
+                            </tbody>
+                        </table>
+                    </div>
+                    {/* Paginación */}
+                    <div className="mt-4 flex justify-center">
+                        <button
+                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="rounded-l-md bg-gray-300 px-4 py-2 disabled:opacity-50"
+                        >
+                            Anterior
+                        </button>
+                        <span className="bg-gray-200 px-4 py-2">
+                            Página {currentPage} de {totalPages}
+                        </span>
+                        <button
+                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className="rounded-r-md bg-gray-300 px-4 py-2 disabled:opacity-50"
+                        >
+                            Siguiente
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Dashboard>
+    );
 }

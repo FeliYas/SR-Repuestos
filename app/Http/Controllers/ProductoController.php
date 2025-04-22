@@ -11,9 +11,24 @@ class ProductoController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $productos = Producto::with(['categorias:id,name', 'marcas:id,name', 'imagenes'])->get();
+
+        $perPage = $request->input('per_page', 10);
+
+        $query = Producto::query()->orderBy('order', 'asc')->with(['categoria:id,name', 'marca:id,name', 'imagenes']);
+
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+        }
+
+        $productos = $query->paginate($perPage);
+
+        foreach ($productos as $item) {
+            $item->ficha_tecnica = url('storage/' . $item->ficha_tecnica);
+        }
+
         return Inertia::render('admin/productosAdmin', [
             'productos' => $productos,
         ]);
@@ -26,11 +41,11 @@ class ProductoController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'order' => 'nullable|string|max:255',
+            'order' => 'sometimes|string|max:255',
             'code' => 'required|string|max:255',
             'categoria_id' => 'required|exists:categorias,id',
             'marca_id' => 'required|exists:marcas,id',
-            'ficha_tecnica' => 'nullable|file',
+            'ficha_tecnica' => 'sometimes|file',
             'aplicacion' => 'nullable|string|max:255',
             'anios' => 'nullable|string|max:255',
             'num_original' => 'nullable|string|max:255',

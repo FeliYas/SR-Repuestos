@@ -71,7 +71,7 @@ export default function Dashboard({ children }) {
             href: '#',
             subHref: [
                 { title: 'Categorias', href: 'categorias' },
-                { title: 'Marcas', href: 'marcas' },
+
                 {
                     title: 'Productos',
                     href: 'productos',
@@ -85,7 +85,10 @@ export default function Dashboard({ children }) {
             title: 'Calidad',
             icon: faStar,
             href: 'calidad',
-            subHref: [],
+            subHref: [
+                { title: 'Contenido', href: 'calidad' },
+                { title: 'Archivos', href: 'archivos' },
+            ],
         },
         {
             id: 'novedades',
@@ -93,7 +96,10 @@ export default function Dashboard({ children }) {
             title: 'Novedades',
             icon: faNewspaper,
             href: 'novedades',
-            subHref: [],
+            subHref: [
+                { title: 'Banner', href: 'bannernovedades' },
+                { title: 'Contenido', href: 'novedades' },
+            ],
         },
         {
             id: 'contacto',
@@ -204,8 +210,8 @@ export default function Dashboard({ children }) {
                         transition={{ ease: 'linear', duration: 0.2 }}
                         className="scrollbar-hide flex h-screen w-[300px] flex-col overflow-y-auto bg-white text-black"
                     >
-                        <Link href={'/'} className="w-full p-6">
-                            <img className="h-full w-full object-cover" src={logo} alt="" />
+                        <Link href={'/'} className="flex w-full items-center justify-center p-6">
+                            <img className="object-cover" src={logo} alt="" />
                         </Link>
                         <nav className="">
                             <ul className="">

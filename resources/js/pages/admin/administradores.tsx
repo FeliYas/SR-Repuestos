@@ -95,7 +95,7 @@ export default function Administradores() {
                 )}
             </AnimatePresence>
             <div className="flex w-full flex-row justify-between py-5">
-                <h2 className="text-2xl font-bold">Administradores</h2>
+                <h2 className="border-primary-orange text-primary-orange text-bold w-full border-b-2 text-2xl">Administradores</h2>
                 <button onClick={() => setCreateView(true)} className="bg-primary-red rounded-md px-2 py-1 text-white">
                     Registrar administrador
                 </button>

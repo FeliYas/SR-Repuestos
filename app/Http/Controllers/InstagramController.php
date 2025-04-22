@@ -19,7 +19,7 @@ class InstagramController extends Controller
                 $instagram->image = url("storage/" . $instagram->image);
             }
         }
-        return Inertia::render('admin/instagramAdmin', ['instagram' => $instagrams]);
+        return Inertia::render('admin/instagramAdmin', ['publicaciones' => $instagrams]);
     }
 
 
@@ -51,9 +51,9 @@ class InstagramController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        $instagram = Instagram::findOrFail($id);
+        $instagram = Instagram::findOrFail($request->id);
 
         // Check if the Instagram entry exists
         if (!$instagram) {
@@ -87,9 +87,9 @@ class InstagramController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(Request $request)
     {
-        $instagram = Instagram::findOrFail($id);
+        $instagram = Instagram::findOrFail($request->id);
 
         // Check if the Instagram entry exists
         if (!$instagram) {

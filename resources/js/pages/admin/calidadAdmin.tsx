@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import Dashboard from './dashboard';
 
-export default function NosotrosAdmin() {
-    const nosotrosInfo = usePage().props.nosotros;
+export default function CalidadAdmin() {
+    const { calidad } = usePage().props;
 
-    const [text, setText] = useState(nosotrosInfo?.text || '');
+    console.log(calidad);
+
+    const [text, setText] = useState(calidad?.text || '');
 
     const { data, setData, processing, post, reset } = useForm({
         title: '',
@@ -19,16 +21,16 @@ export default function NosotrosAdmin() {
     }, [text]);
 
     useEffect(() => {
-        setData('title', nosotrosInfo?.title);
-        setData('text', nosotrosInfo?.text);
-    }, [nosotrosInfo]);
+        setData('title', calidad?.title);
+        setData('text', calidad?.text);
+    }, [calidad]);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         console.log(data.text);
 
-        post(route('admin.nosotros.update'), {
+        post(route('admin.calidad.update'), {
             preserveScroll: true,
             onSuccess: () => {
                 reset();
@@ -54,7 +56,7 @@ export default function NosotrosAdmin() {
                     </label>
                     <div className="mt-2 flex justify-between rounded-lg border shadow-lg">
                         <div className="h-[200px] w-2/3 bg-[rgba(0,0,0,0.2)]">
-                            <img className="h-full w-full rounded-md object-cover" src={nosotrosInfo?.banner} alt="" />
+                            <img className="h-full w-full rounded-md object-cover" src={calidad?.banner} alt="" />
                         </div>
                         <div className="flex w-1/3 items-center justify-center">
                             <div className="h-fit items-center self-center text-center">
@@ -101,7 +103,7 @@ export default function NosotrosAdmin() {
                         </label>
                         <div className="mt-2 flex justify-between rounded-lg border shadow-lg">
                             <div className="h-[200px] w-2/3 bg-[rgba(0,0,0,0.2)]">
-                                <img className="h-full w-full rounded-md object-cover" src={nosotrosInfo?.image} alt="" />
+                                <img className="h-full w-full rounded-md object-cover" src={calidad?.image} alt="" />
                             </div>
                             <div className="flex w-1/3 items-center justify-center">
                                 <div className="h-fit items-center self-center text-center">

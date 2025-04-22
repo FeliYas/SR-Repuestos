@@ -8,15 +8,16 @@ class Producto extends Model
 {
     protected $guarded = [];
 
-    public function categorias()
+    public function categoria()
     {
-        return $this->belongsTo(Categoria::class);
+        return $this->belongsTo(Categoria::class, 'categoria_id');
     }
 
-    public function marcas()
+    public function marca()
     {
-        return $this->belongsTo(Marca::class);
+        return $this->belongsTo(Marca::class, 'marca_id');
     }
+
     public function imagenes()
     {
         return $this->hasMany(ImagenProducto::class);
