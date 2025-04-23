@@ -14,6 +14,7 @@ use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\NosotrosController;
 use App\Http\Controllers\NovedadesController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\SubProductoController;
 use App\Http\Controllers\ValoresController;
 use App\Models\Calidad;
 use App\Models\ImagenProducto;
@@ -54,9 +55,9 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('admin/productos', [ProductoController::class, 'store'])->name('admin.productos.store');
     Route::post('admin/productos/update', [ProductoController::class, 'update'])->name('admin.productos.update');
     Route::delete('admin/productos/destroy', [ProductoController::class, 'destroy'])->name('admin.productos.destroy');
-    Route::post('admin/productos/imagenes/store', [ImagenProductoController::class, 'imagenesStore'])->name('admin.imagenes.store');
-    Route::post('admin/productos/imagenes/update', [ImagenProductoController::class, 'imagenesUpdate'])->name('admin.imagenes.update');
-    Route::delete('admin/productos/imagenes/destroy', [ImagenProductoController::class, 'imagenesDestroy'])->name('admin.imagenes.destroy');
+    Route::post('admin/productos/imagenes/store', [ImagenProductoController::class, 'store'])->name('admin.imagenes.store');
+    Route::post('admin/productos/imagenes/update', [ImagenProductoController::class, 'update'])->name('admin.imagenes.update');
+    Route::delete('admin/productos/imagenes/destroy', [ImagenProductoController::class, 'destroy'])->name('admin.imagenes.destroy');
 
     Route::get('admin/calidad', [CalidadController::class, 'index'])->name('admin.calidad');
     Route::post('admin/calidad', [CalidadController::class, 'update'])->name('admin.calidad.update');
@@ -76,6 +77,11 @@ Route::middleware('auth:admin')->group(function () {
 
     Route::get('admin/contacto', [ContactoController::class, 'index'])->name('admin.contacto');
     Route::post('admin/contacto', [ContactoController::class, 'update'])->name('admin.contacto.update');
+
+    Route::get('admin/subproductos', [SubProductoController::class, 'index'])->name('admin.subproductos');
+    Route::post('admin/subproductos', [SubProductoController::class, 'store'])->name('admin.subproductos.store');
+    Route::post('admin/subproductos/update', [SubProductoController::class, 'update'])->name('admin.subproductos.update');
+    Route::delete('admin/subproductos/destroy', [SubProductoController::class, 'destroy'])->name('admin.subproductos.destroy');
 
     Route::get('/admin/dashboard', function () {
         return Inertia::render('admin/dashboard'); // Cambia esto a tu página de dashboard

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categoria;
+use App\Models\Marca;
 use App\Models\Producto;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,6 +15,9 @@ class ProductoController extends Controller
      */
     public function index(Request $request)
     {
+
+        $categorias = Categoria::select('id', 'name')->get();
+        $marcas = Marca::select('id', 'name')->get();
 
         $perPage = $request->input('per_page', 10);
 
@@ -27,10 +32,16 @@ class ProductoController extends Controller
 
         foreach ($productos as $item) {
             $item->ficha_tecnica = url('storage/' . $item->ficha_tecnica);
+
+            foreach ($item->imagenes as $imagen) {
+                $imagen->image = url('storage/' . $imagen->image);
+            }
         }
 
         return Inertia::render('admin/productosAdmin', [
             'productos' => $productos,
+            'categorias' => $categorias,
+            'marcas' => $marcas,
         ]);
     }
 

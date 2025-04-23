@@ -1,0 +1,130 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Producto;
+use App\Models\SubProducto;
+use DragonCode\Support\Facades\Filesystem\File;
+use Illuminate\Http\Request;
+
+class SubProductoController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+
+        $productos = Producto::select('id', 'name')->get();
+
+        $perPage = $request->input('per_page', 10);
+
+        $query = SubProducto::with([
+            'producto' => function ($query) {
+                $query->select('id', 'name', 'marca_id')
+                    ->with(['marca' => function ($q) {
+                        $q->select('id', 'name');
+                    }]);
+            }
+        ])->orderBy('order', 'asc');
+
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+        }
+
+        $subProductos = $query->paginate($perPage);
+
+        foreach ($subProductos as $item) {
+            $item->image = url('storage/' . $item->image);
+        }
+
+        return inertia('admin/subProductosAdmin', [
+            'subProductos' => $subProductos,
+            'productos' => $productos,
+        ]);
+    }
+
+
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'order' => 'nullable|string|max:255',
+            'code' => 'required|string|max:255',
+            'producto_id' => 'required|exists:productos,id',
+            'description' => 'required|string|max:255',
+            'medida' => 'nullable|string|max:255',
+            'componente' => 'nullable|string|max:255',
+            'caracteristicas' => 'nullable|string|max:255',
+            'price_mayorista' => 'required|numeric',
+            'price_minorista' => 'required|numeric',
+            'price_dist' => 'required|numeric',
+            'image' => 'required|file',
+        ]);
+
+        // Handle file upload
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('images', 'public');
+            $data['image'] = $imagePath;
+        }
+
+        SubProducto::create($data);
+    }
+
+
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request)
+    {
+        $subProducto = SubProducto::findOrFail($request->id);
+        if (!$subProducto) {
+            return redirect()->back()->with('error', 'No se encontró el subproducto.');
+        }
+
+        $data = $request->validate([
+            'order' => 'nullable|string|max:255',
+            'code' => 'required|string|max:255',
+            'producto_id' => 'required|exists:productos,id',
+            'description' => 'required|string|max:255',
+            'medida' => 'nullable|string|max:255',
+            'componente' => 'nullable|string|max:255',
+            'caracteristicas' => 'nullable|string|max:255',
+            'price_mayorista' => 'required|numeric',
+            'price_minorista' => 'required|numeric',
+            'price_dist' => 'required|numeric',
+            'image' => 'sometimes|file',
+        ]);
+
+        // Handle file upload if image exists
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('images', 'public');
+            $data['image'] = $imagePath;
+        }
+
+        $subProducto->update($data);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy()
+    {
+        $subProducto = SubProducto::findOrFail(request()->id);
+        if (!$subProducto) {
+            return redirect()->back()->with('error', 'No se encontró el subproducto.');
+        }
+
+        $absolutePath = public_path('storage/' . $subProducto->image);
+        if (File::exists($absolutePath)) {
+            File::delete($absolutePath);
+        }
+
+        $subProducto->delete();
+    }
+}

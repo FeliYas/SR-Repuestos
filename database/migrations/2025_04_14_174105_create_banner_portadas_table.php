@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->string('logo_banner')->nullable();
             $table->string('desc')->nullable();
-
             $table->timestamps();
         });
     }

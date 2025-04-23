@@ -22,4 +22,9 @@ class Producto extends Model
     {
         return $this->hasMany(ImagenProducto::class);
     }
+
+    public function subproductos()
+    {
+        return $this->hasMany(SubProducto::class, 'sub_producto_id');
+    }
 }

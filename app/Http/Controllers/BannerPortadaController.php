@@ -21,8 +21,8 @@ class BannerPortadaController extends Controller
         if ($banner && $banner->image) {
             $banner->image = url("storage/" . $banner->image);
         }
-        if ($banner && $banner->logo) {
-            $banner->logo = url("storage/" . $banner->logo);
+        if ($banner && $banner->logo_banner) {
+            $banner->logo_banner = url("storage/" . $banner->logo_banner);
         }
         return Inertia::render('admin/bannerPortadaAdmin', ['banner' => $banner]);
     }
@@ -42,7 +42,7 @@ class BannerPortadaController extends Controller
             'title' => 'required|string|max:255',
             'video' => 'sometimes|file',
             'image' => 'sometimes|file',
-            'logo' => 'sometimes|file',
+            'logo_banner' => 'sometimes|file',
             'desc' => 'sometimes|string|max:255',
         ]);
 
@@ -61,17 +61,17 @@ class BannerPortadaController extends Controller
             $data['video'] = $videoPath;
         }
 
-        if ($request->hasFile('logo')) {
+        if ($request->hasFile('logo_banner')) {
 
-            if ($bannerPortada->logo) {
-                $absolutePath = public_path('storage/' . $bannerPortada->logo);
+            if ($bannerPortada->logo_banner) {
+                $absolutePath = public_path('storage/' . $bannerPortada->logo_banner);
                 if (File::exists($absolutePath)) {
                     File::delete($absolutePath);
                 }
             }
 
-            $videoPath = $request->file('logo')->store('images', 'public');
-            $data['logo'] = $videoPath;
+            $videoPath = $request->file('logo_banner')->store('images', 'public');
+            $data['logo_banner'] = $videoPath;
         }
 
         if ($request->hasFile('image')) {

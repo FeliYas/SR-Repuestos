@@ -76,7 +76,7 @@ export default function Dashboard({ children }) {
                     title: 'Productos',
                     href: 'productos',
                 },
-                { title: 'Sub-productos', href: 'sub-productos' },
+                { title: 'Sub-productos', href: 'subproductos' },
             ],
         },
         {
