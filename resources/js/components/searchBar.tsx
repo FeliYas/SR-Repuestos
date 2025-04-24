@@ -17,7 +17,7 @@ export default function SearchBar() {
                     </select>
                     <select className="h-[55px] w-full bg-white pl-3" name="" id="">
                         <option value="">Marca</option>
-                        {marcas.map((categoria) => (
+                        {marcas.map((marcas) => (
                             <option key={marcas.id} value={marcas.id}>
                                 {marcas.name}
                             </option>

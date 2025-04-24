@@ -26,9 +26,6 @@ class MarcaController extends Controller
 
         $marcas = $query->paginate($perPage);
 
-        foreach ($marcas as $item) {
-            $item->image = url('storage/' . $item->image);
-        }
 
         return Inertia::render('admin/marcasAdmin', [
             'marcas' => $marcas,

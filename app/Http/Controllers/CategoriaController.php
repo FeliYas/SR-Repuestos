@@ -25,11 +25,7 @@ class CategoriaController extends Controller
 
         $categorias = $query->paginate($perPage);
 
-        foreach ($categorias as $categoria) {
-            if ($categoria->image) {
-                $categoria->image = url("storage/" . $categoria->image);
-            }
-        }
+
 
         return Inertia::render('admin/categoriasAdmin', [
             'categorias' => $categorias,

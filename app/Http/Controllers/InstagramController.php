@@ -13,12 +13,8 @@ class InstagramController extends Controller
      */
     public function index()
     {
-        $instagrams = Instagram::all();
-        foreach ($instagrams as $instagram) {
-            if ($instagram->image) {
-                $instagram->image = url("storage/" . $instagram->image);
-            }
-        }
+        $instagrams = Instagram::orderBy('order', 'asc')->get();
+
         return Inertia::render('admin/instagramAdmin', ['publicaciones' => $instagrams]);
     }
 

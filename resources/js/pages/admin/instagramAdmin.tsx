@@ -8,13 +8,13 @@ import Dashboard from './dashboard';
 export default function MarcasAdmin() {
     const { publicaciones } = usePage().props;
 
+    console.log(publicaciones);
+
     const { data, setData, post, reset } = useForm({
         link: '',
     });
 
-    const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
-    const itemsPerPage = 10;
     const [createView, setCreateView] = useState(false);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -33,37 +33,6 @@ export default function MarcasAdmin() {
             },
         });
     };
-
-    const filteredCategorias = publicaciones?.sort((a, b) => {
-        // Verificar si alguno de los valores es null o undefined
-        const aOrdenIsNull = a?.orden === null || a?.orden === undefined;
-        const bOrdenIsNull = b?.orden === null || b?.orden === undefined;
-
-        // Si ambos son null/undefined, no importa el orden entre ellos
-        if (aOrdenIsNull && bOrdenIsNull) return 0;
-
-        // Si solo a es null/undefined, va después de b
-        if (aOrdenIsNull) return 1;
-
-        // Si solo b es null/undefined, va después de a
-        if (bOrdenIsNull) return -1;
-
-        // Si ambos son números, ordenar numéricamente
-        if (!isNaN(Number(a.orden)) && !isNaN(Number(b.orden))) {
-            return Number(a.orden) - Number(b.orden);
-        }
-
-        // Orden alfabético como fallback
-        return String(a.orden).localeCompare(String(b.orden), undefined, {
-            numeric: true,
-        });
-    });
-
-    // Calcular los datos a mostrar en la página actual
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredCategorias?.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math?.ceil(filteredCategorias?.length / itemsPerPage);
 
     return (
         <Dashboard>
@@ -170,29 +139,9 @@ export default function MarcasAdmin() {
                                 </tr>
                             </thead>
                             <tbody className="text-center">
-                                {currentItems?.map((publicacion) => <InstagramAdminRow key={publicacion.id} publicacion={publicacion} />)}
+                                {publicaciones?.map((publicacion) => <InstagramAdminRow key={publicacion.id} publicacion={publicacion} />)}
                             </tbody>
                         </table>
-                    </div>
-                    {/* Paginación */}
-                    <div className="mt-4 flex justify-center">
-                        <button
-                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                            className="rounded-l-md bg-gray-300 px-4 py-2 disabled:opacity-50"
-                        >
-                            Anterior
-                        </button>
-                        <span className="bg-gray-200 px-4 py-2">
-                            Página {currentPage} de {totalPages}
-                        </span>
-                        <button
-                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                            className="rounded-r-md bg-gray-300 px-4 py-2 disabled:opacity-50"
-                        >
-                            Siguiente
-                        </button>
                     </div>
                 </div>
             </div>

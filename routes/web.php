@@ -2,45 +2,21 @@
 
 use App\Models\BannerPortada;
 use App\Models\Categoria;
+use App\Models\Contacto;
 use App\Models\Instagram;
 use App\Models\Marca;
+use App\Models\Nosotros;
 use App\Models\Novedades;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
+    $contacto = Contacto::first();
     $categorias = Categoria::orderBy('order', 'asc')->get();
     $marcas = Marca::orderBy('order', 'asc')->get();
     $instagram = Instagram::orderBy('order', 'asc')->get();
     $bannerPortada = BannerPortada::first();
     $novedades = Novedades::all();
-    if ($bannerPortada && $bannerPortada->video) {
-        $bannerPortada->video = url("storage/" . $bannerPortada->video);
-    }
-    if ($bannerPortada && $bannerPortada->image) {
-        $bannerPortada->image = url("storage/" . $bannerPortada->image);
-    }
-    if ($bannerPortada && $bannerPortada->logo_banner) {
-        $bannerPortada->logo_banner = url("storage/" . $bannerPortada->logo_banner);
-    }
-
-    foreach ($categorias as $item) {
-        if ($item->image) {
-            $item->image = url('storage/' . $item->image);
-        }
-    }
-
-    foreach ($marcas as $item) {
-        if ($item->image) {
-            $item->image = url('storage/' . $item->image);
-        }
-    }
-
-    foreach ($novedades as $item) {
-        if ($item->image) {
-            $item->image = url('storage/' . $item->image);
-        }
-    }
 
     return Inertia::render('home', [
         'bannerPortada' => $bannerPortada,
@@ -48,8 +24,21 @@ Route::get('/', function () {
         'marcas' => $marcas,
         'novedades' => $novedades,
         'instagram' => $instagram,
+        'contacto' => $contacto,
     ]);
-})->name('defaultLayout');
+})->name('home');
+
+Route::get('/nosotros', function () {
+    $contacto = Contacto::first();
+    $bannerPortada = BannerPortada::first();
+    $nosotros = Nosotros::first();
+
+    return Inertia::render('nosotros', [
+        'bannerPortada' => $bannerPortada,
+        'contacto' => $contacto,
+        'nosotros' => $nosotros,
+    ]);
+})->name('nosotros');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {

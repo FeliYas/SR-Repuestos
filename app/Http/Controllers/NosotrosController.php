@@ -15,12 +15,7 @@ class NosotrosController extends Controller
     {
         $nosotros = Nosotros::first();
 
-        if ($nosotros->image) {
-            $nosotros->image = url("storage/" . $nosotros->image);
-        }
-        if ($nosotros->banner) {
-            $nosotros->banner = url("storage/" . $nosotros->banner);
-        }
+
 
         return Inertia::render('admin/nosotrosAdmin', ['nosotros' => $nosotros]);
     }

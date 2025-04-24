@@ -24,11 +24,7 @@ class NovedadesController extends Controller
 
         $novedades = $query->paginate($perPage);
 
-        foreach ($novedades as $novedad) {
-            if ($novedad->image) {
-                $novedad->image = url("storage/" . $novedad->image);
-            }
-        }
+
         return inertia('admin/novedadesAdmin', [
             'novedades' => $novedades,
         ]);

@@ -15,15 +15,7 @@ class BannerPortadaController extends Controller
     public function index()
     {
         $banner = BannerPortada::first();
-        if ($banner && $banner->video) {
-            $banner->video = url("storage/" . $banner->video);
-        }
-        if ($banner && $banner->image) {
-            $banner->image = url("storage/" . $banner->image);
-        }
-        if ($banner && $banner->logo_banner) {
-            $banner->logo_banner = url("storage/" . $banner->logo_banner);
-        }
+
         return Inertia::render('admin/bannerPortadaAdmin', ['banner' => $banner]);
     }
 

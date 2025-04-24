@@ -18,10 +18,8 @@ const Carousel = () => {
             </div>
 
             {/* Contenido estático */}
-            <div className="absolute inset-0 -bottom-32 z-30 mx-auto flex max-w-[1240px] flex-col justify-center text-white max-sm:pl-6">
-                <div>
-                    <h1 className="text-5xl">{bannerPortada?.title}</h1>
-                </div>
+            <div className="absolute z-40 flex h-full w-full items-center justify-center text-white">
+                <h1 className="max-w-[500px] text-center text-[44px] font-bold">{bannerPortada?.title}</h1>
             </div>
         </div>
     );

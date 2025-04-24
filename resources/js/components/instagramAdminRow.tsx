@@ -47,7 +47,11 @@ export default function InstagramAdminRow({ publicacion }) {
     return (
         <tr className={`border text-black odd:bg-gray-100 even:bg-white`}>
             <td className="align-middle">{publicacion?.order}</td>
-            <td className="align-middle">{publicacion?.name}</td>
+            <td className="align-middle">
+                <a href={publicacion?.link} target="_blank" rel="noopener noreferrer" className="text-blue-500">
+                    Link
+                </a>
+            </td>
 
             <td className="h-[90px] w-[90px] px-8">
                 <img className="h-full w-full object-contain" src={publicacion?.image} alt="" />

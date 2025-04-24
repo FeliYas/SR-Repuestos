@@ -12,4 +12,9 @@ class Categoria extends Model
     {
         return $this->hasMany(Producto::class);
     }
+
+    public function getImageAttribute($value)
+    {
+        return url("storage/" . $value);
+    }
 }

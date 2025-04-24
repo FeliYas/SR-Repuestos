@@ -12,8 +12,8 @@ export default function BannerInicio() {
                 <div>
                     <h2 className="text-3xl font-bold text-white">{bannerPortada?.desc}</h2>
                 </div>
-                <div className="h-full w-full overflow-hidden">
-                    <img className="h-full w-full object-cover" src={bannerPortada?.logo_banner} alt="" />
+                <div className="flex justify-start">
+                    <img className="" src={bannerPortada?.logo_banner} alt="" />
                 </div>
             </div>
         </div>
