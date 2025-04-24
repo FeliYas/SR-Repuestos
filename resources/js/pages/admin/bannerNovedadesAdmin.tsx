@@ -5,13 +5,12 @@ import Dashboard from './dashboard';
 export default function BannerNovedadesAdmin() {
     const { bannerNovedades } = usePage().props;
 
-    const { data, setData, post } = useForm({
-        banner: bannerNovedades?.banner,
-    });
+    const { data, setData, post } = useForm();
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        post(route('admin.bannerNovedades.update'), {
+
+        post(route('admin.bannernovedades.update'), {
             preserveScroll: true,
             onSuccess: () => {
                 toast.success('Banner actualizado correctamente');

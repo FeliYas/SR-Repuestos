@@ -23,6 +23,8 @@ class BannerNovedadesController extends Controller
      */
     public function update(Request $request)
     {
+
+
         $bannerNovedades = BannerNovedades::first();
 
         // Check if the BannerNovedades entry exists
@@ -31,11 +33,8 @@ class BannerNovedadesController extends Controller
         }
 
         $data = $request->validate([
-
             'banner' => 'sometimes|file',
         ]);
-
-
         // Handle file upload if banner exists
         if ($request->hasFile('banner')) {
             // Delete the old banner if it exists
@@ -48,6 +47,8 @@ class BannerNovedadesController extends Controller
             // Store the new banner
             $data['banner'] = $request->file('banner')->store('images', 'public');
         }
+
+
 
         $bannerNovedades->update($data);
 

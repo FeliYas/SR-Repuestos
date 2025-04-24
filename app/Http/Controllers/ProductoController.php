@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Categoria;
+use App\Models\Contacto;
 use App\Models\Marca;
 use App\Models\Producto;
 use Illuminate\Http\Request;
@@ -30,18 +31,45 @@ class ProductoController extends Controller
 
         $productos = $query->paginate($perPage);
 
-        foreach ($productos as $item) {
-            $item->ficha_tecnica = url('storage/' . $item->ficha_tecnica);
 
-            foreach ($item->imagenes as $imagen) {
-                $imagen->image = url('storage/' . $imagen->image);
-            }
-        }
 
         return Inertia::render('admin/productosAdmin', [
             'productos' => $productos,
             'categorias' => $categorias,
             'marcas' => $marcas,
+        ]);
+    }
+
+    public function indexInicio(Request $request)
+    {
+
+        $contacto = Contacto::first();
+        $productos = Producto::orderBy('order', 'asc')->get();
+        $categorias = Categoria::select('id', 'name', 'order')
+            ->orderBy('order', 'asc')
+            ->get();
+
+
+
+        return Inertia::render('productos', [
+            'contacto' => $contacto,
+            'productos' => $productos,
+            'categorias' => $categorias,
+
+        ]);
+    }
+
+    public function show($id)
+    {
+        $producto = Producto::with(['categoria:id,name', 'marca:id,name', 'imagenes'])->findOrFail($id);
+
+        // Check if the product entry exists
+        if (!$producto) {
+            return redirect()->back()->with('error', 'Producto no encontrado.');
+        }
+
+        return Inertia::render('productos/productoShow', [
+            'producto' => $producto,
         ]);
     }
 

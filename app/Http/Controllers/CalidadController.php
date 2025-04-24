@@ -12,12 +12,6 @@ class CalidadController extends Controller
     {
         $calidad = Calidad::first();
 
-        if ($calidad->image) {
-            $calidad->image = url("storage/" . $calidad->image);
-        }
-        if ($calidad->banner) {
-            $calidad->banner = url("storage/" . $calidad->banner);
-        }
 
         return inertia('admin/calidadAdmin', ['calidad' => $calidad]);
     }

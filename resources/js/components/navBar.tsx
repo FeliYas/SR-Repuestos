@@ -1,10 +1,12 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 import logo from '../../../resources/images/logos/logo.png';
 
 export default function NavBar() {
     const [scrolled, setScrolled] = useState(false);
+
+    const { ziggy } = usePage().props;
 
     useEffect(() => {
         const handleScroll = () => {
@@ -31,7 +33,9 @@ export default function NavBar() {
     ];
 
     return (
-        <div className={`fixed top-0 z-50 h-[100px] w-full transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-transparent'}`}>
+        <div
+            className={`fixed top-0 z-50 h-[100px] w-full transition-all duration-300 ${ziggy.location.includes('productos') ? 'sticky shadow-md' : 'fixed'} ${scrolled ? 'bg-white shadow-md' : 'bg-transparent'}`}
+        >
             <div className="mx-auto flex h-full max-w-[1200px] items-center justify-between">
                 <Link href={'/'} className="">
                     <img src={logo} alt="" />
@@ -42,7 +46,7 @@ export default function NavBar() {
                             <Link
                                 key={index}
                                 href={link.href}
-                                className={`text-[15px] ${scrolled ? 'text-black hover:text-[#F2C94C]' : 'text-white hover:text-[#F2C94C]'}`}
+                                className={`text-[15px] ${scrolled || ziggy.location.includes('productos') ? 'text-black hover:text-[#F2C94C]' : 'text-white hover:text-[#F2C94C]'}`}
                             >
                                 {link.title}
                             </Link>
@@ -50,7 +54,7 @@ export default function NavBar() {
                     </div>
                     <button
                         className={`h-[41px] w-[148px] ${
-                            scrolled
+                            scrolled || ziggy.location.includes('productos')
                                 ? 'border border-black text-black hover:bg-black hover:text-white'
                                 : 'border border-white text-white hover:bg-white hover:text-black'
                         } transition-colors`}

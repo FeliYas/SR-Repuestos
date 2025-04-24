@@ -14,9 +14,7 @@ class ContactoController extends Controller
     {
         $contacto = Contacto::first();
 
-        if ($contacto->banner) {
-            $contacto->banner = url("storage/" . $contacto->banner);
-        }
+
 
         return inertia('admin/contactoAdmin', [
             'contacto' => $contacto,

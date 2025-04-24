@@ -1,30 +1,22 @@
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link, usePage } from '@inertiajs/react';
+import DefaultLayout from './defaultLayout';
 
-export default function NovedadesInicio() {
-    const { novedades } = usePage().props;
-
-    const truncateString = (str: string, num: number) => {
-        if (str?.length > num) {
-            return str?.slice(0, num) + '...';
-        }
-        return str;
-    };
+export default function Novedades() {
+    const { bannerNovedades, novedades } = usePage().props;
 
     return (
-        <div className="w-full py-20">
-            <div className="mx-auto flex max-w-[1200px] flex-col gap-8">
-                <div className="flex flex-row items-center justify-between">
-                    <h2 className="text-3xl font-bold">Novedades</h2>
-                    <Link
-                        href={'#'}
-                        className="text-primary-orange border-primary-orange hover:bg-primary-orange flex h-[41px] w-[127px] items-center justify-center border text-base font-semibold transition duration-300 hover:text-white"
-                    >
-                        Ver todas
-                    </Link>
-                </div>
-                <div className="flex flex-row justify-between">
+        <DefaultLayout>
+            <div
+                style={{ background: 'linear-gradient(180deg, #000000 0%, rgba(0, 0, 0, 0) 122.25%)' }}
+                className="relative flex h-[400px] w-full items-center justify-center"
+            >
+                <img className="absolute h-full w-full object-cover object-center" src={bannerNovedades?.banner} alt="" />
+                <h2 className="absolute text-4xl font-bold text-white">Novedades</h2>
+            </div>
+            <div className="w-full py-20">
+                <div className="mx-auto w-[1200px]">
                     {novedades.map((novedad) => (
                         <Link
                             href={`/novedades/${novedad?.id}`}
@@ -38,7 +30,7 @@ export default function NovedadesInicio() {
                                     <p className="text-primary-orange text-sm font-bold uppercase">{novedad?.type}</p>
                                     <div>
                                         <p className="text-2xl font-bold">{novedad?.title}</p>
-                                        <div dangerouslySetInnerHTML={{ __html: truncateString(novedad?.text, 120) }} />
+                                        <div dangerouslySetInnerHTML={{ __html: novedad?.text }} />
                                     </div>
                                 </div>
                                 <button type="button" className="flex flex-row items-center justify-between">
@@ -50,6 +42,6 @@ export default function NovedadesInicio() {
                     ))}
                 </div>
             </div>
-        </div>
+        </DefaultLayout>
     );
 }

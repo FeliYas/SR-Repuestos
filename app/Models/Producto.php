@@ -27,4 +27,14 @@ class Producto extends Model
     {
         return $this->hasMany(SubProducto::class, 'sub_producto_id');
     }
+
+    public function getImageAttribute($value)
+    {
+        return url("storage/" . $value);
+    }
+
+    public function getFichaTecnicaAttribute($value)
+    {
+        return url("storage/" . $value);
+    }
 }

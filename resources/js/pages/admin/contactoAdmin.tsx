@@ -2,20 +2,35 @@ import { faSquareWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { faEnvelope, faLocationDot, faPhone } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useForm, usePage } from '@inertiajs/react';
+import toast from 'react-hot-toast';
 import Dashboard from './dashboard';
 export default function ContactoAdmin() {
     const { contacto } = usePage().props;
 
-    const { data, setData } = useForm({
+    const { data, setData, post } = useForm({
         location: contacto?.location,
         phone: contacto?.phone,
         mail: contacto?.mail,
         wp: contacto?.wp,
     });
 
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        post(route('admin.contacto.update'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Contacto actualizado correctamente');
+            },
+            onError: (errors) => {
+                toast.error('Error al actualizar el contacto');
+                console.log(errors);
+            },
+        });
+    };
+
     return (
         <Dashboard>
-            <form className="flex flex-col gap-4 p-6" action="">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-6" action="">
                 <h2 className="border-primary-orange text-primary-orange text-bold w-full border-b-2 text-2xl">Banner</h2>
 
                 <div className="col-span-2 w-full">
