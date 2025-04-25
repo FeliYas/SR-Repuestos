@@ -12,4 +12,9 @@ class SubProducto extends Model
     {
         return $this->belongsTo(Producto::class, 'producto_id');
     }
+
+    public function getImageAttribute($value)
+    {
+        return url('storage/' . $value);
+    }
 }

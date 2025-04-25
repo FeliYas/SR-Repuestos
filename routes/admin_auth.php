@@ -15,6 +15,7 @@ use App\Http\Controllers\NosotrosController;
 use App\Http\Controllers\NovedadesController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\SubProductoController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\ValoresController;
 use App\Models\Calidad;
 use App\Models\ImagenProducto;
@@ -82,6 +83,12 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('admin/subproductos', [SubProductoController::class, 'store'])->name('admin.subproductos.store');
     Route::post('admin/subproductos/update', [SubProductoController::class, 'update'])->name('admin.subproductos.update');
     Route::delete('admin/subproductos/destroy', [SubProductoController::class, 'destroy'])->name('admin.subproductos.destroy');
+
+    Route::get('admin/clientes', [UserController::class, 'index'])->name('admin.clientes');
+    Route::post('admin/clientes', [UserController::class, 'store'])->name('admin.clientes.store');
+    Route::post('admin/clientes/update', [UserController::class, 'update'])->name('admin.clientes.update');
+    Route::delete('admin/clientes/destroy', [UserController::class, 'destroy'])->name('admin.clientes.destroy');
+    Route::post('admin/clientes/autorizar', [UserController::class, 'changeStatus'])->name('admin.clientes.autorizar');
 
     Route::get('/admin/dashboard', function () {
         return Inertia::render('admin/dashboard'); // Cambia esto a tu página de dashboard

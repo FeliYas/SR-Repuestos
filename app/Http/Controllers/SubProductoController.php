@@ -35,9 +35,7 @@ class SubProductoController extends Controller
 
         $subProductos = $query->paginate($perPage);
 
-        foreach ($subProductos as $item) {
-            $item->image = url('storage/' . $item->image);
-        }
+
 
         return inertia('admin/subProductosAdmin', [
             'subProductos' => $subProductos,
@@ -45,6 +43,29 @@ class SubProductoController extends Controller
         ]);
     }
 
+    public function indexPrivada(Request $request)
+    {
+
+
+        $perPage = $request->input('per_page', 10);
+
+        $query = SubProducto::with([
+            'producto' => function ($query) {
+                $query->select('id', 'name', 'marca_id')
+                    ->with(['marca' => function ($q) {
+                        $q->select('id', 'name');
+                    }]);
+            }
+        ])->orderBy('order', 'asc');
+
+
+
+        $subProductos = $query->paginate(perPage: $perPage);
+
+        return inertia('privada/productosPrivada', [
+            'subProductos' => $subProductos,
+        ]);
+    }
 
 
     /**

@@ -21,7 +21,7 @@ class ProductoController extends Controller
         $categorias = Categoria::select('id', 'name')->get();
         $marcas = Marca::select('id', 'name')->get();
 
-        $perPage = $request->input('per_page', 10);
+        $perPage = $request->input('per_page', default: 10);
 
         $query = Producto::query()->orderBy('order', 'asc')->with(['categoria:id,name', 'marca:id,name', 'imagenes']);
 
@@ -41,28 +41,39 @@ class ProductoController extends Controller
         ]);
     }
 
-    public function indexInicio(Request $request)
+    public function indexVistaPrevia()
+    {
+        $productos = Producto::select('id', 'code')->get();
+        $categorias = Categoria::orderBy('order', 'asc')->get();
+        $marcas = Marca::select('id', 'name')->get();
+
+
+        return Inertia::render('productosVistaPrevia', [
+            'categorias' => $categorias,
+            'marcas' => $marcas,
+            'productos' => $productos,
+        ]);
+    }
+
+    public function indexInicio($id)
     {
 
-        $contacto = Contacto::first();
-        $productos = Producto::orderBy('order', 'asc')->get();
+        $productos = Producto::where('categoria_id', $id)->orderBy('order', 'asc')->get();
         $categorias = Categoria::select('id', 'name', 'order')
             ->orderBy('order', 'asc')
             ->get();
 
 
-
         return Inertia::render('productos', [
-            'contacto' => $contacto,
             'productos' => $productos,
             'categorias' => $categorias,
+            'id' => $id,
 
         ]);
     }
 
     public function show($id)
     {
-        $contacto = Contacto::first();
         $subproductos = SubProducto::where('producto_id', $id)->orderBy('order', 'asc')->get();
         $producto = Producto::with(['categoria:id,name', 'marca:id,name', 'imagenes'])->findOrFail($id);
         $categorias = Categoria::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
@@ -78,8 +89,37 @@ class ProductoController extends Controller
             'producto' => $producto,
             'subproductos' => $subproductos,
             'categorias' => $categorias,
-            'contacto' => $contacto,
             'productosRelacionados' => $productosRelacionados,
+        ]);
+    }
+
+    public function SearchProducts(Request $request)
+    {
+        $query = Producto::query();
+
+        // Aplicar filtros solo si existen
+        if ($request->filled('categoria')) {
+            $query->where('categoria_id', $request->categoria);
+        }
+
+        if ($request->filled('marca')) {
+            $query->where('marca_id', $request->marca);
+        }
+
+        if ($request->filled('codigo')) {
+            $query->where('code', 'LIKE', '%' . $request->codigo . '%');
+        }
+
+        $productos = $query->with(['categoria:id,name', 'marca:id,name', 'imagenes'])
+            ->get();
+
+        $categorias = Categoria::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
+        $marcas = Marca::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
+
+        return Inertia::render('productos/productoSearch', [
+            'productos' => $productos, // Cambié 'producto' a 'productos' (plural)
+            'categorias' => $categorias,
+            'marcas' => $marcas,
         ]);
     }
 

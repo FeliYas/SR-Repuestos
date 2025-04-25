@@ -116,7 +116,7 @@ export default function Dashboard({ children }) {
             icon: faLock,
             href: '#',
             subHref: [
-                { title: 'Clientes', href: '/dashboard/clientes' },
+                { title: 'Clientes', href: 'clientes' },
                 {
                     title: 'Pedidos/Presupuestos',
                     href: '/dashboard/pedidos-privada',

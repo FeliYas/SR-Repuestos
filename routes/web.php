@@ -16,78 +16,75 @@ use App\Models\Valores;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    $contacto = Contacto::first();
-    $categorias = Categoria::orderBy('order', 'asc')->get();
-    $marcas = Marca::orderBy('order', 'asc')->get();
-    $instagram = Instagram::orderBy('order', 'asc')->get();
-    $bannerPortada = BannerPortada::first();
-    $novedades = Novedades::all();
+Route::middleware(['shareDefaultLayoutData'])->group(function () {
+    Route::get('/', function () {
+        $categorias = Categoria::orderBy('order', 'asc')->get();
+        $marcas = Marca::orderBy('order', 'asc')->get();
+        $instagram = Instagram::orderBy('order', 'asc')->get();
+        $bannerPortada = BannerPortada::first();
+        $novedades = Novedades::all();
 
-    return Inertia::render('home', [
-        'bannerPortada' => $bannerPortada,
-        'categorias' => $categorias,
-        'marcas' => $marcas,
-        'novedades' => $novedades,
-        'instagram' => $instagram,
-        'contacto' => $contacto,
-    ]);
-})->name('home');
+        return Inertia::render('home', [
+            'bannerPortada' => $bannerPortada,
+            'categorias' => $categorias,
+            'marcas' => $marcas,
+            'novedades' => $novedades,
+            'instagram' => $instagram,
+        ]);
+    })->name('home');
 
-Route::get('/nosotros', function () {
-    $contacto = Contacto::first();
-    $bannerPortada = BannerPortada::first();
-    $nosotros = Nosotros::first();
-    $valores = Valores::first();
+    Route::get('/nosotros', function () {
+        $bannerPortada = BannerPortada::first();
+        $nosotros = Nosotros::first();
+        $valores = Valores::first();
 
-    return Inertia::render('nosotros', [
-        'bannerPortada' => $bannerPortada,
-        'contacto' => $contacto,
-        'nosotros' => $nosotros,
-        'valores' => $valores,
-    ]);
-})->name('nosotros');
+        return Inertia::render('nosotros', [
+            'bannerPortada' => $bannerPortada,
+            'nosotros' => $nosotros,
+            'valores' => $valores,
+        ]);
+    })->name('nosotros');
 
-Route::get('/calidad', function () {
-    $contacto = Contacto::first();
-    $calidad = Calidad::first();
-    $archivos = ArchivoCalidad::orderBy('order', 'asc')->get();
+    Route::get('/calidad', function () {
+        $calidad = Calidad::first();
+        $archivos = ArchivoCalidad::orderBy('order', 'asc')->get();
 
 
-    return Inertia::render('calidad', [
-        'contacto' => $contacto,
-        'calidad' => $calidad,
-        'archivos' => $archivos,
+        return Inertia::render('calidad', [
+            'calidad' => $calidad,
+            'archivos' => $archivos,
 
-    ]);
-})->name('calidad');
+        ]);
+    })->name('calidad');
 
-Route::get('/novedades', function () {
-    $contacto = Contacto::first();
-    $bannerNovedades = BannerNovedades::first();
-    $novedades = Novedades::orderBy('order', 'asc')->get();
+    Route::get('/novedades', function () {
+        $bannerNovedades = BannerNovedades::first();
+        $novedades = Novedades::orderBy('order', 'asc')->get();
 
-    return Inertia::render('novedades', [
-        'contacto' => $contacto,
-        'novedades' => $novedades,
-        'bannerNovedades' => $bannerNovedades,
+        return Inertia::render('novedades', [
+            'novedades' => $novedades,
+            'bannerNovedades' => $bannerNovedades,
 
-    ]);
-})->name('novedades');
+        ]);
+    })->name('novedades');
 
 
 
-Route::get('/contacto', function () {
-    $contacto = Contacto::first();
+    Route::get('/contacto', function () {
 
-    return Inertia::render('contacto', [
-        'contacto' => $contacto,
-    ]);
-})->name('contacto');
+        return Inertia::render('contacto');
+    })->name('contacto');
+    Route::get('/productos', [ProductoController::class, 'indexVistaPrevia'])->name('/productos');
+    Route::get('/productos/{id}', [ProductoController::class, 'indexInicio'])->name('/productos');
+    Route::get('/productos/{categoria_id}/{producto_id}', [ProductoController::class, 'show'])->name('/productoss');
+    Route::get('/busqueda', [ProductoController::class, 'SearchProducts'])->name('searchproducts');
+});
+
+
+
 
 // routes/web.php
-Route::get('/productos', [ProductoController::class, 'indexInicio'])->name('/productos');
-Route::get('/productos/{id}', [ProductoController::class, 'show'])->name('/productoss');
+
 
 
 Route::middleware(['auth', 'verified'])->group(function () {

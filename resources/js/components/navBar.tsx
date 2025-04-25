@@ -1,12 +1,34 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
+import { AnimatePresence, motion } from 'framer-motion';
 import logo from '../../../resources/images/logos/logo.png';
 
 export default function NavBar() {
     const [scrolled, setScrolled] = useState(false);
 
-    const { ziggy } = usePage().props;
+    const { ziggy, auth, provincias } = usePage().props;
+
+    const [signupView, setSignupView] = useState(false);
+    const [loginView, setLoginView] = useState(false);
+
+    const signupForm = useForm({
+        name: '',
+        password: '',
+        password_confirmation: '',
+        email: '',
+        cuit: '',
+        direccion: '',
+        provincia: '',
+        localidad: '',
+        telefono: '',
+        autorizado: 0,
+    });
+
+    const loginForm = useForm({
+        name: '',
+        password: '',
+    });
 
     useEffect(() => {
         const handleScroll = () => {
@@ -32,9 +54,38 @@ export default function NavBar() {
         { title: 'Contacto', href: '/contacto' },
     ];
 
+    const login = () => {
+        loginForm.post(route('login'), {
+            onSuccess: () => {
+                setLoginView(false);
+            },
+        });
+    };
+
+    const signup = (e) => {
+        e.preventDefault();
+        signupForm.post(route('register'), {
+            onSuccess: () => {
+                setSignupView(false);
+            },
+        });
+    };
+
+    const handleViews = () => {
+        if (signupView) {
+            setSignupView(false);
+        }
+        if (loginView) {
+            setLoginView(false);
+        }
+        if (!loginView && !signupView) {
+            setLoginView(true);
+        }
+    };
+
     return (
         <div
-            className={`fixed top-0 z-50 h-[100px] w-full transition-all duration-300 ${ziggy.location.includes('productos') ? 'sticky shadow-md' : 'fixed'} ${scrolled || ziggy.location.includes('productos') ? 'bg-white shadow-md' : 'bg-transparent'}`}
+            className={`fixed top-0 z-50 h-[100px] w-full transition-all duration-300 ${ziggy.location.includes('productos/') || ziggy.location.includes('busqueda') || ziggy.location.includes('privada') ? 'sticky shadow-md' : 'fixed'} ${scrolled || ziggy.location.includes('productos/') || ziggy.location.includes('busqueda') || ziggy.location.includes('privada') ? 'bg-white shadow-md' : 'bg-transparent'}`}
         >
             <div className="mx-auto flex h-full max-w-[1200px] items-center justify-between">
                 <Link href={'/'} className="">
@@ -46,21 +97,276 @@ export default function NavBar() {
                             <Link
                                 key={index}
                                 href={link.href}
-                                className={`text-[15px] ${scrolled || ziggy.location.includes('productos') ? 'text-black hover:text-[#F2C94C]' : 'text-white hover:text-[#F2C94C]'}`}
+                                className={`text-[15px] ${scrolled || ziggy.location.includes('productos/') || ziggy.location.includes('privada') || ziggy.location.includes('busqueda') ? 'text-black hover:text-[#F2C94C]' : 'text-white hover:text-[#F2C94C]'}`}
                             >
                                 {link.title}
                             </Link>
                         ))}
                     </div>
-                    <button
-                        className={`h-[41px] w-[148px] ${
-                            scrolled || ziggy.location.includes('productos')
-                                ? 'border border-black text-black hover:bg-black hover:text-white'
-                                : 'border border-white text-white hover:bg-white hover:text-black'
-                        } transition-colors`}
-                    >
-                        Zona Privada
-                    </button>
+                    <div className="relative">
+                        <button
+                            type="button"
+                            onClick={handleViews}
+                            className={`h-[41px] w-[148px] ${
+                                scrolled ||
+                                ziggy.location.includes('productos/') ||
+                                ziggy.location.includes('privada') ||
+                                ziggy.location.includes('busqueda')
+                                    ? 'border border-black text-black hover:bg-black hover:text-white'
+                                    : 'border border-white text-white hover:bg-white hover:text-black'
+                            } transition-colors ${auth.user ? 'bg-primary-orange text-white' : ''}`}
+                        >
+                            {auth.user ? auth?.user?.name : 'Zona Privada'}
+                        </button>
+                        <AnimatePresence>
+                            {signupView && (
+                                <motion.div
+                                    /* ref={userSignRef} */
+                                    initial={{ opacity: 0, y: -30 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -30 }}
+                                    className="absolute top-16 right-0 z-20 flex h-fit w-[600px] flex-col gap-2 bg-white p-5 shadow-md"
+                                >
+                                    <h2 className="py-5 text-[24px] font-bold">Registrarse</h2>
+                                    <form onSubmit={signup} className="flex h-full w-full flex-col gap-6">
+                                        <div className="grid w-full grid-cols-2 gap-3 text-[16px]">
+                                            <div className="col-span-2 flex flex-col gap-2">
+                                                <label htmlFor="name" className="">
+                                                    Nombre de usuario
+                                                </label>
+                                                <input
+                                                    onChange={(ev) => signupForm.setData('name', ev.target.value)}
+                                                    className="focus:outline-primary-orange h-[45px] w-full pl-3 outline-1 outline-[#DDDDE0] transition duration-300"
+                                                    type="text"
+                                                    name="name"
+                                                    id="name"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <label htmlFor="password">Contraseña</label>
+                                                <input
+                                                    onChange={(ev) => signupForm.setData('password', ev.target.value)}
+                                                    className="focus:outline-primary-orange h-[45px] w-full pl-3 outline-1 outline-[#DDDDE0] transition duration-300"
+                                                    type="password"
+                                                    name="password"
+                                                    id="password"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <label htmlFor="password_confirmation">Confirmar contraseña</label>
+                                                <input
+                                                    onChange={(ev) => signupForm.setData('password_confirmation', ev.target.value)}
+                                                    className="focus:outline-primary-orange h-[45px] w-full pl-3 outline-1 outline-[#DDDDE0] transition duration-300"
+                                                    type="password"
+                                                    name="password_confirmation"
+                                                    id="password_confirmation"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <label htmlFor="email">Email</label>
+                                                <input
+                                                    onChange={(ev) => signupForm.setData('email', ev.target.value)}
+                                                    className="focus:outline-primary-orange h-[45px] w-full pl-3 outline-1 outline-[#DDDDE0] transition duration-300"
+                                                    type="email"
+                                                    name="email"
+                                                    id="email"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="flex flex-col gap-2">
+                                                <label htmlFor="dni">Cuit</label>
+                                                <input
+                                                    onChange={(ev) => signupForm.setData('cuit', ev.target.value)}
+                                                    className="focus:outline-primary-orange h-[45px] w-full pl-3 outline-1 outline-[#DDDDE0] transition duration-300"
+                                                    type="text"
+                                                    name="dni"
+                                                    id="dni"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="flex flex-col gap-2">
+                                                <label htmlFor="direccion">Dirección</label>
+                                                <input
+                                                    onChange={(ev) => signupForm.setData('direccion', ev.target.value)}
+                                                    className="focus:outline-primary-orange h-[45px] w-full pl-3 outline-1 outline-[#DDDDE0] transition duration-300"
+                                                    type="text"
+                                                    name="direccion"
+                                                    id="direccion"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="flex flex-col gap-2">
+                                                <label htmlFor="telefono">Telefono</label>
+                                                <input
+                                                    onChange={(ev) => signupForm.setData('telefono', ev.target.value)}
+                                                    className="focus:outline-primary-orange h-[45px] w-full pl-3 outline-1 outline-[#DDDDE0] transition duration-300"
+                                                    type="text"
+                                                    name="telefono"
+                                                    id="telefono"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="flex flex-col gap-2">
+                                                <label htmlFor="provincia">Provincia</label>
+                                                <select
+                                                    required
+                                                    onChange={(ev) => signupForm.setData('provincia', ev.target.value)}
+                                                    className="focus:outline-primary-orange h-[45px] w-full pl-3 outline-1 outline-[#DDDDE0] transition duration-300"
+                                                    name="provincia"
+                                                    id="provincia"
+                                                >
+                                                    <option disabled selected value="">
+                                                        Selecciona una provincia
+                                                    </option>
+
+                                                    {provincias?.map((pr) => (
+                                                        <option key={pr.id} value={pr.name}>
+                                                            {pr.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <label htmlFor="localidad">Localidad</label>
+                                                <select
+                                                    required
+                                                    onChange={(ev) => signupForm.setData('localidad', ev.target.value)}
+                                                    className="focus:outline-primary-orange h-[45px] w-full pl-3 outline-1 outline-[#DDDDE0] transition duration-300"
+                                                    name="localidad"
+                                                    id="localidad"
+                                                >
+                                                    <option disabled selected value="">
+                                                        Selecciona una localidad
+                                                    </option>
+
+                                                    {provincias
+                                                        ?.find((pr) => pr.name === signupForm?.data?.provincia)
+                                                        ?.localidades.map((loc, index) => (
+                                                            <option key={index} value={loc.name}>
+                                                                {loc.name}
+                                                            </option>
+                                                        ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <button className="bg-primary-orange col-span-2 h-[43px] w-full text-white">Regsitrarse</button>
+                                    </form>
+                                    <div className="flex flex-row items-center justify-center gap-3">
+                                        <p>¿Ya tienes una cuenta?</p>
+                                        <button
+                                            type="button"
+                                            className="text-primary-orange py-3 underline"
+                                            onClick={() => {
+                                                setSignupView(false);
+                                                setLoginView(true);
+                                            }}
+                                        >
+                                            Iniciar Sesion
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                        <AnimatePresence>
+                            {loginView && (
+                                <motion.div
+                                    /* ref={userRef} */
+                                    initial={{ y: -30, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    exit={{ y: -30, opacity: 0 }}
+                                    className={`absolute top-20 right-0 flex h-fit w-[367px] flex-col items-start justify-start gap-7 rounded-md bg-white p-5 shadow-lg ${
+                                        auth.user ? 'h-fit' : ''
+                                    }`}
+                                >
+                                    {auth.user ? (
+                                        <div className="flex flex-col gap-2">
+                                            <h2 className="text-2xl">Bienvenido, {auth.user?.name} !</h2>
+                                            <p className="text-[16px]">{auth.user?.email}</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <h2 className="text-2xl">Iniciar Sesion</h2>
+
+                                            {/* Mostrar error general si existe */}
+                                            {loginForm.errors.name && (
+                                                <div className="w-full rounded-md bg-red-100 p-3 text-red-700">{loginForm.errors.name}</div>
+                                            )}
+
+                                            <div className="flex flex-col gap-2">
+                                                <label className="text-[16px]" htmlFor="usuario">
+                                                    Usuario
+                                                </label>
+                                                <input
+                                                    onChange={(ev) => loginForm.setData('name', ev.target.value)}
+                                                    type="text"
+                                                    id="usuario"
+                                                    className={`focus:outline-primary-orange h-[45px] w-[327px] rounded-full pl-3 outline-1 transition duration-300 focus:outline ${loginForm.errors.name ? 'outline-red-500' : 'outline-[#DDDDE0]'}`}
+                                                />
+                                            </div>
+
+                                            <div className="flex flex-col gap-2">
+                                                <label className="text-[16px]" htmlFor="password">
+                                                    Contraseña
+                                                </label>
+                                                <input
+                                                    onChange={(ev) => loginForm.setData('password', ev.target.value)}
+                                                    type="password"
+                                                    id="password"
+                                                    className={`focus:outline-primary-orange h-[45px] w-[327px] rounded-full pl-3 outline-1 transition duration-300 focus:outline ${loginForm.errors.password ? 'outline-red-500' : 'outline-[#DDDDE0]'}`}
+                                                />
+                                                {/* Mostrar error específico de la contraseña si existe */}
+                                                {loginForm.errors.password && (
+                                                    <span className="text-sm text-red-500">{loginForm.errors.password}</span>
+                                                )}
+                                            </div>
+
+                                            <button
+                                                onClick={login}
+                                                className="bg-primary-orange h-[51px] w-[327px] rounded-full text-white"
+                                                disabled={loginForm.processing}
+                                            >
+                                                {loginForm.processing ? 'Iniciando...' : 'Iniciar sesion'}
+                                            </button>
+                                        </>
+                                    )}
+
+                                    {auth.user && (
+                                        <Link
+                                            href={route('logout')}
+                                            method="post"
+                                            className="flex h-[51px] w-[327px] items-center justify-center rounded-full bg-red-500 text-white"
+                                        >
+                                            Cerrar Sesion
+                                        </Link>
+                                    )}
+                                    {!auth.user && (
+                                        <>
+                                            <div className="h-[1px] w-full bg-[#DDDDE0]"></div>
+                                            <div className="flex w-full flex-row justify-center gap-3">
+                                                <p>No estas registrado?</p>
+                                                <button
+                                                    onClick={() => {
+                                                        setLoginView(false);
+                                                        setSignupView(true);
+                                                    }}
+                                                    className="text-primary-orange underline"
+                                                >
+                                                    Registrate
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
             </div>
         </div>

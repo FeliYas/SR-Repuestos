@@ -27,24 +27,31 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(Request $request)
     {
-        $request->authenticate();
+        $credentials = $request->validate([
+            'name' => 'required',
+            'password' => 'required',
+        ]);
 
-        $request->session()->regenerate();
+        // Agregar el campo autorizado a las credenciales
+        $credentials['autorizado'] = true;
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        if (Auth::guard()->attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->intended('/admin/dashboard');
+        }
+
+        return back()->withErrors([
+            'name' => 'Las credenciales proporcionadas no son correctas o la cuenta no está autorizada.',
+        ]);
     }
 
     /**
      * Destroy an authenticated session.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request)
     {
         Auth::guard('web')->logout();
-
-
-
-        return redirect('/');
     }
 }

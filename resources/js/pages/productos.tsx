@@ -5,7 +5,7 @@ import { useState } from 'react';
 import DefaultLayout from './defaultLayout';
 
 export default function Productos() {
-    const { categorias, marcas, productos } = usePage().props;
+    const { categorias, marcas, productos, ziggy, id } = usePage().props;
 
     const [categoriasDropdown, setCategoriasDropdown] = useState(false);
     const [marcasDropdown, setMarcasDropdown] = useState(false);
@@ -14,7 +14,7 @@ export default function Productos() {
         <DefaultLayout>
             <div className="mx-auto flex w-[1200px] flex-row gap-10 py-20">
                 {/* sidebar */}
-                <div className="flex w-1/3 flex-col gap-10">
+                <div className="flex w-1/4 flex-col gap-10">
                     <div className="flex flex-col">
                         <button
                             onClick={() => setCategoriasDropdown(!categoriasDropdown)}
@@ -33,7 +33,10 @@ export default function Productos() {
                             <div className="flex flex-col">
                                 {categorias?.map((categoria, index) => (
                                     <div key={index} className="border-b border-[#74716A] py-2">
-                                        <Link className="w-full text-[16px] text-[#74716A] transition-colors hover:text-black" href={'#'}>
+                                        <Link
+                                            className={`w-full text-[16px] text-[#74716A] transition-colors hover:text-black ${ziggy.location.split('/')[4] == categoria?.id ? 'font-bold' : ''}`}
+                                            href={`/productos/${categoria?.id}`}
+                                        >
                                             {categoria?.name}
                                         </Link>
                                     </div>
@@ -69,7 +72,7 @@ export default function Productos() {
                 <div className="grid grid-cols-3">
                     {productos?.map((producto) => (
                         <Link
-                            href={`/productos/${producto?.id}`}
+                            href={`/productos/${id}/${producto?.id}`}
                             key={producto?.id}
                             className="flex h-[400px] w-[286px] flex-col border border-gray-200"
                         >
@@ -79,7 +82,7 @@ export default function Productos() {
                             <div className="flex w-full flex-col gap-2 p-4">
                                 <p className="text-primary-orange">
                                     {' '}
-                                    <span className="font-bold">{producto?.code}</span> | {producto?.marca}
+                                    <span className="font-bold">{producto?.code}</span> | {producto?.marca?.name}
                                 </p>
                                 <h2 className="font-bold text-[#74716A]">{producto?.name}</h2>
                             </div>
