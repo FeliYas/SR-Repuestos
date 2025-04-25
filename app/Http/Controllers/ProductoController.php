@@ -6,6 +6,7 @@ use App\Models\Categoria;
 use App\Models\Contacto;
 use App\Models\Marca;
 use App\Models\Producto;
+use App\Models\SubProducto;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -61,15 +62,24 @@ class ProductoController extends Controller
 
     public function show($id)
     {
+        $contacto = Contacto::first();
+        $subproductos = SubProducto::where('producto_id', $id)->orderBy('order', 'asc')->get();
         $producto = Producto::with(['categoria:id,name', 'marca:id,name', 'imagenes'])->findOrFail($id);
+        $categorias = Categoria::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
+        $productosRelacionados = Producto::with(['imagenes'])
+            ->where('marca_id', $producto->marca_id)
+            ->where('id', '!=', $id)
+            ->inRandomOrder()
+            ->limit(3)
+            ->get();
 
-        // Check if the product entry exists
-        if (!$producto) {
-            return redirect()->back()->with('error', 'Producto no encontrado.');
-        }
 
         return Inertia::render('productos/productoShow', [
             'producto' => $producto,
+            'subproductos' => $subproductos,
+            'categorias' => $categorias,
+            'contacto' => $contacto,
+            'productosRelacionados' => $productosRelacionados,
         ]);
     }
 

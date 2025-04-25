@@ -31,7 +31,7 @@ export default function Productos() {
                             className={`overflow-hidden transition-all duration-300 ease-in-out ${categoriasDropdown ? 'max-h-[500px]' : 'max-h-0'}`}
                         >
                             <div className="flex flex-col">
-                                {categorias.map((categoria, index) => (
+                                {categorias?.map((categoria, index) => (
                                     <div key={index} className="border-b border-[#74716A] py-2">
                                         <Link className="w-full text-[16px] text-[#74716A] transition-colors hover:text-black" href={'#'}>
                                             {categoria?.name}
@@ -55,7 +55,7 @@ export default function Productos() {
                         </button>
                         <div className={`overflow-hidden transition-all duration-300 ease-in-out ${marcasDropdown ? 'max-h-[500px]' : 'max-h-0'}`}>
                             <div className="flex flex-col">
-                                {marcas.map((marca, index) => (
+                                {marcas?.map((marca, index) => (
                                     <div key={index} className="border-b border-[#74716A] py-2">
                                         <Link className="text-[16px] text-[#74716A] transition-colors hover:text-black" href={'#'}>
                                             {marca?.name}
@@ -67,8 +67,12 @@ export default function Productos() {
                     </div>
                 </div>
                 <div className="grid grid-cols-3">
-                    {productos.map((producto) => (
-                        <Link href={'#'} key={producto?.id} className="flex h-[400px] w-[286px] flex-col border border-gray-200">
+                    {productos?.map((producto) => (
+                        <Link
+                            href={`/productos/${producto?.id}`}
+                            key={producto?.id}
+                            className="flex h-[400px] w-[286px] flex-col border border-gray-200"
+                        >
                             <div className="h-[287px] w-full border-b border-gray-200">
                                 <img className="object-cove h-full w-full object-center" src={producto?.image} alt="" />
                             </div>

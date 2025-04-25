@@ -34,7 +34,7 @@ export default function NavBar() {
 
     return (
         <div
-            className={`fixed top-0 z-50 h-[100px] w-full transition-all duration-300 ${ziggy.location.includes('productos') ? 'sticky shadow-md' : 'fixed'} ${scrolled ? 'bg-white shadow-md' : 'bg-transparent'}`}
+            className={`fixed top-0 z-50 h-[100px] w-full transition-all duration-300 ${ziggy.location.includes('productos') ? 'sticky shadow-md' : 'fixed'} ${scrolled || ziggy.location.includes('productos') ? 'bg-white shadow-md' : 'bg-transparent'}`}
         >
             <div className="mx-auto flex h-full max-w-[1200px] items-center justify-between">
                 <Link href={'/'} className="">

@@ -87,7 +87,7 @@ Route::get('/contacto', function () {
 
 // routes/web.php
 Route::get('/productos', [ProductoController::class, 'indexInicio'])->name('/productos');
-Route::get('/productos/{id}', [ProductoController::class, 'show'])->name('/productos');
+Route::get('/productos/{id}', [ProductoController::class, 'show'])->name('/productoss');
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
