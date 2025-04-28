@@ -35,7 +35,7 @@ export default function ProductoShow() {
                                     <div key={index} className="border-b border-[#74716A] py-2">
                                         <Link
                                             className={`w-full text-[16px] text-[#74716A] transition-colors hover:text-black ${categoria?.id == producto?.categoria?.id ? 'font-bold' : ''}`}
-                                            href={'#'}
+                                            href={`/productos/${categoria?.id}`}
                                         >
                                             {categoria?.name}
                                         </Link>

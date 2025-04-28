@@ -269,8 +269,8 @@ export default function Clientes() {
                                     <td className="text-left">EMAIL</td>
                                     <td className="w-[400px] px-3 py-2 text-left">PROVINCIA</td>
                                     <td className="text-left">LOCALIDAD</td>
-                                    <td className="text-left">LISTA</td>
-                                    <td className="text-left">AUTORIZADO</td>
+                                    <td className="text-center">LISTA</td>
+                                    <td className="text-center">AUTORIZADO</td>
 
                                     <td className="text-center">EDITAR</td>
                                 </tr>

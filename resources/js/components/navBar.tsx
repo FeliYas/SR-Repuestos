@@ -54,7 +54,15 @@ export default function NavBar() {
         { title: 'Contacto', href: '/contacto' },
     ];
 
-    const login = () => {
+    const privateLinks = [
+        { title: 'Productos', href: '/privada/productos' },
+        { title: 'Carrito', href: '/privada/carrito' },
+        { title: 'Mis pedidos', href: '/privada/mis-pedidos' },
+        { title: 'Lista de precios', href: '/privada/lista-de-precios' },
+    ];
+
+    const login = (e) => {
+        e.preventDefault();
         loginForm.post(route('login'), {
             onSuccess: () => {
                 setLoginView(false);
@@ -93,15 +101,25 @@ export default function NavBar() {
                 </Link>
                 <div className="flex flex-row items-center gap-7">
                     <div className="flex flex-row gap-7">
-                        {defaultLinks.map((link, index) => (
-                            <Link
-                                key={index}
-                                href={link.href}
-                                className={`text-[15px] ${scrolled || ziggy.location.includes('productos/') || ziggy.location.includes('privada') || ziggy.location.includes('busqueda') ? 'text-black hover:text-[#F2C94C]' : 'text-white hover:text-[#F2C94C]'}`}
-                            >
-                                {link.title}
-                            </Link>
-                        ))}
+                        {ziggy.location.includes('privada')
+                            ? privateLinks.map((link, index) => (
+                                  <Link
+                                      key={index}
+                                      href={link.href}
+                                      className={`text-[15px] ${ziggy.location.includes(link.title.toLowerCase()) ? 'font-bold' : ''} ${scrolled || ziggy.location.includes('productos/') || ziggy.location.includes('privada') || ziggy.location.includes('busqueda') ? 'text-black hover:text-[#F2C94C]' : 'text-white hover:text-[#F2C94C]'}`}
+                                  >
+                                      {link.title}
+                                  </Link>
+                              ))
+                            : defaultLinks.map((link, index) => (
+                                  <Link
+                                      key={index}
+                                      href={link.href}
+                                      className={`text-[15px] ${ziggy.location.includes(link.title.toLowerCase()) ? 'font-bold' : ''} ${scrolled || ziggy.location.includes('productos/') || ziggy.location.includes('privada') || ziggy.location.includes('busqueda') ? 'text-black hover:text-[#F2C94C]' : 'text-white hover:text-[#F2C94C]'}`}
+                                  >
+                                      {link.title}
+                                  </Link>
+                              ))}
                     </div>
                     <div className="relative">
                         <button
@@ -281,7 +299,7 @@ export default function NavBar() {
                                     initial={{ y: -30, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
                                     exit={{ y: -30, opacity: 0 }}
-                                    className={`absolute top-20 right-0 flex h-fit w-[367px] flex-col items-start justify-start gap-7 rounded-md bg-white p-5 shadow-lg ${
+                                    className={`absolute top-20 right-0 flex h-fit w-[367px] flex-col items-start justify-start gap-7 bg-white p-5 shadow-lg ${
                                         auth.user ? 'h-fit' : ''
                                     }`}
                                 >
@@ -291,7 +309,7 @@ export default function NavBar() {
                                             <p className="text-[16px]">{auth.user?.email}</p>
                                         </div>
                                     ) : (
-                                        <>
+                                        <form onSubmit={login} className="flex flex-col gap-5">
                                             <h2 className="text-2xl">Iniciar Sesion</h2>
 
                                             {/* Mostrar error general si existe */}
@@ -307,7 +325,7 @@ export default function NavBar() {
                                                     onChange={(ev) => loginForm.setData('name', ev.target.value)}
                                                     type="text"
                                                     id="usuario"
-                                                    className={`focus:outline-primary-orange h-[45px] w-[327px] rounded-full pl-3 outline-1 transition duration-300 focus:outline ${loginForm.errors.name ? 'outline-red-500' : 'outline-[#DDDDE0]'}`}
+                                                    className={`focus:outline-primary-orange h-[45px] w-[327px] pl-3 outline-1 transition duration-300 focus:outline ${loginForm.errors.name ? 'outline-red-500' : 'outline-[#DDDDE0]'}`}
                                                 />
                                             </div>
 
@@ -319,7 +337,7 @@ export default function NavBar() {
                                                     onChange={(ev) => loginForm.setData('password', ev.target.value)}
                                                     type="password"
                                                     id="password"
-                                                    className={`focus:outline-primary-orange h-[45px] w-[327px] rounded-full pl-3 outline-1 transition duration-300 focus:outline ${loginForm.errors.password ? 'outline-red-500' : 'outline-[#DDDDE0]'}`}
+                                                    className={`focus:outline-primary-orange h-[45px] w-[327px] pl-3 outline-1 transition duration-300 focus:outline ${loginForm.errors.password ? 'outline-red-500' : 'outline-[#DDDDE0]'}`}
                                                 />
                                                 {/* Mostrar error específico de la contraseña si existe */}
                                                 {loginForm.errors.password && (
@@ -328,13 +346,13 @@ export default function NavBar() {
                                             </div>
 
                                             <button
-                                                onClick={login}
-                                                className="bg-primary-orange h-[51px] w-[327px] rounded-full text-white"
+                                                type="submit"
+                                                className="bg-primary-orange h-[51px] w-[327px] text-white"
                                                 disabled={loginForm.processing}
                                             >
                                                 {loginForm.processing ? 'Iniciando...' : 'Iniciar sesion'}
                                             </button>
-                                        </>
+                                        </form>
                                     )}
 
                                     {auth.user && (

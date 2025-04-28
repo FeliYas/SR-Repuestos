@@ -1,33 +1,43 @@
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCart } from 'react-use-cart';
 
 export default function SubproductosPrivadaRow({ subProducto }) {
-    const { addItem } = useCart();
-    const { auth } = usePage().props;
-
+    const { addItem, updateItemQuantity, getItem, removeItem } = useCart();
+    const { auth, ziggy } = usePage().props;
     const { user } = auth;
 
-    const [cantidad, setCantidad] = useState(1);
+    const currentItem = getItem(subProducto?.id) ? getItem(subProducto?.id) : null;
+
+    const [cantidad, setCantidad] = useState(currentItem?.quantity || 1);
 
     const handlePrice = () => {
-        if (user.lista === '1') {
-            return subProducto?.price_mayorista;
+        let price = 0;
+        if (user.lista == '1') {
+            price = subProducto?.price_mayorista;
         }
-        if (user.lista === '2') {
-            return subProducto?.price_minorista;
+        if (user.lista == '2') {
+            price = subProducto?.price_minorista;
         }
-        if (user.lista === '3') {
-            return subProducto?.price_dist;
+        if (user.lista == '3') {
+            price = subProducto?.price_dist;
         }
+
+        return Number(price);
     };
 
+    useEffect(() => {
+        if (currentItem) {
+            updateItemQuantity(subProducto?.id, cantidad);
+        }
+    }, [cantidad]);
+
     return (
-        <div className="grid h-[52px] grid-cols-8 items-center text-[15px] text-[#74716A]">
+        <div className="grid h-fit grid-cols-8 items-center border-b border-gray-200 py-2 text-[15px] text-[#74716A]">
             <div className="h-[85px] w-[85px]">
-                <img src={subProducto?.image} className="h-full w-full object-cover" alt="" />
+                <img src={subProducto?.image} className="h-full w-full object-contain" alt="" />
             </div>
             <p className="">{subProducto?.code}</p>
             <p className="">{subProducto?.producto?.marca?.name}</p>
@@ -48,12 +58,21 @@ export default function SubproductosPrivadaRow({ subProducto }) {
                 </div>
             </p>
             <p className="flex justify-center">
-                <button
-                    onClick={() => addItem({ ...subProducto, price: 1 })}
-                    className="bg-primary-orange h-[41px] w-[88px] text-[16px] font-bold text-white"
-                >
-                    Agregar
-                </button>
+                {ziggy.location.includes('carrito') ? (
+                    <button
+                        onClick={() => removeItem(subProducto?.id)}
+                        className="border-primary-orange text-primary-orange hover:bg-primary-orange h-[41px] w-[88px] border text-[16px] font-bold transition duration-300 hover:text-white"
+                    >
+                        Eliminar
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => addItem({ ...subProducto, price: handlePrice(), id: subProducto?.id }, cantidad)}
+                        className="bg-primary-orange hover:text-primary-orange hover:border-primary-orange h-[41px] w-[88px] text-[16px] font-bold text-white transition duration-300 hover:border hover:bg-white"
+                    >
+                        Agregar
+                    </button>
+                )}
             </p>
         </div>
     );

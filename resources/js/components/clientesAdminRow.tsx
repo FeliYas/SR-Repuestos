@@ -63,7 +63,7 @@ export default function ClientesAdminRow({ cliente }) {
             <td className="text-left">{cliente?.email}</td>
             <td className="text-left">{cliente?.provincia}</td>
             <td className="text-left">{cliente?.localidad}</td>
-            <td className="h-[90px] text-left">{cliente?.lista}</td>
+            <td className="h-[90px] text-center">{cliente?.lista}</td>
             <td className="">
                 <UserSwitch user={cliente} />
             </td>

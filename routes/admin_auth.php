@@ -13,12 +13,13 @@ use App\Http\Controllers\InstagramController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\NosotrosController;
 use App\Http\Controllers\NovedadesController;
+use App\Http\Controllers\PrivadaController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\SubProductoController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ValoresController;
-use App\Models\Calidad;
-use App\Models\ImagenProducto;
+use App\Models\InformacionImportante;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -89,6 +90,18 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('admin/clientes/update', [UserController::class, 'update'])->name('admin.clientes.update');
     Route::delete('admin/clientes/destroy', [UserController::class, 'destroy'])->name('admin.clientes.destroy');
     Route::post('admin/clientes/autorizar', [UserController::class, 'changeStatus'])->name('admin.clientes.autorizar');
+
+    Route::get('admin/carrito', [PrivadaController::class, 'carritoAdmin'])->name('admin.carrito');
+
+    Route::post('admin/informacion', function (Request $request) {
+        $informacion = InformacionImportante::first();
+
+        $data = $request->validate([
+            'text' => 'required|string',
+        ]);
+
+        $informacion->update($data);
+    })->name('admin.informacion.update');
 
     Route::get('/admin/dashboard', function () {
         return Inertia::render('admin/dashboard'); // Cambia esto a tu página de dashboard

@@ -118,20 +118,16 @@ export default function Dashboard({ children }) {
             subHref: [
                 { title: 'Clientes', href: 'clientes' },
                 {
-                    title: 'Pedidos/Presupuestos',
-                    href: '/dashboard/pedidos-privada',
+                    title: 'Carrito',
+                    href: 'carrito',
                 },
                 {
                     title: 'Mis Pedidos',
-                    href: '/dashboard/mis-pedidos',
+                    href: 'mis-pedidos',
                 },
                 {
-                    title: 'Mis Facturas',
-                    href: '/dashboard/mis-facturas',
-                },
-                {
-                    title: 'Informacion y descuento',
-                    href: '/dashboard/informacion',
+                    title: 'Lista de pedidos',
+                    href: 'lista-de-pedidos',
                 },
             ],
         },
@@ -149,14 +145,6 @@ export default function Dashboard({ children }) {
             title: 'Metadatos',
             icon: faGear,
             href: '/dashboard/metadatos',
-            subHref: [],
-        },
-        {
-            id: 'excel',
-            open: false,
-            title: 'excel',
-            icon: faGear,
-            href: '/dashboard/excel',
             subHref: [],
         },
     ]);

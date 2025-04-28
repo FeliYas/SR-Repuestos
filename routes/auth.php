@@ -8,6 +8,10 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\PedidoController;
+use App\Http\Controllers\PedidoProductoController;
+use App\Http\Controllers\PrivadaController;
+use App\Http\Controllers\SendPedidoController;
 use App\Http\Controllers\SubProductoController;
 use Illuminate\Support\Facades\Route;
 
@@ -56,4 +60,14 @@ Route::middleware('auth')->group(function () {
         ->name('logout');
 
     Route::get('privada/productos', [SubProductoController::class, 'indexPrivada']);
+    Route::get('privada/carrito', [PrivadaController::class, 'carrito']);
+
+    Route::post('sendPedido', [SendPedidoController::class, 'sendReactEmail'])
+        ->name('sendPedido');
+
+    Route::post('pedido', [PedidoController::class, 'store'])
+        ->name('pedido.store');
+
+    Route::post('pedidoProducto', [PedidoProductoController::class, 'store'])
+        ->name('pedidoProducto.store');
 });

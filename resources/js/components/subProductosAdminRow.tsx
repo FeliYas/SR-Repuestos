@@ -61,9 +61,24 @@ export default function SubProdcutosAdminRow({ subprod, productos }) {
             <td className="align-middle">{subprod?.medida}</td>
             <td className="align-middle">{subprod?.componente}</td>
             <td className="align-middle">{subprod?.caracteristicas}</td>
-            <td className="align-middle">$ {subprod?.precio_mayorista ? subprod?.precio_mayorista : 0}</td>
-            <td className="align-middle">$ {subprod?.precio_minorista ? subprod?.precio_minorista : 0}</td>
-            <td className="align-middle">$ {subprod?.precio_dist ? subprod?.precio_dist : 0}</td>
+            <td className="align-middle">
+                ${' '}
+                {subprod?.price_mayorista
+                    ? Number(subprod?.price_mayorista)?.toLocaleString('es-AR', { maximumFractionDigits: 2, minimumFractionDigits: 2 })
+                    : 0}
+            </td>
+            <td className="align-middle">
+                ${' '}
+                {subprod?.price_minorista
+                    ? Number(subprod?.price_minorista)?.toLocaleString('es-AR', { maximumFractionDigits: 2, minimumFractionDigits: 2 })
+                    : 0}
+            </td>
+            <td className="align-middle">
+                ${' '}
+                {subprod?.price_dist
+                    ? Number(subprod?.price_dist)?.toLocaleString('es-AR', { maximumFractionDigits: 2, minimumFractionDigits: 2 })
+                    : 0}
+            </td>
 
             <td className="h-[90px] w-[90px] px-8">
                 <img className="h-full w-full object-contain" src={subprod?.image} alt="" />

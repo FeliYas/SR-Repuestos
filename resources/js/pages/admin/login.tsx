@@ -1,7 +1,6 @@
-import { Link, useForm } from "@inertiajs/react";
-import React from "react";
-
-
+import { Link, useForm } from '@inertiajs/react';
+import React from 'react';
+import logo from '../../../images/logos/logo.png';
 
 export default function AdminLogin() {
     const { data, setData, post, processing, errors } = useForm({
@@ -9,24 +8,20 @@ export default function AdminLogin() {
         password: '',
         remember: false,
     });
-    
+
     const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         post(route('admin.login'));
     };
 
     return (
-        <div className="flex flex-col gap-10 justify-center items-center w-screen h-screen bg-black/50 bg-opacity-50 fixed top-0 left-0 z-10">
-            <div className="flex flex-col top-10 right-10 bg-white shadow-md p-5 font-roboto-condensed w-fit h-fit z-20 rounded-lg">
-               
-                <Link className="self-center py-5" href={"/"}>
-                    <img src="" alt="" />
+        <div className="bg-opacity-50 fixed top-0 left-0 z-10 flex h-screen w-screen flex-col items-center justify-center gap-10 bg-black/50">
+            <div className="font-roboto-condensed top-10 right-10 z-20 flex h-fit w-fit flex-col rounded-lg bg-white p-5 shadow-md">
+                <Link className="self-center py-5" href={'/'}>
+                    <img src={logo} alt="" />
                 </Link>
 
-                <form
-                    onSubmit={onSubmit}
-                    className="w-fit h-full flex flex-col justify-around gap-8 "
-                >
+                <form onSubmit={onSubmit} className="flex h-full w-fit flex-col justify-around gap-8">
                     <div className="flex flex-col gap-3">
                         <div className="flex flex-col gap-2">
                             <label className="font-semibold" htmlFor="user">
@@ -35,14 +30,12 @@ export default function AdminLogin() {
                             <input
                                 value={data.name}
                                 onChange={(ev: React.ChangeEvent<HTMLInputElement>) => setData('name', ev.target.value)}
-                                className={`w-[328px] h-[45px] pl-3 outline ${errors.name ? 'outline-red-500' : 'outline-gray-300'} focus:outline-primary-orange transition duration-300 rounded-full`}
+                                className={`h-[45px] w-[328px] pl-3 outline ${errors.name ? 'outline-red-500' : 'outline-gray-300'} focus:outline-primary-orange rounded-full transition duration-300`}
                                 type="text"
                                 name="user"
                                 id="user"
                             />
-                            {errors.name && (
-                                <div className="text-red-500 text-sm mt-1">{errors.name}</div>
-                            )}
+                            {errors.name && <div className="mt-1 text-sm text-red-500">{errors.name}</div>}
                         </div>
 
                         <div className="flex flex-col gap-2">
@@ -52,25 +45,23 @@ export default function AdminLogin() {
                             <input
                                 value={data.password}
                                 onChange={(ev: React.ChangeEvent<HTMLInputElement>) => setData('password', ev.target.value)}
-                                className={`w-[328px] h-[45px] pl-3 outline ${errors.password ? 'outline-red-500' : 'outline-gray-300'} focus:outline-primary-orange transition duration-300 rounded-full`}
+                                className={`h-[45px] w-[328px] pl-3 outline ${errors.password ? 'outline-red-500' : 'outline-gray-300'} focus:outline-primary-orange rounded-full transition duration-300`}
                                 type="password"
                                 name="password"
                                 id="password"
                             />
-                            {errors.password && (
-                                <div className="text-red-500 text-sm mt-1">{errors.password}</div>
-                            )}
+                            {errors.password && <div className="mt-1 text-sm text-red-500">{errors.password}</div>}
                         </div>
                     </div>
 
-                    <div className="bg-gray-300 w-full h-[0.5px]"></div>
+                    <div className="h-[0.5px] w-full bg-gray-300"></div>
 
                     <button
-                        className="w-[325px] h-[47px] bg-primary-orange font-bold rounded-full text-white self-center"
+                        className="bg-primary-orange h-[47px] w-[325px] self-center rounded-full font-bold text-white"
                         type="submit"
                         disabled={processing}
                     >
-                        {processing ? "Iniciando Sesion..." : "Iniciar Sesion"}
+                        {processing ? 'Iniciando Sesion...' : 'Iniciar Sesion'}
                     </button>
                 </form>
             </div>

@@ -68,6 +68,14 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
         ]);
     })->name('novedades');
 
+    Route::get('/novedades/{id}', function ($id) {
+        $novedad = Novedades::where('id', $id)->first();
+
+        return Inertia::render('novedadesShow', [
+            'novedad' => $novedad,
+        ]);
+    })->name('novedades');
+
 
 
     Route::get('/contacto', function () {

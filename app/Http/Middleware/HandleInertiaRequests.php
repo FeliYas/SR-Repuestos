@@ -46,7 +46,11 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
-            'ziggy' => fn (): array => [
+            'flash' => [
+                'pedido_id' => fn() => $request->session()->get('pedido_id'),
+                'message' => fn() => $request->session()->get('message'),
+            ],
+            'ziggy' => fn(): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],

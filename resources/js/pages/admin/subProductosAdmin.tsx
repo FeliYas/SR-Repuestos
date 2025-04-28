@@ -109,7 +109,7 @@ export default function SubProductosAdmin() {
                                             id="prod"
                                         >
                                             <option value="">Seleccionar producto</option>
-                                            {productos.data?.map((prod) => (
+                                            {productos?.map((prod) => (
                                                 <option key={prod.id} value={prod.id}>
                                                     {prod.name}
                                                 </option>
@@ -123,7 +123,6 @@ export default function SubProductosAdmin() {
                                             id="desc"
                                             onChange={(e) => setData('description', e.target.value)}
                                         />
-                                        <label htmlFor="imagenn">Imagen</label>
 
                                         <label htmlFor="medida">Medida</label>
                                         <input
