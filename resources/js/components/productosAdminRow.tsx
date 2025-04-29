@@ -17,7 +17,7 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
 
     const caracForm = useForm({
         aplicacion: producto?.aplicacion,
-        anios: producto?.anios,
+        anio: producto?.anio,
         num_original: producto?.num_original,
         tonelaje: producto?.tonelaje,
         espigon: producto?.espigon,
@@ -28,7 +28,7 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
     const updateForm = useForm({
         name: producto?.name,
         code: producto?.code,
-        oreder: producto?.order,
+        order: producto?.order,
         categoria_id: producto?.categoria_id,
         marca_id: producto?.marca_id,
         id: producto?.id,
@@ -158,8 +158,8 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
                                         type="text"
                                         name="code"
                                         id="code"
-                                        value={caracForm.data.anios}
-                                        onChange={(e) => caracForm.setData('anios', e.target.value)}
+                                        value={caracForm.data.anio}
+                                        onChange={(e) => caracForm.setData('anio', e.target.value)}
                                     />
 
                                     <label htmlFor="numor">

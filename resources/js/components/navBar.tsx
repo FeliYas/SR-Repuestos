@@ -359,7 +359,7 @@ export default function NavBar() {
                                         <Link
                                             href={route('logout')}
                                             method="post"
-                                            className="flex h-[51px] w-[327px] items-center justify-center rounded-full bg-red-500 text-white"
+                                            className="bg-primary-orange flex h-[51px] w-[327px] items-center justify-center text-white"
                                         >
                                             Cerrar Sesion
                                         </Link>

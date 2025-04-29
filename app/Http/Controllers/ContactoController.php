@@ -42,6 +42,8 @@ class ContactoController extends Controller
             'phone' => 'sometimes|string|max:255',
             'mail' => 'sometimes|email|max:255',
             'location' => 'sometimes|string|max:255',
+            'fb' => 'sometimes|string|max:255',
+            'ig' => 'sometimes|string|max:255',
             'wp' => 'sometimes|string|max:255',
         ]);
 

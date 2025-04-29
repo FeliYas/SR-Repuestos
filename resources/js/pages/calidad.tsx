@@ -1,15 +1,25 @@
-import { usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import DefaultLayout from './defaultLayout';
 
 export default function Calidad() {
-    const { calidad, archivos } = usePage().props;
+    const { calidad, archivos, metadatos } = usePage().props;
 
     return (
         <DefaultLayout>
+            <Head>
+                <meta name="description" content={metadatos?.description} />
+                <meta name="keywords" content={metadatos?.keywords} />
+            </Head>
             <div
                 style={{ background: 'linear-gradient(180deg, #000000 0%, rgba(0, 0, 0, 0) 122.25%)' }}
                 className="relative flex h-[400px] w-full items-center justify-center"
             >
+                <div className="absolute top-26 z-40 mx-auto w-[1200px] text-[12px] text-white">
+                    <Link className="font-bold" href={'/'}>
+                        Inicio
+                    </Link>{' '}
+                    / <Link href={'/calidad'}>Calidad</Link>
+                </div>
                 <img className="absolute h-full w-full object-cover object-center" src={calidad?.banner} alt="" />
                 <h2 className="absolute text-4xl font-bold text-white">Calidad</h2>
             </div>

@@ -144,7 +144,7 @@ export default function Dashboard({ children }) {
             open: false,
             title: 'Metadatos',
             icon: faGear,
-            href: '/dashboard/metadatos',
+            href: 'metadatos',
             subHref: [],
         },
     ]);
@@ -294,9 +294,9 @@ export default function Dashboard({ children }) {
                                         duration: 0.1,
                                         ease: 'linear',
                                     }}
-                                    className="shadow- absolute top-10 right-2 flex h-fit w-[300px] flex-col items-start gap-4 border-2 bg-white p-4"
+                                    className="shadow- absolute top-12 right-2 flex h-fit w-[300px] flex-col items-start gap-4 border-2 bg-white p-4"
                                 >
-                                    <Link method="post" href={route('admin.logout')} className="bg-primary-gray h-[40px] w-full text-white">
+                                    <Link method="post" href={route('admin.logout')} className="bg-primary-orange h-[40px] w-full text-white">
                                         Cerrar Sesion
                                     </Link>
                                 </motion.div>

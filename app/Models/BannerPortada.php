@@ -12,7 +12,7 @@ class BannerPortada extends Model
     {
         return url("storage/" . $value);
     }
-    public function getBannerAttribute($value)
+    public function getVideoAttribute($value)
     {
         return url("storage/" . $value);
     }

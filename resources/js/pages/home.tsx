@@ -6,14 +6,20 @@ import NovedadesInicio from '@/components/novedadesInicio';
 import ProductosInicio from '@/components/productosInicio';
 import SearchBar from '@/components/searchBar';
 import { type SharedData } from '@/types';
-import { usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import DefaultLayout from './defaultLayout';
 
 export default function Home() {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, metadatos } = usePage<SharedData>().props;
+
+    console.log(metadatos);
 
     return (
         <DefaultLayout>
+            <Head>
+                <meta name="description" content={metadatos?.description} />
+                <meta name="keywords" content={metadatos?.keywords} />
+            </Head>
             <Carousel />
             <SearchBar />
             <ProductosInicio />

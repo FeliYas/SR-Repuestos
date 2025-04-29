@@ -11,6 +11,7 @@ use App\Http\Controllers\ContactoController;
 use App\Http\Controllers\ImagenProductoController;
 use App\Http\Controllers\InstagramController;
 use App\Http\Controllers\MarcaController;
+use App\Http\Controllers\MetadatosController;
 use App\Http\Controllers\NosotrosController;
 use App\Http\Controllers\NovedadesController;
 use App\Http\Controllers\PrivadaController;
@@ -24,6 +25,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::middleware('guest:admin')->group(function () {
+
 
     Route::get('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login');
     Route::post('/admin/login', [AdminAuthController::class, 'authenticate']);
@@ -93,6 +95,9 @@ Route::middleware('auth:admin')->group(function () {
 
     Route::get('admin/carrito', [PrivadaController::class, 'carritoAdmin'])->name('admin.carrito');
 
+    Route::get('admin/metadatos', [MetadatosController::class, 'index'])->name('admin.metadatos');
+    Route::post('admin/metadatos', [MetadatosController::class, 'update'])->name('admin.metadatos.update');
+
     Route::post('admin/informacion', function (Request $request) {
         $informacion = InformacionImportante::first();
 
@@ -104,6 +109,6 @@ Route::middleware('auth:admin')->group(function () {
     })->name('admin.informacion.update');
 
     Route::get('/admin/dashboard', function () {
-        return Inertia::render('admin/dashboard'); // Cambia esto a tu página de dashboard
+        return Inertia::render('admin/dashboard');
     })->name('admin.dashboard');
 });

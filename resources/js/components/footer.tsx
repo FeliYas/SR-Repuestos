@@ -2,7 +2,7 @@ import { faFacebookF, faInstagram, faWhatsapp } from '@fortawesome/free-brands-s
 import { faArrowRight, faEnvelope, faLocationDot, faPhone } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { usePage } from '@inertiajs/react';
-
+import logoFooter from '../../images/logofooter.png';
 export default function Footer() {
     const { contacto } = usePage().props;
 
@@ -44,14 +44,18 @@ export default function Footer() {
             <div className="mx-auto flex h-full w-[1200px] flex-row items-start justify-between py-26">
                 {/* logo redes */}
                 <div className="flex h-full flex-col items-center gap-4">
-                    <img src="#" alt="" />
+                    <img src={logoFooter} alt="" />
                     <div className="flex flex-row items-center justify-center gap-2">
-                        <a href={contacto?.fb}>
-                            <FontAwesomeIcon icon={faFacebookF} color="#E0E0E0" size="lg" />
-                        </a>
-                        <a href={contacto?.ig}>
-                            <FontAwesomeIcon icon={faInstagram} color="#E0E0E0" size="lg" />
-                        </a>
+                        {contacto?.fb && (
+                            <a target="_blanck" href={contacto?.fb}>
+                                <FontAwesomeIcon icon={faFacebookF} color="#E0E0E0" size="lg" />
+                            </a>
+                        )}
+                        {contacto?.ig && (
+                            <a target="_blanck" href={contacto?.ig}>
+                                <FontAwesomeIcon icon={faInstagram} color="#E0E0E0" size="lg" />
+                            </a>
+                        )}
                     </div>
                 </div>
 

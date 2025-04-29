@@ -9,6 +9,7 @@ use App\Models\Categoria;
 use App\Models\Contacto;
 use App\Models\Instagram;
 use App\Models\Marca;
+use App\Models\Metadatos;
 use App\Models\Nosotros;
 use App\Models\Novedades;
 use App\Models\Producto;
@@ -23,6 +24,7 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
         $instagram = Instagram::orderBy('order', 'asc')->get();
         $bannerPortada = BannerPortada::first();
         $novedades = Novedades::all();
+        $metadatos = Metadatos::where('title', 'Inicio')->first();
 
         return Inertia::render('home', [
             'bannerPortada' => $bannerPortada,
@@ -30,6 +32,7 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
             'marcas' => $marcas,
             'novedades' => $novedades,
             'instagram' => $instagram,
+            'metadatos' => $metadatos,
         ]);
     })->name('home');
 
@@ -37,22 +40,26 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
         $bannerPortada = BannerPortada::first();
         $nosotros = Nosotros::first();
         $valores = Valores::first();
+        $metadatos = Metadatos::where('title', 'Nosotros')->first();
 
         return Inertia::render('nosotros', [
             'bannerPortada' => $bannerPortada,
             'nosotros' => $nosotros,
             'valores' => $valores,
+            'metadatos' => $metadatos,
         ]);
     })->name('nosotros');
 
     Route::get('/calidad', function () {
         $calidad = Calidad::first();
         $archivos = ArchivoCalidad::orderBy('order', 'asc')->get();
+        $metadatos = Metadatos::where('title', 'Calidad')->first();
 
 
         return Inertia::render('calidad', [
             'calidad' => $calidad,
             'archivos' => $archivos,
+            'metadatos' => $metadatos,
 
         ]);
     })->name('calidad');
@@ -60,10 +67,12 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
     Route::get('/novedades', function () {
         $bannerNovedades = BannerNovedades::first();
         $novedades = Novedades::orderBy('order', 'asc')->get();
+        $metadatos = Metadatos::where('title', 'Novedades')->first();
 
         return Inertia::render('novedades', [
             'novedades' => $novedades,
             'bannerNovedades' => $bannerNovedades,
+            'metadatos' => $metadatos,
 
         ]);
     })->name('novedades');

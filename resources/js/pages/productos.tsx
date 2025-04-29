@@ -1,17 +1,23 @@
 import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import DefaultLayout from './defaultLayout';
 
 export default function Productos() {
-    const { categorias, marcas, productos, ziggy, id } = usePage().props;
+    const { categorias, marcas, productos, ziggy, id, metadatos } = usePage().props;
+
+    console.log(marcas);
 
     const [categoriasDropdown, setCategoriasDropdown] = useState(false);
     const [marcasDropdown, setMarcasDropdown] = useState(false);
 
     return (
         <DefaultLayout>
+            <Head>
+                <meta name="description" content={metadatos?.description} />
+                <meta name="keywords" content={metadatos?.keywords} />
+            </Head>
             <div className="mx-auto flex w-[1200px] flex-row gap-10 py-20">
                 {/* sidebar */}
                 <div className="flex w-1/4 flex-col gap-10">

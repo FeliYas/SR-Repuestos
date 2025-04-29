@@ -1,5 +1,5 @@
 import { Link, useForm } from '@inertiajs/react';
-import React from 'react';
+// Assuming logo import works in your environment
 import logo from '../../../images/logos/logo.png';
 
 export default function AdminLogin() {
@@ -9,7 +9,7 @@ export default function AdminLogin() {
         remember: false,
     });
 
-    const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const onSubmit = (e) => {
         e.preventDefault();
         post(route('admin.login'));
     };
@@ -18,7 +18,7 @@ export default function AdminLogin() {
         <div className="bg-opacity-50 fixed top-0 left-0 z-10 flex h-screen w-screen flex-col items-center justify-center gap-10 bg-black/50">
             <div className="font-roboto-condensed top-10 right-10 z-20 flex h-fit w-fit flex-col rounded-lg bg-white p-5 shadow-md">
                 <Link className="self-center py-5" href={'/'}>
-                    <img src={logo} alt="" />
+                    <img src={logo} alt="Logo" />
                 </Link>
 
                 <form onSubmit={onSubmit} className="flex h-full w-fit flex-col justify-around gap-8">
@@ -29,13 +29,17 @@ export default function AdminLogin() {
                             </label>
                             <input
                                 value={data.name}
-                                onChange={(ev: React.ChangeEvent<HTMLInputElement>) => setData('name', ev.target.value)}
-                                className={`h-[45px] w-[328px] pl-3 outline ${errors.name ? 'outline-red-500' : 'outline-gray-300'} focus:outline-primary-orange rounded-full transition duration-300`}
+                                onChange={(e) => setData('name', e.target.value)}
+                                className={`h-[45px] w-[328px] rounded-full pl-3 transition duration-300 ${
+                                    errors.name
+                                        ? 'border-red-500 outline outline-red-500 focus:outline-red-500'
+                                        : 'focus:outline-primary-orange outline outline-gray-300'
+                                }`}
                                 type="text"
                                 name="user"
                                 id="user"
                             />
-                            {errors.name && <div className="mt-1 text-sm text-red-500">{errors.name}</div>}
+                            {errors.name && <div className="mt-1 pl-3 text-sm text-red-500">{errors.name}</div>}
                         </div>
 
                         <div className="flex flex-col gap-2">
@@ -44,13 +48,17 @@ export default function AdminLogin() {
                             </label>
                             <input
                                 value={data.password}
-                                onChange={(ev: React.ChangeEvent<HTMLInputElement>) => setData('password', ev.target.value)}
-                                className={`h-[45px] w-[328px] pl-3 outline ${errors.password ? 'outline-red-500' : 'outline-gray-300'} focus:outline-primary-orange rounded-full transition duration-300`}
+                                onChange={(e) => setData('password', e.target.value)}
+                                className={`h-[45px] w-[328px] rounded-full pl-3 transition duration-300 ${
+                                    errors.password
+                                        ? 'border-red-500 outline outline-red-500 focus:outline-red-500'
+                                        : 'focus:outline-primary-orange outline outline-gray-300'
+                                }`}
                                 type="password"
                                 name="password"
                                 id="password"
                             />
-                            {errors.password && <div className="mt-1 text-sm text-red-500">{errors.password}</div>}
+                            {errors.password && <div className="mt-1 pl-3 text-sm text-red-500">{errors.password}</div>}
                         </div>
                     </div>
 

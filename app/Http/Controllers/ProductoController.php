@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Categoria;
 use App\Models\Contacto;
 use App\Models\Marca;
+use App\Models\Metadatos;
 use App\Models\Producto;
 use App\Models\SubProducto;
 use Illuminate\Http\Request;
@@ -57,16 +58,19 @@ class ProductoController extends Controller
 
     public function indexInicio($id)
     {
-
+        $marcas = Marca::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
         $productos = Producto::where('categoria_id', $id)->orderBy('order', 'asc')->get();
         $categorias = Categoria::select('id', 'name', 'order')
             ->orderBy('order', 'asc')
             ->get();
+        $metadatos = Metadatos::where('title', 'Productos')->first();
 
 
         return Inertia::render('productos', [
             'productos' => $productos,
             'categorias' => $categorias,
+            'marcas' => $marcas,
+            'metadatos' => $metadatos,
             'id' => $id,
 
         ]);
