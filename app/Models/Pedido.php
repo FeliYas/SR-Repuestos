@@ -29,4 +29,9 @@ class Pedido extends Model
     {
         return $this->hasMany(PedidoProducto::class);
     }
+
+    protected function serializeDate($date)
+    {
+        return $date->format('d/m/Y');
+    }
 }

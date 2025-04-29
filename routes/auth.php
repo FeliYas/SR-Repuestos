@@ -70,4 +70,6 @@ Route::middleware('auth')->group(function () {
 
     Route::post('pedidoProducto', [PedidoProductoController::class, 'store'])
         ->name('pedidoProducto.store');
+
+    Route::get('privada/mispedidos', [PedidoController::class, 'misPedidos']);
 });

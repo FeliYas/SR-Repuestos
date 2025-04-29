@@ -2,6 +2,7 @@ import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useCart } from 'react-use-cart';
 
 export default function SubproductosPrivadaRow({ subProducto }) {
@@ -67,7 +68,10 @@ export default function SubproductosPrivadaRow({ subProducto }) {
                     </button>
                 ) : (
                     <button
-                        onClick={() => addItem({ ...subProducto, price: handlePrice(), id: subProducto?.id }, cantidad)}
+                        onClick={() => {
+                            addItem({ ...subProducto, price: handlePrice(), id: subProducto?.id }, cantidad);
+                            toast.success('Producto agregado al carrito', { position: 'bottom-left' });
+                        }}
                         className="bg-primary-orange hover:text-primary-orange hover:border-primary-orange h-[41px] w-[88px] text-[16px] font-bold text-white transition duration-300 hover:border hover:bg-white"
                     >
                         Agregar

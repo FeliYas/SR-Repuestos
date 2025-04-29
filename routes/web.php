@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DescargarArchivo;
 use App\Http\Controllers\ProductoController;
 use App\Models\ArchivoCalidad;
 use App\Models\BannerNovedades;
@@ -101,6 +102,8 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
 
 
 // routes/web.php
+Route::get('/descargar/archivo/{filename}', [DescargarArchivo::class, 'descargarArchivo'])
+    ->name('descargar.archivo');
 
 
 
