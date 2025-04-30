@@ -58,7 +58,7 @@ export default function NavBar() {
         { title: 'Productos', href: '/privada/productos' },
         { title: 'Carrito', href: '/privada/carrito' },
         { title: 'Mis pedidos', href: '/privada/mispedidos' },
-        { title: 'Lista de precios', href: '/privada/lista-de-precios' },
+        { title: 'Lista de precios', href: '/privada/listadeprecios' },
     ];
 
     const login = (e) => {

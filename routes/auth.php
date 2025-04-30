@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\ListaDePreciosController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\PedidoProductoController;
 use App\Http\Controllers\PrivadaController;
@@ -72,4 +73,5 @@ Route::middleware('auth')->group(function () {
         ->name('pedidoProducto.store');
 
     Route::get('privada/mispedidos', [PedidoController::class, 'misPedidos']);
+    Route::get('privada/listadeprecios', [ListaDePreciosController::class, 'index']);
 });

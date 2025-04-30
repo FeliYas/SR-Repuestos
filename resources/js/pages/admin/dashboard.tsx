@@ -126,8 +126,8 @@ export default function Dashboard({ children }) {
                     href: 'mis-pedidos',
                 },
                 {
-                    title: 'Lista de pedidos',
-                    href: 'lista-de-pedidos',
+                    title: 'Lista de precios',
+                    href: 'listadeprecios',
                 },
             ],
         },

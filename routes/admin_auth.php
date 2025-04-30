@@ -10,6 +10,7 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ContactoController;
 use App\Http\Controllers\ImagenProductoController;
 use App\Http\Controllers\InstagramController;
+use App\Http\Controllers\ListaDePreciosController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\MetadatosController;
 use App\Http\Controllers\NosotrosController;
@@ -20,6 +21,8 @@ use App\Http\Controllers\SubProductoController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ValoresController;
 use App\Models\InformacionImportante;
+use Illuminate\Support\Facades\Auth;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -108,7 +111,15 @@ Route::middleware('auth:admin')->group(function () {
         $informacion->update($data);
     })->name('admin.informacion.update');
 
+    Route::get('admin/listadeprecios', [ListaDePreciosController::class, 'indexAdmin'])->name('admin.listadeprecios');
+    Route::post('admin/listadeprecios', [ListaDePreciosController::class, 'store'])->name('admin.listadeprecios.store');
+    Route::post('admin/listadeprecios/update', [ListaDePreciosController::class, 'update'])->name('admin.listadeprecios.update');
+    Route::delete('admin/listadeprecios/destroy', [ListaDePreciosController::class, 'destroy'])->name('admin.listadeprecios.destroy');
+
     Route::get('/admin/dashboard', function () {
+        if (!Auth::guard('admin')->check()) {
+            return redirect()->route('/admin/login');
+        }
         return Inertia::render('admin/dashboard');
     })->name('admin.dashboard');
 });
