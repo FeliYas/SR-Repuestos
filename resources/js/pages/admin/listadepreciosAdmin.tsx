@@ -127,7 +127,7 @@ export default function ListaDePreciosAdmin() {
                         <table className="w-full border text-left text-sm text-gray-500 rtl:text-right dark:text-gray-400">
                             <thead className="bg-gray-300 text-sm font-medium text-black uppercase">
                                 <tr>
-                                    <td className="text-center">NOMBRE</td>
+                                    <td className="pl-4 text-center">NOMBRE</td>
                                     <td className="w-[400px] px-3 py-2 text-center">LISTA</td>
                                     <td className="text-center">ARCHIVO</td>
                                     <td className="text-center">EDITAR</td>

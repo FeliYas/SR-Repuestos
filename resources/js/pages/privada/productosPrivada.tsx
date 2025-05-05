@@ -1,4 +1,4 @@
-import SearchBar from '@/components/searchBar';
+import SearchBarPrivate from '@/components/searchBarPrivate';
 import SubproductosPrivadaRow from '@/components/subproductosPrivadaRow';
 import { router, usePage } from '@inertiajs/react';
 import DefaultLayout from '../defaultLayout';
@@ -21,7 +21,7 @@ export default function ProductosPrivada() {
 
     return (
         <DefaultLayout>
-            <SearchBar />
+            <SearchBarPrivate />
             <div className="mx-auto w-[1200px] py-20">
                 <div className="w-full">
                     <div className="grid h-[52px] grid-cols-8 items-center bg-[#F5F5F5]">

@@ -5,6 +5,7 @@ import {
     faEnvelope,
     faGear,
     faHouse,
+    faImage,
     faLock,
     faNewspaper,
     faShield,
@@ -137,6 +138,7 @@ export default function Dashboard({ children }) {
             title: 'Administradores',
             icon: faShield,
             href: 'administradores',
+            barra: true,
             subHref: [],
         },
         {
@@ -145,6 +147,14 @@ export default function Dashboard({ children }) {
             title: 'Metadatos',
             icon: faGear,
             href: 'metadatos',
+            subHref: [],
+        },
+        {
+            id: 'logos',
+            open: false,
+            title: 'Logos',
+            icon: faImage,
+            href: 'logos',
             subHref: [],
         },
     ]);

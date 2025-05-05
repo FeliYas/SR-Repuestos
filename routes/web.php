@@ -15,11 +15,14 @@ use App\Models\Nosotros;
 use App\Models\Novedades;
 use App\Models\Producto;
 use App\Models\Valores;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::middleware(['shareDefaultLayoutData'])->group(function () {
+
     Route::get('/', function () {
+
         $categorias = Categoria::orderBy('order', 'asc')->get();
         $marcas = Marca::orderBy('order', 'asc')->get();
         $instagram = Instagram::orderBy('order', 'asc')->get();
@@ -102,7 +105,7 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
 
 
 // routes/web.php
-Route::get('/descargar/archivo/{filename}', [DescargarArchivo::class, 'descargarArchivo'])
+Route::get('/descargar/archivo/{id}', [DescargarArchivo::class, 'descargarArchivo'])
     ->name('descargar.archivo');
 
 

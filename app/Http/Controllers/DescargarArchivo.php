@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\ArchivoCalidad;
+use Illuminate\Support\Facades\Storage;
 
 class DescargarArchivo extends Controller
 {

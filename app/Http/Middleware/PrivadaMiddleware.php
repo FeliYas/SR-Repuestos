@@ -10,12 +10,12 @@ use Closure;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
-class ShareDefaultLayoutData
+class PrivadaMiddleware
 {
     public function handle($request, Closure $next)
     {
-        if (Auth::check()) {
-            return redirect('/privada/productos');  // O la URL que prefieras
+        if (!Auth::check()) {
+            return redirect('/');  // O la URL que prefieras
         }
         Inertia::share([
             'contacto' => fn() => Contacto::first(),

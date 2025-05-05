@@ -74,7 +74,7 @@ class ListaDePreciosController extends Controller
         $data = $request->validate([
             'name' => 'required',
             'lista' => 'required',
-            'archivo' => 'required|file'
+            'archivo' => 'sometimes|file'
         ]);
 
         if ($request->hasFile('archivo')) {

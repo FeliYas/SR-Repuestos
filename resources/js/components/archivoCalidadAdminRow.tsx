@@ -1,6 +1,7 @@
 import { faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useForm } from '@inertiajs/react';
+import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -45,6 +46,34 @@ export default function ArchivoCalidadAdminRow({ archivo }) {
         }
     };
 
+    const handleDownload = async () => {
+        try {
+            const filename = archivo?.archivo.split('/').pop();
+            // Make a GET request to the download endpoint
+            const response = await axios.get(`/descargar/archivo/${filename}`, {
+                responseType: 'blob', // Important for file downloads
+            });
+
+            // Create a link element to trigger the download
+            const fileType = response.headers['content-type'] || 'application/octet-stream';
+            const blob = new Blob([response.data], { type: fileType });
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Catalogo'; // Descargar con el nombre original
+            document.body.appendChild(a);
+            a.click();
+
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Download failed:', error);
+
+            // Optional: show user-friendly error message
+            alert('Failed to download the file. Please try again.');
+        }
+    };
+
     return (
         <tr className={`border text-black odd:bg-gray-100 even:bg-white`}>
             <td className="align-middle">{archivo?.order}</td>
@@ -54,7 +83,11 @@ export default function ArchivoCalidadAdminRow({ archivo }) {
                 <img className="h-full w-full object-contain" src={archivo?.image} alt="" />
             </td>
 
-            <td className="align-middle">{archivo?.archivo}</td>
+            <td className="align-middle">
+                <button className="text-blue-500" onClick={handleDownload}>
+                    Archivo
+                </button>
+            </td>
 
             <td className="w-[140px] text-center">
                 <div className="flex flex-row justify-center gap-3">

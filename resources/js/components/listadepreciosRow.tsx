@@ -1,7 +1,7 @@
 export default function ListaDePreciosRow({ lista }) {
     return (
         <>
-            <div className="grid grid-cols-7 gap-2 border-b py-2 text-[#74716A]">
+            <div className="grid grid-cols-5 gap-2 border-b py-2 text-[#74716A]">
                 <div className="flex items-center">
                     <div className="flex h-[80px] w-[80px] items-center justify-center bg-[#F5F5F5]">
                         <svg xmlns="http://www.w3.org/2000/svg" width="43" height="43" viewBox="0 0 43 43" fill="none">
@@ -16,10 +16,12 @@ export default function ListaDePreciosRow({ lista }) {
                     </div>
                 </div>
                 <div className="flex items-center">{lista?.name}</div>
-                <div className="flex items-center">{lista?.formato}</div>
-                <div className="flex items-center">{lista?.peso}</div>
+                <div className="flex items-center uppercase">{lista?.formato}</div>
+                <div className="flex items-center">{lista?.peso_archivo}</div>
                 <div className="flex items-center">
-                    <button className="bg-primary-orange h-10 w-full min-w-[138px] font-bold text-white">Ver Online</button>
+                    <a href={lista?.archivo} target="_blank" rel="noopener noreferrer" className="block w-full">
+                        <button className="bg-primary-orange h-10 w-full min-w-[138px] font-bold text-white">Ver Online</button>
+                    </a>
                 </div>
             </div>
         </>

@@ -2,15 +2,18 @@ import { Link, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import logo from '../../../resources/images/logos/logo.png';
 
 export default function NavBar() {
     const [scrolled, setScrolled] = useState(false);
 
-    const { ziggy, auth, provincias } = usePage().props;
+    const { ziggy, auth, provincias, logos } = usePage().props;
 
     const [signupView, setSignupView] = useState(false);
     const [loginView, setLoginView] = useState(false);
+
+    const soloPrimeraMayuscula = (str) => {
+        return str?.charAt(0)?.toUpperCase() + str?.slice(1);
+    };
 
     const signupForm = useForm({
         name: '',
@@ -97,7 +100,7 @@ export default function NavBar() {
         >
             <div className="mx-auto flex h-full max-w-[1200px] items-center justify-between">
                 <Link href={'/'} className="">
-                    <img src={logo} alt="" />
+                    <img src={logos?.logo_principal} alt="" />
                 </Link>
                 <div className="flex flex-row items-center gap-7">
                     <div className="flex flex-row gap-7">
@@ -134,7 +137,7 @@ export default function NavBar() {
                                     : 'border border-white text-white hover:bg-white hover:text-black'
                             } transition-colors ${auth.user ? 'bg-primary-orange text-white' : ''}`}
                         >
-                            {auth.user ? auth?.user?.name : 'Zona Privada'}
+                            {auth.user ? soloPrimeraMayuscula(auth?.user?.name) : 'Zona Privada'}
                         </button>
                         <AnimatePresence>
                             {signupView && (

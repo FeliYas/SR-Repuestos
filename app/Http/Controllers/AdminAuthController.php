@@ -10,6 +10,10 @@ class AdminAuthController extends Controller
 {
     public function login()
     {
+
+        if (Auth::guard('admin')->check()) {
+            return redirect('/admin/dashboard');
+        }
         return Inertia::render('admin/login');
     }
 
@@ -36,6 +40,6 @@ class AdminAuthController extends Controller
         /* $request->session()->invalidate();
         $request->session()->regenerateToken(); */
 
-        return redirect('/admin/login')->with('success', 'Has cerrado sesión correctamente.');
+        return redirect('/adm')->with('success', 'Has cerrado sesión correctamente.');
     }
 }

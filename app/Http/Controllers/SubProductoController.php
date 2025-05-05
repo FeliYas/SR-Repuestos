@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categoria;
+use App\Models\Marca;
 use App\Models\Producto;
 use App\Models\SubProducto;
 use DragonCode\Support\Facades\Filesystem\File;
@@ -45,25 +47,52 @@ class SubProductoController extends Controller
 
     public function indexPrivada(Request $request)
     {
-
-
         $perPage = $request->input('per_page', 10);
+        $categoria = $request->input('categoria');
+        $marca = $request->input('marca');
+        $codigo = $request->input('codigo');
+
+
+        $marcas = Marca::select('id', 'name')->get();
+        $categorias = Categoria::select('id', 'name')->get();
 
         $query = SubProducto::with([
             'producto' => function ($query) {
-                $query->select('id', 'name', 'marca_id')
+                $query->select('id', 'name', 'marca_id', 'categoria_id')
                     ->with(['marca' => function ($q) {
+                        $q->select('id', 'name');
+                    }])
+                    ->with(['categoria' => function ($q) {
                         $q->select('id', 'name');
                     }]);
             }
         ])->orderBy('order', 'asc');
 
+        // Filtrar por código del subproducto
+        if ($codigo) {
+            $query->where('code', 'like', "%{$codigo}%");
+        }
 
+        // Filtrar por marca del producto
+        if ($marca) {
+            $query->whereHas('producto', function ($q) use ($marca) {
+                $q->where('marca_id', $marca);
+            });
+        }
+
+        // Filtrar por categoría del producto
+        if ($categoria) {
+            $query->whereHas('producto', function ($q) use ($categoria) {
+                $q->where('categoria_id', $categoria);
+            });
+        }
 
         $subProductos = $query->paginate(perPage: $perPage);
 
         return inertia('privada/productosPrivada', [
             'subProductos' => $subProductos,
+            'categorias' => $categorias,
+            'marcas' => $marcas,
         ]);
     }
 

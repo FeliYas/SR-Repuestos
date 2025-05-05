@@ -11,6 +11,7 @@ use App\Http\Controllers\ContactoController;
 use App\Http\Controllers\ImagenProductoController;
 use App\Http\Controllers\InstagramController;
 use App\Http\Controllers\ListaDePreciosController;
+use App\Http\Controllers\LogosController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\MetadatosController;
 use App\Http\Controllers\NosotrosController;
@@ -27,12 +28,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::middleware('guest:admin')->group(function () {
+Route::middleware('guest:admin')->group(function () {});
 
-
-    Route::get('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login');
-    Route::post('/admin/login', [AdminAuthController::class, 'authenticate']);
-});
+Route::get('/adm', [AdminAuthController::class, 'login'])->name('admin.login');
+Route::post('/adm', [AdminAuthController::class, 'authenticate']);
 
 Route::middleware('auth:admin')->group(function () {
     Route::post('admin-logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
@@ -116,9 +115,12 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('admin/listadeprecios/update', [ListaDePreciosController::class, 'update'])->name('admin.listadeprecios.update');
     Route::delete('admin/listadeprecios/destroy', [ListaDePreciosController::class, 'destroy'])->name('admin.listadeprecios.destroy');
 
+    Route::get('admin/logos', [LogosController::class, 'index'])->name('admin.logos');
+    Route::post('admin/logos', [LogosController::class, 'update'])->name('admin.logos.update');
+
     Route::get('/admin/dashboard', function () {
         if (!Auth::guard('admin')->check()) {
-            return redirect()->route('/admin/login');
+            return redirect()->route('/adm');
         }
         return Inertia::render('admin/dashboard');
     })->name('admin.dashboard');

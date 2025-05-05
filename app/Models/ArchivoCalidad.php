@@ -8,10 +8,7 @@ class ArchivoCalidad extends Model
 {
     protected $guarded = [];
 
-    public function getArchivoAttribute($value)
-    {
-        return url("storage/" . $value);
-    }
+
 
     public function getImageAttribute($value)
     {
