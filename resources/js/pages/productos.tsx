@@ -7,8 +7,6 @@ import DefaultLayout from './defaultLayout';
 export default function Productos() {
     const { categorias, marcas, productos, ziggy, id, metadatos } = usePage().props;
 
-    console.log(marcas);
-
     const [categoriasDropdown, setCategoriasDropdown] = useState(false);
     const [marcasDropdown, setMarcasDropdown] = useState(false);
 
@@ -18,13 +16,23 @@ export default function Productos() {
                 <meta name="description" content={metadatos?.description} />
                 <meta name="keywords" content={metadatos?.keywords} />
             </Head>
-            <div className="mx-auto flex w-[1200px] flex-row gap-10 py-20">
+            <div className="mx-auto flex w-[1200px] flex-row gap-10 py-30">
                 {/* sidebar */}
+                <div className="absolute top-32 z-40 mx-auto w-[1200px] text-[12px] text-[#74716A]">
+                    <Link className="font-bold" href={'/'}>
+                        Inicio
+                    </Link>{' '}
+                    /{' '}
+                    <Link className="font-bold" href={'/productos'}>
+                        Productos
+                    </Link>{' '}
+                    / <Link href={`/productos/${id}`}>{categorias?.find((cat) => cat.id == id)?.name}</Link>
+                </div>
                 <div className="flex w-1/4 flex-col gap-10">
                     <div className="flex flex-col">
                         <button
                             onClick={() => setCategoriasDropdown(!categoriasDropdown)}
-                            className="flex flex-row items-center justify-between border-b border-[#74716A] pr-2 pb-1"
+                            className="flex flex-row items-center justify-between border-b border-[#E0E0E0] pr-2 pb-1"
                         >
                             <h2 className="text-[20px] font-semibold">Categorias</h2>
                             <FontAwesomeIcon
@@ -38,7 +46,7 @@ export default function Productos() {
                         >
                             <div className="flex flex-col">
                                 {categorias?.map((categoria, index) => (
-                                    <div key={index} className="border-b border-[#74716A] py-2">
+                                    <div key={index} className="border-b border-[#E0E0E0] py-2">
                                         <Link
                                             className={`w-full text-[16px] text-[#74716A] transition-colors hover:text-black ${ziggy.location.split('/')[4] == categoria?.id ? 'font-bold' : ''}`}
                                             href={`/productos/${categoria?.id}`}
@@ -53,7 +61,7 @@ export default function Productos() {
                     <div className="flex flex-col">
                         <button
                             onClick={() => setMarcasDropdown(!marcasDropdown)}
-                            className="flex flex-row items-center justify-between border-b border-[#74716A] pr-2 pb-1"
+                            className="flex flex-row items-center justify-between border-b border-[#E0E0E0] pr-2 pb-1"
                         >
                             <h2 className="text-[20px] font-semibold">Marcas</h2>
                             <FontAwesomeIcon
@@ -65,7 +73,7 @@ export default function Productos() {
                         <div className={`overflow-hidden transition-all duration-300 ease-in-out ${marcasDropdown ? 'max-h-[500px]' : 'max-h-0'}`}>
                             <div className="flex flex-col">
                                 {marcas?.map((marca, index) => (
-                                    <div key={index} className="border-b border-[#74716A] py-2">
+                                    <div key={index} className="border-b border-[#E0E0E0] py-2">
                                         <Link className="text-[16px] text-[#74716A] transition-colors hover:text-black" href={'#'}>
                                             {marca?.name}
                                         </Link>

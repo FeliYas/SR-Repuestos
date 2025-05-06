@@ -1,9 +1,9 @@
 import { usePage } from '@inertiajs/react';
 
-export default function MiPedidoTemplate({ pedido, productos }) {
-    const { subproductos } = usePage().props;
+export default function EmailTemplateAdmin({ pedido, user, productos }) {
+    const { subProductos } = usePage().props;
 
-    console.log(subproductos);
+    console.log(productos);
 
     return (
         <div
@@ -16,8 +16,41 @@ export default function MiPedidoTemplate({ pedido, productos }) {
                 borderRadius: '8px',
                 backgroundColor: '#f9f9f9',
             }}
-            className="scrollbar-hide relative max-h-[90vh] overflow-y-auto"
+            className="scrollbar-hide relative max-h-[90vh] overflow-y-auto text-left"
         >
+            <div style={{ marginBottom: '20px' }}>
+                <h1
+                    style={{
+                        borderBottom: '2px solid #333',
+                        paddingBottom: '5px',
+                    }}
+                >
+                    Información del Cliente:
+                </h1>
+                <p>
+                    <strong>Nombre:</strong> {user.name}
+                </p>
+                <p>
+                    <strong>Correo:</strong> {user.email ? user.email : 'Sin correo'}
+                </p>
+                <p>
+                    <strong>Telefono:</strong> {user.telefono}
+                </p>
+                <p>
+                    <strong>CUIT:</strong> {user.cuit}
+                </p>
+
+                <p>
+                    <strong>Dirección:</strong> {user.direccion}
+                </p>
+                <p>
+                    <strong>Provincia:</strong> {user.provincia}
+                </p>
+                <p>
+                    <strong>Localidad:</strong> {user.localidad}
+                </p>
+            </div>
+
             <div style={{ marginBottom: '20px' }}>
                 <h1
                     style={{
@@ -106,7 +139,7 @@ export default function MiPedidoTemplate({ pedido, productos }) {
                                         border: '1px solid #ddd',
                                     }}
                                 >
-                                    {subproductos.find((subprod) => item?.subproducto_id == subprod?.id).code}
+                                    {subProductos?.find((subProducto) => subProducto?.id === item?.subproducto_id)?.code}
                                 </td>
                                 <td
                                     style={{
@@ -114,7 +147,7 @@ export default function MiPedidoTemplate({ pedido, productos }) {
                                         border: '1px solid #ddd',
                                     }}
                                 >
-                                    {subproductos.find((subprod) => item?.subproducto_id == subprod?.id).producto?.marca?.name}
+                                    {subProductos?.find((subProducto) => subProducto?.id === item?.subproducto_id)?.producto?.marca?.name}
                                 </td>
                                 <td
                                     style={{
@@ -122,7 +155,7 @@ export default function MiPedidoTemplate({ pedido, productos }) {
                                         border: '1px solid #ddd',
                                     }}
                                 >
-                                    {subproductos.find((subprod) => item?.subproducto_id == subprod?.id).producto?.name}
+                                    {subProductos?.find((subProducto) => subProducto?.id === item?.subproducto_id)?.producto?.name}
                                 </td>
                                 <td
                                     style={{
@@ -130,7 +163,7 @@ export default function MiPedidoTemplate({ pedido, productos }) {
                                         border: '1px solid #ddd',
                                     }}
                                 >
-                                    {subproductos.find((subprod) => item?.subproducto_id == subprod?.id)?.description}
+                                    {subProductos?.find((subProducto) => subProducto?.id === item?.subproducto_id)?.description}
                                 </td>
                                 <td
                                     style={{

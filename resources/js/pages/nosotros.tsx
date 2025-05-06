@@ -1,8 +1,28 @@
 import { Link, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import DefaultLayout from './defaultLayout';
 
 export default function Nosotros() {
     const { valores, nosotros } = usePage().props;
+
+    const [isMobile, setIsMobile] = useState(false);
+    const [isTablet, setIsTablet] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 640);
+            setIsTablet(window.innerWidth >= 640 && window.innerWidth < 1024);
+        };
+
+        // Inicializar
+        handleResize();
+
+        // Agregar listener
+        window.addEventListener('resize', handleResize);
+
+        // Limpiar
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const data = [
         {
@@ -103,37 +123,42 @@ export default function Nosotros() {
         <DefaultLayout>
             <div
                 style={{ background: 'linear-gradient(180deg, #000000 0%, rgba(0, 0, 0, 0) 122.25%)' }}
-                className="relative flex h-[400px] w-full items-center justify-center"
+                className="relative flex h-[250px] w-full items-center justify-center sm:h-[300px] md:h-[400px]"
             >
-                <div className="absolute top-26 z-40 mx-auto w-[1200px] text-[12px] text-white">
+                <div className="absolute top-16 z-40 mx-auto w-full max-w-[1200px] px-4 text-[12px] text-white sm:top-20 md:top-26 lg:px-0">
                     <Link className="font-bold" href={'/'}>
                         Inicio
                     </Link>{' '}
                     / <Link href={'/nosotros'}>Nosotros</Link>
                 </div>
-                <img className="absolute h-full w-full object-cover object-center" src={nosotros?.banner} alt="" />
-                <h2 className="absolute text-4xl font-bold text-white">Nosotros</h2>
+                <img className="absolute h-full w-full object-cover object-center" src={nosotros?.banner} alt="Banner nosotros" />
+                <h2 className="absolute z-10 text-3xl font-bold text-white sm:text-4xl">Nosotros</h2>
             </div>
-            <div className="mx-auto flex w-[1200px] flex-row gap-10 py-20">
-                <div className="h-[476px] w-full">
-                    <img className="h-full w-full object-cover" src={nosotros.image} alt="" />
+
+            <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 sm:gap-8 sm:py-16 lg:flex-row lg:gap-10 lg:px-0 lg:py-20">
+                <div className="h-auto w-full lg:h-[476px]">
+                    <img className="h-full w-full rounded-sm object-cover" src={nosotros.image} alt="Imagen nosotros" />
                 </div>
-                <div className="h-full w-full py-10">
-                    <div className="flex flex-col gap-6">
-                        <h2 className="text-3xl font-bold">{nosotros.title}</h2>
+                <div className="h-full w-full py-4 lg:py-10">
+                    <div className="flex flex-col gap-4 lg:gap-6">
+                        <h2 className="text-2xl font-bold sm:text-3xl">{nosotros.title}</h2>
                         <div className="" dangerouslySetInnerHTML={{ __html: nosotros.text }} />
                     </div>
                 </div>
             </div>
-            <div className="w-full bg-[#F5F5F5] py-10">
-                <div className="mx-auto flex w-[1200px] flex-col gap-4">
-                    <h2 className="text-[30px] font-semibold">¿Por qué elegirnos?</h2>
-                    <div className="flex justify-between gap-5">
+
+            <div className="w-full bg-[#F5F5F5] py-8 sm:py-10">
+                <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-4 px-4 lg:px-0">
+                    <h2 className="text-2xl font-semibold sm:text-[30px]">¿Por qué elegirnos?</h2>
+                    <div className="flex flex-col justify-between gap-4 sm:gap-5 md:flex-row">
                         {data.map((item, index) => (
-                            <div key={index} className="flex min-h-[410px] w-full flex-col items-center gap-4 bg-white py-20">
+                            <div
+                                key={index}
+                                className="flex min-h-[300px] w-full flex-col items-center gap-4 bg-white py-10 sm:min-h-[350px] sm:py-16 md:min-h-[410px] md:py-20"
+                            >
                                 {item.icon}
-                                <h2 className="text-2xl font-bold">{item.title}</h2>
-                                <div className="px-10 text-center" dangerouslySetInnerHTML={{ __html: item.text }} />
+                                <h2 className="text-xl font-bold sm:text-2xl">{item.title}</h2>
+                                <div className="px-4 text-center sm:px-6 md:px-10" dangerouslySetInnerHTML={{ __html: item.text }} />
                             </div>
                         ))}
                     </div>

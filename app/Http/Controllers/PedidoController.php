@@ -61,7 +61,11 @@ class PedidoController extends Controller
         }
 
         // Get subproductos using the collected ids
-        $subproductos = SubProducto::whereIn('id', $subproductoIds)->get();
+        $subproductos = SubProducto::whereIn('id', $subproductoIds)
+            ->with(['producto' => function ($query) {
+                $query->select('id', 'name', 'marca_id')->with('marca');
+            }])
+            ->get();
 
         return inertia('privada/mispedidos', [
             'pedidos' => $pedidos,
@@ -69,35 +73,46 @@ class PedidoController extends Controller
         ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Pedido $pedido)
+    public function misPedidosAdmin(Request $request)
     {
-        //
+        $perPage = $request->input('per_page', 10);
+
+        $query = Pedido::query()->with(['productos', 'user'])
+            ->orderBy('created_at', 'desc');
+
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where('id',  $searchTerm);
+        }
+
+        $subProductos = SubProducto::with(['producto' => function ($query) {
+            $query->select('id', 'name', 'marca_id')->with('marca');
+        }])
+            ->get();;
+
+        $pedidos = $query->paginate($perPage);
+        return inertia('admin/pedidosAdmin', [
+            'pedidos' => $pedidos,
+            'subProductos' => $subProductos,
+        ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Pedido $pedido)
-    {
-        //
-    }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Pedido $pedido)
+    public function update(Request $request)
     {
-        //
-    }
+        $pedido = Pedido::find($request->id);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Pedido $pedido)
-    {
-        //
+        if (!$pedido) {
+            return redirect()->back()->with('error', 'Pedido not found.');
+        }
+
+        // Toggle the current value of entregado
+        $pedido->entregado = !$pedido->entregado;
+        $pedido->save();
+
+        return redirect()->back()->with('success', 'Pedido updated successfully.');
     }
 }

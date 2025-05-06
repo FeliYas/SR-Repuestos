@@ -59,7 +59,7 @@ class ProductoController extends Controller
     public function indexInicio($id)
     {
         $marcas = Marca::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
-        $productos = Producto::where('categoria_id', $id)->orderBy('order', 'asc')->get();
+        $productos = Producto::where('categoria_id', $id)->with('marca')->orderBy('order', 'asc')->get();
         $categorias = Categoria::select('id', 'name', 'order')
             ->orderBy('order', 'asc')
             ->get();

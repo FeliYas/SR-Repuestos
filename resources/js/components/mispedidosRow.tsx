@@ -1,22 +1,40 @@
+import { usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useCart } from 'react-use-cart';
 import MiPedidoTemplate from './miPedidoTemplate';
 
 export default function MispedidosRow({ pedido }) {
     const { addItem } = useCart();
+    const { subproductos, auth } = usePage().props;
     const [pedidoView, setPedidoView] = useState(false);
+
+    const { user } = auth;
+
+    const handlePrice = (subProducto) => {
+        let price = 0;
+        if (user.lista == '1') {
+            price = subProducto?.price_mayorista;
+        }
+        if (user.lista == '2') {
+            price = subProducto?.price_minorista;
+        }
+        if (user.lista == '3') {
+            price = subProducto?.price_dist;
+        }
+
+        return Number(price);
+    };
 
     const addMultipleItems = () => {
         pedido?.productos.forEach((producto) => {
-            const item = {
-                id: producto?.id,
-                name: producto?.name,
-                price: producto?.price,
-                image: producto?.image,
-                quantity: 1,
-            };
-            addItem(item);
+            addItem({
+                ...subproductos?.find((sub) => sub.id == producto.subproducto_id),
+                quantity: producto?.cantidad,
+                price: handlePrice(subproductos?.find((sub) => sub.id == producto.subproducto_id)),
+            });
         });
+        toast.success('Productos agregados al carrito');
     };
 
     return (
@@ -45,15 +63,22 @@ export default function MispedidosRow({ pedido }) {
                 </div>
                 <div className="flex items-center">{pedido?.id}</div>
                 <div className="flex items-center">{pedido?.created_at}</div>
-                <div className="flex items-center font-bold">{pedido?.estado ? 'Entregado' : 'Pendiente'}</div>
-                <div className="flex items-center">{pedido?.subtotal_prod}</div>
+                <div className="flex items-center font-bold">{pedido?.entregado == 1 ? 'Entregado' : 'Pendiente'}</div>
+                <div className="flex items-center">
+                    $ {Number(pedido?.total).toLocaleString('es-AR', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
+                </div>
                 <div className="flex items-center">
                     <button onClick={() => setPedidoView(true)} className="bg-primary-orange h-10 w-full min-w-[138px] font-bold text-white">
                         Ver detalles
                     </button>
                 </div>
                 <div className="flex items-center">
-                    <button className="border-primary-orange text-primary-orange h-10 w-full min-w-[138px] border font-medium">Recomprar</button>
+                    <button
+                        onClick={addMultipleItems}
+                        className="border-primary-orange text-primary-orange h-10 w-full min-w-[138px] border font-medium"
+                    >
+                        Recomprar
+                    </button>
                 </div>
             </div>
         </>

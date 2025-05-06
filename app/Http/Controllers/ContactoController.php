@@ -14,10 +14,9 @@ class ContactoController extends Controller
     {
         $contacto = Contacto::first();
 
-
-
         return inertia('admin/contactoAdmin', [
             'contacto' => $contacto,
+
         ]);
     }
 

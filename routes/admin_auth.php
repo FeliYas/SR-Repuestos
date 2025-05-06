@@ -16,6 +16,7 @@ use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\MetadatosController;
 use App\Http\Controllers\NosotrosController;
 use App\Http\Controllers\NovedadesController;
+use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\PrivadaController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\SubProductoController;
@@ -117,6 +118,9 @@ Route::middleware('auth:admin')->group(function () {
 
     Route::get('admin/logos', [LogosController::class, 'index'])->name('admin.logos');
     Route::post('admin/logos', [LogosController::class, 'update'])->name('admin.logos.update');
+
+    Route::get('admin/pedidos', [PedidoController::class, 'misPedidosAdmin'])->name('admin.pedidos');
+    Route::post('admin/pedidos/update', [PedidoController::class, 'update'])->name('admin.pedidos.update');
 
     Route::get('/admin/dashboard', function () {
         if (!Auth::guard('admin')->check()) {

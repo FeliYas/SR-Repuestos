@@ -26,6 +26,8 @@ export default function Dashboard({ children }) {
     const { auth } = usePage().props;
     const { user } = auth;
 
+    console.log(user);
+
     const [sidebar, setSidebar] = useState(true);
 
     const MotionFontAwesomeIcon = motion(FontAwesomeIcon);
@@ -124,7 +126,7 @@ export default function Dashboard({ children }) {
                 },
                 {
                     title: 'Mis Pedidos',
-                    href: 'mis-pedidos',
+                    href: 'pedidos',
                 },
                 {
                     title: 'Lista de precios',
@@ -215,7 +217,7 @@ export default function Dashboard({ children }) {
                             <ul className="">
                                 <AnimatePresence>
                                     {dropdowns.map((drop) => (
-                                        <li key={drop.id}>
+                                        <li key={drop.id} className={drop.barra ? 'border-primary-orange border-t-2' : ''}>
                                             {drop?.subHref.length > 0 ? (
                                                 <button
                                                     onClick={() => {

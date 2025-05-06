@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DescargarArchivo;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\SendContactInfoController;
 use App\Models\ArchivoCalidad;
 use App\Models\BannerNovedades;
 use App\Models\BannerPortada;
@@ -15,6 +16,7 @@ use App\Models\Nosotros;
 use App\Models\Novedades;
 use App\Models\Producto;
 use App\Models\Valores;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -91,9 +93,11 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
 
 
 
-    Route::get('/contacto', function () {
-
-        return Inertia::render('contacto');
+    Route::get('/contacto', function (Request $request) {
+        $producto = $request->producto;
+        return Inertia::render('contacto', [
+            'producto' => $producto,
+        ]);
     })->name('contacto');
     Route::get('/productos', [ProductoController::class, 'indexVistaPrevia'])->name('/productos');
     Route::get('/productos/{id}', [ProductoController::class, 'indexInicio'])->name('/productos');
@@ -102,7 +106,7 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
 });
 
 
-
+Route::post('/sendcontact', [SendContactInfoController::class, 'sendReactEmail'])->name('send.contact');
 
 // routes/web.php
 Route::get('/descargar/archivo/{id}', [DescargarArchivo::class, 'descargarArchivo'])

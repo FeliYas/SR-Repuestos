@@ -8,7 +8,7 @@ export default function ProductosPrivada() {
 
     const handlePageChange = (page) => {
         router.get(
-            route('admin.marcas'),
+            route('admin.subProductos'),
             {
                 page: page,
             },
