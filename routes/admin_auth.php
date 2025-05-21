@@ -80,7 +80,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::delete('admin/novedades/destroy', [NovedadesController::class, 'destroy'])->name('admin.novedades.destroy');
 
     Route::get('admin/bannernovedades', [BannerNovedadesController::class, 'index'])->name('admin.bannernovedades');
-    Route::post('admin/bannernovedades', [BannerNovedadesController::class, 'update'])->name('admin.bannernovedades.update');
+    Route::post('admin/bannernovedades/update', [BannerNovedadesController::class, 'update'])->name('admin.bannernovedades.update');
 
     Route::get('admin/contacto', [ContactoController::class, 'index'])->name('admin.contacto');
     Route::post('admin/contacto', [ContactoController::class, 'update'])->name('admin.contacto.update');

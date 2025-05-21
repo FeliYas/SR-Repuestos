@@ -22,5 +22,4 @@ export default defineConfig({
             'ziggy-js': resolve(__dirname, 'vendor/tightenco/ziggy'),
         },
     },
-    base: '/public_sr_equipamientos/build/',
 });

@@ -56,15 +56,19 @@ class ProductoController extends Controller
         ]);
     }
 
-    public function indexInicio($id)
+    public function indexInicio(Request $request, $id)
     {
         $marcas = Marca::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
-        $productos = Producto::where('categoria_id', $id)->with('marca')->orderBy('order', 'asc')->get();
+
         $categorias = Categoria::select('id', 'name', 'order')
             ->orderBy('order', 'asc')
             ->get();
         $metadatos = Metadatos::where('title', 'Productos')->first();
-
+        if ($request->has('marca') && !empty($request->marca)) {
+            $productos = Producto::where('categoria_id', $id)->where('marca_id', $request->marca)->with('marca')->orderBy('order', 'asc')->get();
+        } else {
+            $productos = Producto::where('categoria_id', $id)->with('marca')->orderBy('order', 'asc')->get();
+        }
 
         return Inertia::render('productos', [
             'productos' => $productos,
@@ -72,6 +76,7 @@ class ProductoController extends Controller
             'marcas' => $marcas,
             'metadatos' => $metadatos,
             'id' => $id,
+            'marca_id' => $request->marca,
 
         ]);
     }

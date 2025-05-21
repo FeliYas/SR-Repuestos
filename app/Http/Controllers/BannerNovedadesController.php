@@ -24,17 +24,13 @@ class BannerNovedadesController extends Controller
     public function update(Request $request)
     {
 
-
         $bannerNovedades = BannerNovedades::first();
 
-        // Check if the BannerNovedades entry exists
-        if (!$bannerNovedades) {
-            return redirect()->back()->with('error', 'Banner Novedades not found.');
-        }
 
         $data = $request->validate([
             'banner' => 'sometimes|file',
         ]);
+
         // Handle file upload if banner exists
         if ($request->hasFile('banner')) {
             // Delete the old banner if it exists
