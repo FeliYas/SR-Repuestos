@@ -14,9 +14,9 @@ return new class extends Migration
     {
         Schema::create('sub_productos', function (Blueprint $table) {
             $table->id();
-            $table->string('code');
-            $table->foreignIdFor(Producto::class, 'producto_id')->constrained('productos')->onDelete('cascade');
-            $table->string('description');
+            $table->string('code')->nullable();
+            $table->foreignIdFor(Producto::class, 'producto_id')->nullable()->constrained('productos')->onDelete('cascade');
+            $table->string('description')->nullable();
             $table->string('order')->nullable();
             $table->string('image')->nullable();
             $table->string('medida')->nullable();

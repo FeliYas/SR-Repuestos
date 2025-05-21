@@ -3,7 +3,7 @@ import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { faEnvelope, faLocationDot, faPhone } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import ReactDOMServer from 'react-dom/server';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { toast } from 'react-hot-toast';
@@ -11,6 +11,7 @@ import DefaultLayout from './defaultLayout';
 
 export default function Contacto() {
     const { contacto, metadatos, producto } = usePage().props;
+    const [captchaToken, setCaptchaToken] = useState(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
@@ -27,13 +28,9 @@ export default function Contacto() {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Execute the reCAPTCHA when the form is submitted
-        recaptchaRef.current.execute();
-    };
-
-    const onReCAPTCHAChange = (captchaCode) => {
-        // If the reCAPTCHA code is null or undefined, return
-        if (!captchaCode) {
+        // Verificar si el captcha ha sido completado
+        if (!captchaToken) {
+            toast.error('Por favor, complete el captcha');
             return;
         }
 
@@ -50,24 +47,31 @@ export default function Contacto() {
             />,
         );
 
-        // Add the reCAPTCHA code to your form data
+        // Preparar los datos completos con el token de reCAPTCHA
         completeContent.data.html = htmlContent;
-        completeContent.data.recaptchaToken = captchaCode;
+        completeContent.data.recaptchaToken = captchaToken;
 
-        // Now post with the updated data
+        // Enviar el formulario
         completeContent.post(route('send.contact'), {
             onSuccess: () => {
                 toast.success('Consulta enviada correctamente');
                 reset();
                 // Reset the reCAPTCHA
                 recaptchaRef.current.reset();
+                setCaptchaToken(null);
             },
             onError: () => {
                 toast.error('Error al enviar la consulta');
                 // Reset the reCAPTCHA on error as well
                 recaptchaRef.current.reset();
+                setCaptchaToken(null);
             },
         });
+    };
+
+    const onReCAPTCHAChange = (captchaCode) => {
+        // Guardar el token del captcha para usarlo cuando se envíe el formulario
+        setCaptchaToken(captchaCode);
     };
 
     const datos = [

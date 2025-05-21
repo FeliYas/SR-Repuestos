@@ -147,7 +147,7 @@ export default function ContactoAdmin() {
                                 <div className="focus-within:outline-primary-orange flex items-center rounded-md bg-white pl-3 outline outline-1 -outline-offset-1 outline-gray-300 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2">
                                     <div className="shrink-0 text-base text-gray-500 select-none sm:text-sm/6"></div>
                                     <input
-                                        value={data.phone}
+                                        value={data.location}
                                         onChange={(ev) => {
                                             setData('location', ev.target.value);
                                         }}

@@ -56,8 +56,6 @@ export default function Carrito() {
         user_id: user?.id,
     });
 
-    console.log(pedidoForm.data);
-
     const emailForm = useForm({
         html: '',
     });
@@ -340,7 +338,7 @@ export default function Carrito() {
                 <div className="flex flex-col gap-3 max-sm:order-4 max-sm:col-span-2">
                     <h2 className="text-2xl font-bold">Adjuntar un archivo</h2>
                     <div className="flex w-full items-center justify-between border">
-                        <span className="pl-4 text-gray-600">{pedidoForm?.data?.archivo}</span>
+                        <span className="pl-4 text-gray-600">{pedidoForm?.data?.archivo?.name}</span>
                         <label
                             htmlFor="fileInput"
                             className="text-primary-orange h-full cursor-pointer bg-gray-100 p-4 font-semibold hover:bg-gray-200"
@@ -352,7 +350,6 @@ export default function Carrito() {
                             id="fileInput"
                             className="hidden"
                             onChange={(e) => {
-                                emailForm.setData('attachments[]', e.target.files[0]);
                                 pedidoForm.setData('archivo', e.target.files[0]);
                             }}
                         />

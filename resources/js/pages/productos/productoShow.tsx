@@ -67,7 +67,7 @@ export default function ProductoShow() {
                     {/* product info section */}
                     <div className="flex w-full flex-col gap-8 lg:flex-row">
                         {/* product image */}
-                        <div className="relative mb-24 h-[300px] w-full border border-[#E0E0E0] sm:mb-24 sm:h-[400px] lg:h-[496px]">
+                        <div className="relative h-[300px] w-full border border-[#E0E0E0] max-sm:mb-24 sm:h-[400px] lg:h-[496px]">
                             <img className="h-full w-full object-cover" src={currentImage} alt={producto?.name} />
                             <div className="absolute -bottom-20 left-0 flex w-full flex-row gap-2 overflow-x-auto pb-2">
                                 {producto?.imagenes?.map((image, index) => (
