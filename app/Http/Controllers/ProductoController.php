@@ -81,14 +81,15 @@ class ProductoController extends Controller
         ]);
     }
 
-    public function show($id)
+    public function show($id, $producto_id)
     {
-        $subproductos = SubProducto::where('producto_id', $id)->orderBy('order', 'asc')->get();
-        $producto = Producto::with(['categoria:id,name', 'marca:id,name', 'imagenes'])->findOrFail($id);
+
+        $subproductos = SubProducto::where('producto_id', $producto_id)->orderBy('order', 'asc')->get();
+        $producto = Producto::with(['categoria:id,name', 'marca:id,name', 'imagenes'])->findOrFail($producto_id);
         $categorias = Categoria::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
         $productosRelacionados = Producto::with(['imagenes'])
             ->where('marca_id', $producto->marca_id)
-            ->where('id', '!=', $id)
+            ->where('id', '!=', $producto_id)
             ->inRandomOrder()
             ->limit(3)
             ->get();
