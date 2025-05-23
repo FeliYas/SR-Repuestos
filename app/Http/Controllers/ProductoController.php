@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Categoria;
 use App\Models\Contacto;
+use App\Models\ImagenProducto;
 use App\Models\Marca;
 use App\Models\Metadatos;
 use App\Models\Producto;
 use App\Models\SubProducto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ProductoController extends Controller
@@ -65,10 +67,11 @@ class ProductoController extends Controller
             ->get();
         $metadatos = Metadatos::where('title', 'Productos')->first();
         if ($request->has('marca') && !empty($request->marca)) {
-            $productos = Producto::where('categoria_id', $id)->where('marca_id', $request->marca)->with('marca')->orderBy('order', 'asc')->get();
+            $productos = Producto::where('categoria_id', $id)->whereHas('subproductos')->whereHas('imagenes')->where('marca_id', $request->marca)->with('marca', 'imagenes')->orderBy('order', 'asc')->get();
         } else {
-            $productos = Producto::where('categoria_id', $id)->with('marca')->orderBy('order', 'asc')->get();
+            $productos = Producto::where('categoria_id', $id)->whereHas('subproductos')->whereHas('imagenes')->with('marca', 'imagenes')->orderBy('order', 'asc')->get();
         }
+        $subproductos = SubProducto::orderBy('order', 'asc')->get();
 
         return Inertia::render('productos', [
             'productos' => $productos,
@@ -77,8 +80,27 @@ class ProductoController extends Controller
             'metadatos' => $metadatos,
             'id' => $id,
             'marca_id' => $request->marca,
+            'subproductos' => $subproductos,
 
         ]);
+    }
+
+    public function imagenesProducto()
+    {
+        $fotos = Storage::disk('public')->files('imagenesproducto');
+
+        foreach ($fotos as $foto) {
+
+            $producto = Producto::where('code', pathinfo(basename($foto), PATHINFO_FILENAME))->first();
+            if (!$producto) {
+                continue; // Skip if the product is not found
+            }
+            $url = Storage::url($foto);
+            ImagenProducto::create([
+                'producto_id' => $producto->id,
+                'image' => $url,
+            ]);
+        }
     }
 
     public function show($id, $producto_id)

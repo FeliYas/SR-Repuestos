@@ -106,6 +106,9 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
 });
 
 
+Route::get('/imagenes-prod', [ProductoController::class, 'imagenesProducto']);
+
+
 Route::post('/sendcontact', [SendContactInfoController::class, 'sendReactEmail'])->name('send.contact');
 
 // routes/web.php

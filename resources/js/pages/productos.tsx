@@ -5,10 +5,12 @@ import { useState } from 'react';
 import DefaultLayout from './defaultLayout';
 
 export default function Productos() {
-    const { categorias, marcas, productos, ziggy, id, metadatos, marca_id } = usePage().props;
+    const { categorias, marcas, productos, ziggy, id, metadatos, marca_id, subproductos } = usePage().props;
 
     const [categoriasDropdown, setCategoriasDropdown] = useState(true);
     const [marcasDropdown, setMarcasDropdown] = useState(true);
+
+    console.log(productos);
 
     return (
         <DefaultLayout>
@@ -99,12 +101,15 @@ export default function Productos() {
                             className="flex h-auto w-full flex-col border border-gray-200 sm:h-[400px]"
                         >
                             <div className="h-[200px] w-full border-b border-gray-200 sm:h-[287px]">
-                                <img className="h-full w-full object-cover object-center" src={producto?.image} alt={producto?.name} />
+                                <img className="h-full w-full object-cover object-center" src={producto?.imagenes[0]?.image} alt={producto?.name} />
                             </div>
                             <div className="flex w-full flex-col gap-2 p-4">
                                 <p className="text-primary-orange">
                                     {' '}
-                                    <span className="font-bold">{producto?.code}</span> | {producto?.marca?.name}
+                                    <span className="font-bold">
+                                        {subproductos?.filter((subprod) => subprod?.producto_id == producto?.id)[0]?.code}
+                                    </span>{' '}
+                                    | {producto?.marca?.name}
                                 </p>
                                 <h2 className="font-bold text-[#74716A]">{producto?.name}</h2>
                             </div>

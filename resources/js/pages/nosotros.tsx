@@ -137,7 +137,7 @@ export default function Nosotros() {
 
             <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 sm:gap-8 sm:py-16 lg:flex-row lg:gap-10 lg:px-0 lg:py-20">
                 <div className="h-auto w-full lg:h-[476px]">
-                    <img className="h-full w-full rounded-sm object-cover" src={nosotros.image} alt="Imagen nosotros" />
+                    <img className="h-full w-full object-cover" src={nosotros.image} alt="Imagen nosotros" />
                 </div>
                 <div className="h-full w-full py-4 lg:py-10">
                     <div className="flex flex-col gap-4 lg:gap-6">

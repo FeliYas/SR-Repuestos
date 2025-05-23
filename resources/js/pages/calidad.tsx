@@ -33,6 +33,8 @@ export default function Calidad() {
         }
     };
 
+    console.log(archivos);
+
     return (
         <DefaultLayout>
             <Head>
@@ -75,7 +77,7 @@ export default function Calidad() {
                                 <div className="flex w-full flex-row items-center justify-between px-3 sm:px-6">
                                     <div className="flex flex-col justify-center">
                                         <p className="text-sm sm:text-base">{archivo?.name}</p>
-                                        <p className="text-sm sm:text-base">asdasdassad</p>
+                                        <p className="text-sm sm:text-base">{archivo?.archivo_peso}</p>
                                     </div>
                                     <button type="button" onClick={() => handleDownload(archivo?.archivo)}>
                                         <svg

@@ -8,7 +8,7 @@ export default function ProductoShow() {
     const { producto, categorias, subproductos, productosRelacionados } = usePage().props;
 
     const [categoriasDropdown, setCategoriasDropdown] = useState(false);
-    const [currentImage, setCurrentImage] = useState(producto?.imagenes[0]);
+    const [currentImage, setCurrentImage] = useState(producto?.imagenes[0]?.image);
 
     return (
         <DefaultLayout>
@@ -74,7 +74,7 @@ export default function ProductoShow() {
                                     <button
                                         className={`h-[66px] w-[66px] flex-shrink-0 border ${image == currentImage ? 'border-primary-orange' : 'border-[#E0E0E0]'}`}
                                         key={index}
-                                        onClick={() => setCurrentImage(image)}
+                                        onClick={() => setCurrentImage(image?.image)}
                                     >
                                         <img
                                             className="h-full w-full object-cover"
@@ -176,7 +176,11 @@ export default function ProductoShow() {
                                     className="flex h-auto w-full flex-col border border-gray-200 sm:h-[400px]"
                                 >
                                     <div className="h-[200px] w-full border-b border-gray-200 sm:h-[287px]">
-                                        <img className="h-full w-full object-cover object-center" src={producto?.image} alt={producto?.name} />
+                                        <img
+                                            className="h-full w-full object-cover object-center"
+                                            src={producto?.imagenes[0]?.image}
+                                            alt={producto?.name}
+                                        />
                                     </div>
                                     <div className="flex w-full flex-col gap-2 p-4">
                                         <p className="text-primary-orange">

@@ -20,12 +20,12 @@ class Producto extends Model
 
     public function imagenes()
     {
-        return $this->hasMany(ImagenProducto::class);
+        return $this->hasMany(ImagenProducto::class, 'producto_id');
     }
 
     public function subproductos()
     {
-        return $this->hasMany(SubProducto::class, 'sub_producto_id');
+        return $this->hasMany(SubProducto::class);
     }
 
     public function getImageAttribute($value)

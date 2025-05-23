@@ -25,67 +25,62 @@ class ImportarProductosDesdeExcelJob implements ShouldQueue
 
     public function handle()
     {
+
+
         $spreadsheet = IOFactory::load(storage_path("app/" . $this->path));
         $sheet = $spreadsheet->getActiveSheet();
         $rows = $sheet->toArray();
 
-        $productos = [];
-
         foreach ($rows as $index => $row) {
             if ($index === 0) continue; // Saltar encabezado
 
-            [$superCodigo, $codigo, $nombre, $descripcion, $_, $lista1, $lista2, $lista3] = $row;
+            $modelo = trim($row[0]);
+            $aplicacion = trim($row[1]);
+            $anio = trim($row[2]);
+            $num_original = trim($row[3]);
+            $espigon = trim($row[4]);
+            $tonelaje = trim($row[5]);
+            $codigoFormat = trim($row[6]);
 
-            if (!$superCodigo || !$codigo) continue;
+            $codigoFormat = str_replace('"', '', $codigoFormat);
+            $codigoFormat = str_replace('-', '', $codigoFormat);
+            $codigoFormat = preg_replace('/\..*/', '', $codigoFormat);
 
-            // Crear o encontrar el producto
-            if (!isset($productos[$superCodigo])) {
-                $producto = Producto::where('code', $superCodigo)->first();
-
-                if ($producto) {
-                    $producto->update([
-                        'name' => $nombre,
-                        'categoria_id' => 1, // o usar un valor dinámico si lo querés configurable
-                    ]);
-                    Log::info("Producto actualizado: {$superCodigo}");
-                } else {
-                    $producto = Producto::create([
-                        'code' => $superCodigo,
-                        'name' => $nombre,
-                        'categoria_id' => 1,
-                    ]);
-                    Log::info("Producto creado: {$superCodigo}");
-                }
-
-                $productos[$superCodigo] = $producto->id;
-            }
+            $codigo = trim($row[6]);
+            $codigo = str_replace('"', '', $codigo);
+            $codigo = str_replace('-', '', $codigo);
+            $codigo = str_replace('.', '0', $codigo);
+            $medida = trim($row[7]);
+            $componente = trim($row[8]);
+            $caracteristicas = trim($row[9]) . ' ' . trim($row[10]);
 
 
-            // Crear el subproducto
-            $subProducto = SubProducto::where('code', $codigo)->first();
+            // Buscar o crear el producto
+            $producto = Producto::updateOrCreate(
+                ['name' => $modelo],
+                [
+                    'code' => $codigoFormat,
+                    'aplicacion' => $aplicacion,
+                    'anio' => $anio,
+                    'num_original' => $num_original,
+                    'espigon' => $espigon,
+                    'tonelaje' => $tonelaje,
+                    'categoria_id' => 1
+                ]
+            );
 
-            if ($subProducto) {
-                $subProducto->update([
-                    'producto_id'     => $productos[$superCodigo],
-                    'description'     => $descripcion,
-                    'price_mayorista' => $lista1,
-                    'price_minorista' => $lista2,
-                    'price_dist'      => $lista3,
-                ]);
-                Log::info("SubProducto actualizado: {$codigo}");
-            } else {
-                SubProducto::create([
-                    'producto_id'     => $productos[$superCodigo],
-                    'code'            => $codigo,
-                    'description'     => $descripcion,
-                    'price_mayorista' => $lista1,
-                    'price_minorista' => $lista2,
-                    'price_dist'      => $lista3,
-                ]);
-                Log::info("SubProducto creado: {$codigo}");
-            }
+
+            SubProducto::updateOrCreate(
+                ['code' => $codigo],
+                [
+                    'producto_id' => $producto->id,
+                    'medida' => $medida,
+                    'componente' => $componente,
+                    'caracteristicas' => $caracteristicas
+                ]
+            );
         }
 
-        Log::info("Importación completada correctamente.");
+        Log::info("Importación de productos y subproductos desde CSV completada.");
     }
 }
