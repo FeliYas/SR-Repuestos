@@ -248,9 +248,7 @@ export default function SubProductosAdmin() {
                                     <td className="text-center">CODIGO</td>
                                     <td className="text-center">PRODUCTO</td>
                                     <td className="text-center">DESCRIPCION</td>
-                                    <td className="text-center">MEDIDA</td>
-                                    <td className="text-center">COMPONENTE</td>
-                                    <td className="text-center">CARACTERISTICAS</td>
+
                                     <td className="text-center">PRECIO MAYORISTA</td>
                                     <td className="text-center">PRECIO MINORISTA</td>
                                     <td className="text-center">PRECIO DISTRIBUIDOR</td>

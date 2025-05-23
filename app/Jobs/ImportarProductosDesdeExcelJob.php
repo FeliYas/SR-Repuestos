@@ -40,26 +40,50 @@ class ImportarProductosDesdeExcelJob implements ShouldQueue
 
             // Crear o encontrar el producto
             if (!isset($productos[$superCodigo])) {
-                $producto = Producto::firstOrCreate(
-                    ['code' => $superCodigo],
-                    [
-                        'name' => $nombre,
-                        'categoria_id' => 1
-                    ]
+                $producto = Producto::where('code', $superCodigo)->first();
 
-                );
+                if ($producto) {
+                    $producto->update([
+                        'name' => $nombre,
+                        'categoria_id' => 1, // o usar un valor dinámico si lo querés configurable
+                    ]);
+                    Log::info("Producto actualizado: {$superCodigo}");
+                } else {
+                    $producto = Producto::create([
+                        'code' => $superCodigo,
+                        'name' => $nombre,
+                        'categoria_id' => 1,
+                    ]);
+                    Log::info("Producto creado: {$superCodigo}");
+                }
+
                 $productos[$superCodigo] = $producto->id;
             }
 
+
             // Crear el subproducto
-            SubProducto::create([
-                'producto_id'     => $productos[$superCodigo],
-                'code'            => $codigo,
-                'description' => $descripcion,
-                'price_mayorista' => floatval(str_replace(',', '.', str_replace('.', '', $lista1))),
-                'price_minorista' => floatval(str_replace(',', '.', str_replace('.', '', $lista2))),
-                'price_dist'      => floatval(str_replace(',', '.', str_replace('.', '', $lista3))),
-            ]);
+            $subProducto = SubProducto::where('code', $codigo)->first();
+
+            if ($subProducto) {
+                $subProducto->update([
+                    'producto_id'     => $productos[$superCodigo],
+                    'description'     => $descripcion,
+                    'price_mayorista' => $lista1,
+                    'price_minorista' => $lista2,
+                    'price_dist'      => $lista3,
+                ]);
+                Log::info("SubProducto actualizado: {$codigo}");
+            } else {
+                SubProducto::create([
+                    'producto_id'     => $productos[$superCodigo],
+                    'code'            => $codigo,
+                    'description'     => $descripcion,
+                    'price_mayorista' => $lista1,
+                    'price_minorista' => $lista2,
+                    'price_dist'      => $lista3,
+                ]);
+                Log::info("SubProducto creado: {$codigo}");
+            }
         }
 
         Log::info("Importación completada correctamente.");

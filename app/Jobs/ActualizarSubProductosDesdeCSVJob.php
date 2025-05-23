@@ -43,13 +43,15 @@ class ActualizarSubProductosDesdeCSVJob implements ShouldQueue
 
             $codigoCsv = $this->limpiarCodigo($row[6]);
 
-            $subProducto = SubProducto::where('code', $codigoCsv)->first();
+            $subProducto = SubProducto::get()->first(function ($item) use ($codigoCsv) {
+                return $this->limpiarCodigo($item->code) === $codigoCsv;
+            });
 
             if ($subProducto) {
                 $subProducto->update([
                     'medida'          => $row[7] ?? null,               // columna H
                     'componente'      => $row[8] ?? null,               // columna I
-                    'caracteristicas' => trim(($row[9] ?? '') . ' ' . ($row[10] ?? '')) // columnas J + K
+                    'caracteristicas' => str_replace('"', '', trim(($row[9] ?? '') . ' ' . ($row[10] ?? ''))) // columnas J + K
                 ]);
 
                 Log::info("SubProducto actualizado: {$codigoCsv}");
@@ -66,6 +68,9 @@ class ActualizarSubProductosDesdeCSVJob implements ShouldQueue
 
     private function limpiarCodigo($codigo)
     {
-        return trim(str_replace(['"', "'"], '', $codigo));
+        $codigo = strtoupper(trim($codigo));                  // Mayúsculas y sin espacios
+        $codigo = str_replace(['-', '"', "'", ' '], '', $codigo); // Elimina guiones y comillas
+        $codigo = str_replace('.', '0', $codigo);             // Reemplaza punto por 0
+        return $codigo;
     }
 }

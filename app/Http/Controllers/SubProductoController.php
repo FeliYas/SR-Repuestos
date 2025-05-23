@@ -32,7 +32,7 @@ class SubProductoController extends Controller
 
         if ($request->has('search') && !empty($request->search)) {
             $searchTerm = $request->search;
-            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+            $query->where('code', 'LIKE', '%' . $searchTerm . '%');
         }
 
         $subProductos = $query->paginate($perPage);

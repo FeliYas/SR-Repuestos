@@ -58,9 +58,7 @@ export default function SubProdcutosAdminRow({ subprod, productos }) {
             <td className="align-middle">{subprod?.code}</td>
             <td className="align-middle">{subprod?.producto?.name}</td>
             <td className="align-middle">{subprod?.description}</td>
-            <td className="align-middle">{subprod?.medida}</td>
-            <td className="align-middle">{subprod?.componente}</td>
-            <td className="align-middle">{subprod?.caracteristicas}</td>
+
             <td className="align-middle">
                 ${' '}
                 {subprod?.price_mayorista
