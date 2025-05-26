@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('instagrams', function (Blueprint $table) {
             $table->id();
-            $table->string('order')->nullable();
+            $table->string('order')->default("zzz");
             $table->string('image')->nullable();
             $table->string('link')->nullable();
             $table->timestamps();

@@ -15,7 +15,7 @@ class Producto extends Model
 
     public function marca()
     {
-        return $this->belongsTo(Marca::class, 'marca_id');
+        return $this->belongsTo(MarcaProducto::class, 'marca_id');
     }
 
     public function imagenes()

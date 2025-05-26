@@ -14,7 +14,7 @@ export default function ProductoShow() {
         <DefaultLayout>
             <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 md:flex-row md:gap-10 md:px-6 md:py-30">
                 {/* breadcrumbs - responsive */}
-                <div className="z-40 mb-4 w-full text-[12px] text-[#74716A] md:absolute md:top-32 md:mb-0">
+                <div className="z-40 mb-4 w-[1200px] text-[12px] text-[#74716A] md:absolute md:top-32 md:mb-0">
                     <Link className="font-bold" href={'/'}>
                         Inicio
                     </Link>{' '}
@@ -68,7 +68,7 @@ export default function ProductoShow() {
                     <div className="flex w-full flex-col gap-8 lg:flex-row">
                         {/* product image */}
                         <div className="relative h-[300px] w-full border border-[#E0E0E0] max-sm:mb-24 sm:h-[400px] lg:h-[496px]">
-                            <img className="h-full w-full object-cover" src={currentImage} alt={producto?.name} />
+                            <img className="h-full w-full object-contain" src={currentImage} alt={producto?.name} />
                             <div className="absolute -bottom-20 left-0 flex w-full flex-row gap-2 overflow-x-auto pb-2">
                                 {producto?.imagenes?.map((image, index) => (
                                     <button
@@ -77,7 +77,7 @@ export default function ProductoShow() {
                                         onClick={() => setCurrentImage(image?.image)}
                                     >
                                         <img
-                                            className="h-full w-full object-cover"
+                                            className="h-full w-full object-contain"
                                             src={image?.image}
                                             alt={`${producto?.name} - imagen ${index + 1}`}
                                         />
@@ -127,7 +127,6 @@ export default function ProductoShow() {
                                 >
                                     Consultar
                                 </Link>
-                                <button className="text-primary-orange border-primary-orange h-[41px] w-full border font-bold">Ficha técnica</button>
                             </div>
                         </div>
                     </div>

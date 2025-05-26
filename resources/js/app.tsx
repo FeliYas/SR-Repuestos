@@ -8,6 +8,10 @@ import { initializeTheme } from './hooks/use-appearance';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+document.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+});
+
 createInertiaApp({
     title: (title) => `SR Repuestos`,
     resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')),

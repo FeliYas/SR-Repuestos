@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 export default function InstagramInicio() {
@@ -33,15 +33,17 @@ export default function InstagramInicio() {
             <div className="mx-auto flex h-full w-full max-w-[1200px] flex-col gap-6 px-4 sm:gap-8">
                 <h2 className="text-2xl font-bold text-white sm:text-3xl">Seguinos en instagram</h2>
 
-                <div className="flex flex-col justify-center gap-4 overflow-x-auto pb-2 sm:flex-row sm:justify-between">
+                <div className="flex flex-col justify-center gap-4 pb-2 max-sm:overflow-x-auto sm:flex-row sm:justify-between">
                     {instagram.slice(0, visibleItems).map((item, index) => (
-                        <Link
+                        <a
                             key={index}
                             href={item?.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="mx-auto h-[285px] w-full min-w-[288px] sm:mx-0 sm:w-[calc(50%-8px)] md:w-[calc(33.33%-11px)] lg:w-[288px]"
                         >
                             <img className="h-full w-full object-cover" src={item?.image} alt={`Instagram post ${index + 1}`} />
-                        </Link>
+                        </a>
                     ))}
                 </div>
 

@@ -61,7 +61,7 @@ Route::middleware('auth')->group(function () {
         ->name('logout');
 
     Route::middleware('privada')->group(function () {
-        Route::get('privada/productos', [SubProductoController::class, 'indexPrivada'])->name('index.privada');
+        Route::get('privada/productos', [SubProductoController::class, 'indexPrivada'])->name('index.privada.subproductos');
         Route::get('privada/carrito', [PrivadaController::class, 'carrito']);
 
         Route::get('privada/mispedidos', [PedidoController::class, 'misPedidos']);

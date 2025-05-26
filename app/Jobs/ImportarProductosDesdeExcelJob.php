@@ -34,51 +34,32 @@ class ImportarProductosDesdeExcelJob implements ShouldQueue
         foreach ($rows as $index => $row) {
             if ($index === 0) continue; // Saltar encabezado
 
-            $modelo = trim($row[0]);
-            $aplicacion = trim($row[1]);
-            $anio = trim($row[2]);
-            $num_original = trim($row[3]);
-            $espigon = trim($row[4]);
-            $tonelaje = trim($row[5]);
-            $codigoFormat = trim($row[6]);
-
-            $codigoFormat = str_replace('"', '', $codigoFormat);
-            $codigoFormat = str_replace('-', '', $codigoFormat);
-            $codigoFormat = preg_replace('/\..*/', '', $codigoFormat);
-
-            $codigo = trim($row[6]);
-            $codigo = str_replace('"', '', $codigo);
-            $codigo = str_replace('-', '', $codigo);
-            $codigo = str_replace('.', '0', $codigo);
-            $medida = trim($row[7]);
-            $componente = trim($row[8]);
-            $caracteristicas = trim($row[9]) . ' ' . trim($row[10]);
+            $codigo = trim($row[0]);
+            $descripcion = trim($row[1]);
+            $familia = trim($row[2]);
+            $precio_mayorista = trim($row[3]);
+            $precio_minorista = trim($row[4]);
+            $precio_dist = trim($row[5]);
 
 
-            // Buscar o crear el producto
-            $producto = Producto::updateOrCreate(
-                ['name' => $modelo],
+
+            $producto = Producto::firstOrCreate(
+                ['name' => $familia],
                 [
-                    'code' => $codigoFormat,
-                    'aplicacion' => $aplicacion,
-                    'anio' => $anio,
-                    'num_original' => $num_original,
-                    'espigon' => $espigon,
-                    'tonelaje' => $tonelaje,
-                    'categoria_id' => 1
+                    'code' => $codigo,
+                    //parabolico 1, convensional 2, repuestos 3
+                    'categoria_id' => 3
                 ]
             );
 
 
-            SubProducto::updateOrCreate(
-                ['code' => $codigo],
-                [
-                    'producto_id' => $producto->id,
-                    'medida' => $medida,
-                    'componente' => $componente,
-                    'caracteristicas' => $caracteristicas
-                ]
-            );
+            SubProducto::updateOrCreate([
+                'producto_id' => $producto->id,
+                'price_mayorista' => $precio_mayorista,
+                'price_minorista' => $precio_minorista,
+                'price_dist' => $precio_dist,
+                'code' => $codigo,
+            ]);
         }
 
         Log::info("Importación de productos y subproductos desde CSV completada.");

@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import defaultPhoto from '../../../images/logos/logobetter.png';
 import DefaultLayout from '../defaultLayout';
 
 export default function ProductoSearch() {
@@ -10,7 +11,7 @@ export default function ProductoSearch() {
                 <div className="border-primary-orange border-b-2 py-2">
                     <h2 className="text-xl font-bold">Resultados de busqueda:</h2>
                 </div>
-                <div className="grid grid-cols-4 py-10">
+                <div className="grid grid-cols-4 gap-y-10 py-10">
                     {productos?.map((producto, index) => (
                         <Link
                             href={`/productos/${producto?.categoria?.id}/${producto?.id}`}
@@ -18,7 +19,11 @@ export default function ProductoSearch() {
                             className="flex h-[400px] w-[286px] flex-col border border-gray-200"
                         >
                             <div className="h-[287px] w-full border-b border-gray-200">
-                                <img className="object-cove h-full w-full object-center" src={producto?.image} alt="" />
+                                <img
+                                    className="h-full w-full object-contain object-center"
+                                    src={producto?.imagenes[0]?.image || defaultPhoto}
+                                    alt=""
+                                />
                             </div>
                             <div className="flex w-full flex-col gap-2 p-4">
                                 <p className="text-primary-orange">

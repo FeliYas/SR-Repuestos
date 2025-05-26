@@ -227,7 +227,7 @@ export default function ProductosAdmin() {
                                     <td className="text-center">MARCA</td>
                                     <td className="text-center">FICHA TECNICA</td>
                                     <td className="text-center">CARACTERISTICAS</td>
-                                    <td className="w-[400px] px-3 py-2 text-center">IMAGEN</td>
+                                    <td className="px-3 py-2 text-center">IMAGEN</td>
                                     <td className="text-center">EDITAR</td>
                                 </tr>
                             </thead>

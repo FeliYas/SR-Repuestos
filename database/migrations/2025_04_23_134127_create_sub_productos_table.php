@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('code')->nullable();
             $table->foreignIdFor(Producto::class, 'producto_id')->nullable()->constrained('productos')->onDelete('cascade');
             $table->string('description')->nullable();
-            $table->string('order')->nullable();
+            $table->string('order')->default("zzz");
             $table->string('image')->nullable();
             $table->string('medida')->nullable();
             $table->string('componente')->nullable();

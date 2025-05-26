@@ -11,7 +11,7 @@ export default function SearchBarPrivate() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        get(route('index.privada'), {
+        get(route('index.privada.subproductos'), {
             preserveState: true,
             preserveScroll: true,
         });

@@ -1,7 +1,8 @@
 import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import defaultPhoto from '../../images/logos/logobetter.png';
 import DefaultLayout from './defaultLayout';
 
 export default function Productos() {
@@ -20,7 +21,7 @@ export default function Productos() {
             </Head>
             <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 md:flex-row md:gap-10 md:px-6 md:py-30">
                 {/* Breadcrumb - responsive */}
-                <div className="z-40 mb-4 w-full text-[12px] text-[#74716A] md:absolute md:top-32 md:mb-0">
+                <div className="z-40 mb-4 w-[1200px] text-[12px] text-[#74716A] md:absolute md:top-32 md:mb-0">
                     <Link className="font-bold" href={'/'}>
                         Inicio
                     </Link>{' '}
@@ -94,27 +95,39 @@ export default function Productos() {
 
                 {/* Products Grid - responsive */}
                 <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {productos?.map((producto) => (
+                    {productos.data?.map((producto) => (
                         <Link
                             href={`/productos/${id}/${producto?.id}`}
                             key={producto?.id}
                             className="flex h-auto w-full flex-col border border-gray-200 sm:h-[400px]"
                         >
                             <div className="h-[200px] w-full border-b border-gray-200 sm:h-[287px]">
-                                <img className="h-full w-full object-cover object-center" src={producto?.imagenes[0]?.image} alt={producto?.name} />
+                                <img
+                                    className="h-full w-full object-cover object-center"
+                                    src={producto?.imagenes[0]?.image || defaultPhoto}
+                                    alt={producto?.name}
+                                />
                             </div>
                             <div className="flex w-full flex-col gap-2 p-4">
                                 <p className="text-primary-orange">
                                     {' '}
-                                    <span className="font-bold">
-                                        {subproductos?.filter((subprod) => subprod?.producto_id == producto?.id)[0]?.code}
-                                    </span>{' '}
-                                    | {producto?.marca?.name}
+                                    <span className="font-bold">{producto?.code}</span> | {producto?.marca?.name?.toUpperCase()}
                                 </p>
                                 <h2 className="font-bold text-[#74716A]">{producto?.name}</h2>
                             </div>
                         </Link>
                     ))}
+                    <div className="col-span-3 mt-4 flex max-h-[33px] w-full justify-between">
+                        {productos.links.map((link, index) => (
+                            <button
+                                key={index}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                disabled={!link.url}
+                                onClick={() => router.visit(link.url)}
+                                className={`mx-1 border px-3 py-1 ${link.active ? 'bg-gray-300' : ''}`}
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
         </DefaultLayout>

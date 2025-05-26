@@ -1,10 +1,8 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import axios from 'axios';
 import DefaultLayout from './defaultLayout';
 
-export default function Calidad() {
-    const { calidad, archivos, metadatos } = usePage().props;
-
+export default function Calidad({ calidad, archivos, metadatos }) {
     const handleDownload = async (archivo) => {
         try {
             const filename = archivo.split('/').pop();
@@ -77,7 +75,11 @@ export default function Calidad() {
                                 <div className="flex w-full flex-row items-center justify-between px-3 sm:px-6">
                                     <div className="flex flex-col justify-center">
                                         <p className="text-sm sm:text-base">{archivo?.name}</p>
-                                        <p className="text-sm sm:text-base">{archivo?.archivo_peso}</p>
+                                        <div className="flex flex-row gap-1">
+                                            <p className="text-sm uppercase sm:text-base">{archivo?.archivo_formato}</p>
+                                            <p>-</p>
+                                            <p className="text-sm sm:text-base">{archivo?.archivo_peso}</p>
+                                        </div>
                                     </div>
                                     <button type="button" onClick={() => handleDownload(archivo?.archivo)}>
                                         <svg

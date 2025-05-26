@@ -4,6 +4,7 @@ import { usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useCart } from 'react-use-cart';
+import defaultPhoto from '../../images/logos/logobetter.png';
 
 export default function SubproductosPrivadaRow({ subProducto }) {
     const { addItem, updateItemQuantity, getItem, removeItem } = useCart();
@@ -38,13 +39,13 @@ export default function SubproductosPrivadaRow({ subProducto }) {
     return (
         <div className="grid h-fit grid-cols-8 items-center border-b border-gray-200 py-2 text-[15px] text-[#74716A]">
             <div className="h-[85px] w-[85px]">
-                <img src={subProducto?.image} className="h-full w-full object-contain" alt="" />
+                <img src={subProducto?.image || defaultPhoto} className="h-full w-full object-contain" alt="" />
             </div>
             <p className="">{subProducto?.code}</p>
             <p className="">{subProducto?.producto?.marca?.name}</p>
             <p className="">{subProducto?.producto?.name}</p>
             <p className="">{subProducto?.description}</p>
-            <p className="">$ {handlePrice()}</p>
+            <p className="pl-4">$ {handlePrice()?.toLocaleString('es-AR', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</p>
             <p className="flex justify-center">
                 <div className="flex h-[38px] w-[99px] flex-row items-center border border-[#EEEEEE] px-2">
                     <input value={cantidad} type="text" className="h-full w-full focus:outline-none" />

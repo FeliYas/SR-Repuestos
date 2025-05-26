@@ -83,6 +83,7 @@ export default function Dashboard({ children }) {
                 { title: 'Categorias', href: 'categorias' },
                 { title: 'Productos', href: 'productos' },
                 { title: 'Sub-productos', href: 'subproductos' },
+                { title: 'Marcas', href: 'marcasProducto' },
             ],
         },
         {

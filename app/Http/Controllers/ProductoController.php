@@ -6,6 +6,7 @@ use App\Models\Categoria;
 use App\Models\Contacto;
 use App\Models\ImagenProducto;
 use App\Models\Marca;
+use App\Models\MarcaProducto;
 use App\Models\Metadatos;
 use App\Models\Producto;
 use App\Models\SubProducto;
@@ -22,7 +23,7 @@ class ProductoController extends Controller
     {
 
         $categorias = Categoria::select('id', 'name')->get();
-        $marcas = Marca::select('id', 'name')->get();
+        $marcas = MarcaProducto::select('id', 'name')->get();
 
         $perPage = $request->input('per_page', default: 10);
 
@@ -48,7 +49,7 @@ class ProductoController extends Controller
     {
         $productos = Producto::select('id', 'code')->get();
         $categorias = Categoria::orderBy('order', 'asc')->get();
-        $marcas = Marca::select('id', 'name')->get();
+        $marcas = MarcaProducto::select('id', 'name')->get();
 
 
         return Inertia::render('productosVistaPrevia', [
@@ -58,7 +59,7 @@ class ProductoController extends Controller
         ]);
     }
 
-    public function indexInicio(Request $request, $id)
+    /* public function indexInicio(Request $request, $id)
     {
         $marcas = Marca::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
 
@@ -83,15 +84,53 @@ class ProductoController extends Controller
             'subproductos' => $subproductos,
 
         ]);
+    } */
+
+    public function indexInicio(Request $request, $id)
+    {
+        $marcas = MarcaProducto::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
+
+        $categorias = Categoria::select('id', 'name', 'order')
+            ->orderBy('order', 'asc')
+            ->get();
+
+        $metadatos = Metadatos::where('title', 'Productos')->first();
+
+        $query = Producto::where('categoria_id', $id)
+            ->with('marca', 'imagenes')
+            ->orderBy('order', 'asc');
+
+        if ($request->filled('marca')) {
+            $query->where('marca_id', $request->marca);
+        }
+
+        $productos = $query->paginate(12)->withQueryString(); // 12 por página, mantiene filtros
+
+        // Opcional: solo subproductos de productos actuales (más eficiente)
+        $productoIds = $productos->pluck('id');
+        $subproductos = SubProducto::whereIn('producto_id', $productoIds)
+            ->orderBy('order', 'asc')
+            ->get();
+
+        return Inertia::render('productos', [
+            'productos' => $productos,
+            'categorias' => $categorias,
+            'marcas' => $marcas,
+            'metadatos' => $metadatos,
+            'id' => $id,
+            'marca_id' => $request->marca,
+            'subproductos' => $subproductos,
+        ]);
     }
 
     public function imagenesProducto()
     {
-        $fotos = Storage::disk('public')->files('imagenesproducto');
+        $fotos = Storage::disk('public')->files('repuestos');
 
         foreach ($fotos as $foto) {
+            $path = pathinfo(basename($foto), PATHINFO_FILENAME);
 
-            $producto = Producto::where('code', pathinfo(basename($foto), PATHINFO_FILENAME))->first();
+            $producto = Producto::where('code', $path)->first();
             if (!$producto) {
                 continue; // Skip if the product is not found
             }
@@ -102,6 +141,62 @@ class ProductoController extends Controller
             ]);
         }
     }
+
+    public function agregarMarca()
+    {
+        $productos = Producto::all();
+
+        foreach ($productos as $producto) {
+            // Extraer las letras iniciales del código
+            $prefijo = preg_match('/^[A-Za-z]+/', $producto->code, $matches) ? $matches[0] : '';
+
+            // Verificar si el prefijo coincide con el que querés
+            if ($prefijo === 'AG' || $prefijo === 'AGP') {
+                $producto->marca_id = 1;
+            } else if ($prefijo === 'C' || $prefijo === 'CHP') {
+                $producto->marca_id = 2;
+            } else if ($prefijo === 'DO') {
+                $producto->marca_id = 3;
+            } else if ($prefijo === 'FI' || $prefijo === 'FIP') {
+                $producto->marca_id = 4;
+            } else if ($prefijo === 'FO' || $prefijo === 'FOP') {
+                $producto->marca_id = 5;
+            } else if ($prefijo === 'HY') {
+                $producto->marca_id = 6;
+            } else if ($prefijo === 'IVP' || $prefijo === 'IV') {
+                $producto->marca_id = 7;
+            } else if ($prefijo === 'MB' || $prefijo === 'MBP') {
+                $producto->marca_id = 8;
+            } else if ($prefijo === 'MTB') {
+                $producto->marca_id = 9;
+            } else if ($prefijo === 'NF') {
+                $producto->marca_id = 10;
+            } else if ($prefijo === 'SR') {
+                $producto->marca_id = 11;
+            } else if ($prefijo === 'SV' || $prefijo === 'SVP') {
+                $producto->marca_id = 12;
+            } else if ($prefijo === 'TO') {
+                $producto->marca_id = 13;
+            } else if ($prefijo === 'VL' || $prefijo === 'VLP') {
+                $producto->marca_id = 14;
+            } else if ($prefijo === 'VW' || $prefijo === 'VWP') {
+                $producto->marca_id = 15;
+            } else if ($prefijo === 'RAP') {
+                $producto->marca_id = 16;
+            } else if ($prefijo === 'REP') {
+                $producto->marca_id = 17;
+            } else if ($prefijo === 'ZLP') {
+                $producto->marca_id = 18;
+            } else {
+                continue;
+            }
+
+            // Guardar el producto con la nueva marca
+            $producto->save();
+        }
+    }
+
+
 
     public function show($id, $producto_id)
     {
@@ -165,7 +260,7 @@ class ProductoController extends Controller
             'order' => 'sometimes|string|max:255',
             'code' => 'required|string|max:255',
             'categoria_id' => 'required|exists:categorias,id',
-            'marca_id' => 'required|exists:marcas,id',
+            'marca_id' => 'required|exists:marcas_productos,id',
             'ficha_tecnica' => 'sometimes|file',
             'aplicacion' => 'nullable|string|max:255',
             'anios' => 'nullable|string|max:255',
@@ -205,7 +300,7 @@ class ProductoController extends Controller
             'order' => 'sometimes|string|max:255',
             'code' => 'sometimes|string|max:255',
             'categoria_id' => 'sometimes|exists:categorias,id',
-            'marca_id' => 'sometimes|exists:marcas,id',
+            'marca_id' => 'sometimes|exists:marcas_productos,id',
             'ficha_tecnica' => 'sometimes|file',
             'aplicacion' => 'sometimes|string|max:255',
             'anios' => 'sometimes|string|max:255',

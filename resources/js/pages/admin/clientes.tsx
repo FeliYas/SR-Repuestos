@@ -30,6 +30,9 @@ export default function Clientes() {
             onSuccess: () => {
                 setCreateView(false);
             },
+            onError: (error) => {
+                console.error('Error al registrar el cliente:', error);
+            },
         });
     };
 
