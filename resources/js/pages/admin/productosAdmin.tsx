@@ -151,16 +151,6 @@ export default function ProductosAdmin() {
                                             ))}
                                         </select>
 
-                                        <label htmlFor="ficha">Ficha tecnica</label>
-
-                                        <input
-                                            type="file"
-                                            name="ficha"
-                                            id="ficha"
-                                            onChange={(e) => setData('ficha_tecnica', e.target.files[0])}
-                                            className="file:border-primary-orange file:text-primary-orange hover:file:bg-primary-orange file:cursor-pointer file:rounded-md file:border file:px-2 file:py-1 file:transition file:duration-300 hover:file:text-white"
-                                        />
-
                                         <label htmlFor="imagenn">Imagen</label>
                                         <span className="text-base font-normal">Resolucion recomendada: 501x181px</span>
 
@@ -225,7 +215,7 @@ export default function ProductosAdmin() {
                                     <td className="text-center">CODIGO</td>
                                     <td className="text-center">CATEGORIA</td>
                                     <td className="text-center">MARCA</td>
-                                    <td className="text-center">FICHA TECNICA</td>
+
                                     <td className="text-center">CARACTERISTICAS</td>
                                     <td className="px-3 py-2 text-center">IMAGEN</td>
                                     <td className="text-center">EDITAR</td>

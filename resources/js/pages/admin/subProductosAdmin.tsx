@@ -20,8 +20,11 @@ export default function SubProductosAdmin() {
         price_dist: '',
     });
 
+    const excelForm = useForm();
+
     const [searchTerm, setSearchTerm] = useState('');
     const [createView, setCreateView] = useState(false);
+    const [importar, setImportar] = useState(false);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -38,6 +41,25 @@ export default function SubProductosAdmin() {
                 console.log(errors);
             },
         });
+    };
+
+    const handleImport = (e) => {
+        e.preventDefault();
+
+        excelForm.post(route('importar.excel'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Archivo importado correctamente');
+                excelForm.reset();
+                setImportar(false);
+            },
+            onError: (errors) => {
+                toast.error('Error al importar archivo');
+                console.log(errors);
+            },
+        });
+        setImportar(false);
+        reset();
     };
 
     // Manejadores para la paginación del backend
@@ -216,6 +238,58 @@ export default function SubProductosAdmin() {
                         </motion.div>
                     )}
                 </AnimatePresence>
+                <AnimatePresence>
+                    {importar && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed top-0 left-0 z-50 flex h-full w-full items-center justify-center bg-black/50 text-left"
+                        >
+                            <form onSubmit={handleImport} method="POST" className="max-h-[90vh] overflow-x-auto text-black">
+                                <div className="w-[500px] rounded-md bg-white p-4">
+                                    <h2 className="mb-4 text-2xl font-semibold">Cargar archivo Excel</h2>
+                                    <div className="flex flex-col gap-4">
+                                        <label htmlFor="imagenn">Archivo</label>
+
+                                        <div className="flex flex-row">
+                                            <input
+                                                type="file"
+                                                name="imagen"
+                                                id="imagenn"
+                                                onChange={(e) => excelForm.setData('archivo', e.target.files[0])}
+                                                className="hidden"
+                                            />
+                                            <label
+                                                className="border-primary-orange text-primary-orange hover:bg-primary-orange cursor-pointer rounded-md border px-2 py-1 transition duration-300 hover:text-white"
+                                                htmlFor="imagenn"
+                                            >
+                                                Elegir Archivo
+                                            </label>
+                                            <p className="self-center px-2">{excelForm?.data?.archivo?.name}</p>
+                                        </div>
+
+                                        <div className="flex justify-end gap-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => setImportar(false)}
+                                                className="border-primary-orange text-primary-orange hover:bg-primary-orange rounded-md border px-2 py-1 transition duration-300 hover:text-white"
+                                            >
+                                                Cancelar
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                className="border-primary-orange text-primary-orange hover:bg-primary-orange rounded-md border px-2 py-1 transition duration-300 hover:text-white"
+                                            >
+                                                Guardar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
                 <div className="mx-auto flex w-full flex-col gap-3">
                     <h2 className="border-primary-orange text-primary-orange text-bold w-full border-b-2 text-2xl">Sub-productos</h2>
                     <div className="flex h-fit w-full flex-row gap-5">
@@ -234,9 +308,15 @@ export default function SubProductosAdmin() {
                         </button>
                         <button
                             onClick={() => setCreateView(true)}
-                            className="bg-primary-orange w-[300px] rounded px-4 py-1 font-bold text-white hover:bg-orange-400"
+                            className="bg-primary-orange w-[400px] rounded px-4 py-1 font-bold text-white hover:bg-orange-400"
                         >
                             Crear Sub-producto
+                        </button>
+                        <button
+                            onClick={() => setImportar(true)}
+                            className="bg-primary-orange w-[300px] rounded px-4 py-1 font-bold text-white hover:bg-orange-400"
+                        >
+                            Actualizar precios
                         </button>
                     </div>
 

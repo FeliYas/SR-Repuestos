@@ -104,7 +104,7 @@ export default function Productos() {
                             <div className="h-[200px] w-full border-b border-gray-200 sm:h-[287px]">
                                 <img
                                     className="h-full w-full object-cover object-center"
-                                    src={producto?.imagenes[0]?.image || defaultPhoto}
+                                    src={Array.isArray(producto?.imagenes) && producto.imagenes[0]?.image ? producto.imagenes[0].image : defaultPhoto}
                                     alt={producto?.name}
                                 />
                             </div>
@@ -118,20 +118,21 @@ export default function Productos() {
                         </Link>
                     ))}
                     <div className="col-span-3 mt-4 flex max-h-[33px] w-full justify-between">
-                        {productos.links.map((link, index) => (
-                            <button
-                                key={index}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                disabled={!link.url}
-                                onClick={() => {
-                                    const secureUrl = link.url?.replace('http://', 'https://');
-                                    if (secureUrl) {
-                                        router.visit(secureUrl);
-                                    }
-                                }}
-                                className={`mx-1 border px-3 py-1 ${link.active ? 'bg-gray-300' : ''}`}
-                            />
-                        ))}
+                        {Array.isArray(productos?.links) &&
+                            productos.links.map((link, index) => (
+                                <button
+                                    key={index}
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                    disabled={!link.url}
+                                    onClick={() => {
+                                        const secureUrl = link.url?.replace('http://', 'https://');
+                                        if (secureUrl) {
+                                            router.visit(secureUrl);
+                                        }
+                                    }}
+                                    className={`mx-1 border px-3 py-1 ${link.active ? 'bg-gray-300' : ''}`}
+                                />
+                            ))}
                     </div>
                 </div>
             </div>

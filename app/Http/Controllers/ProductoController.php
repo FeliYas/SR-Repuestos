@@ -31,7 +31,7 @@ class ProductoController extends Controller
 
         if ($request->has('search') && !empty($request->search)) {
             $searchTerm = $request->search;
-            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%')->orWhere('code', 'LIKE', '%' . $searchTerm . '%');
         }
 
         $productos = $query->paginate($perPage);
@@ -145,6 +145,8 @@ class ProductoController extends Controller
     public function agregarMarca()
     {
         $productos = Producto::all();
+
+
 
         foreach ($productos as $producto) {
             // Extraer las letras iniciales del código
@@ -300,7 +302,7 @@ class ProductoController extends Controller
             'order' => 'sometimes|string|max:255',
             'code' => 'sometimes|string|max:255',
             'categoria_id' => 'sometimes|exists:categorias,id',
-            'marca_id' => 'sometimes|exists:marcas_productos,id',
+            'marca_id' => 'sometimes|exists:marca_productos,id',
             'ficha_tecnica' => 'sometimes|file',
             'aplicacion' => 'sometimes|string|max:255',
             'anios' => 'sometimes|string|max:255',
