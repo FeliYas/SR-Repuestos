@@ -2,7 +2,7 @@ import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import defaultPhoto from '../../images/logos/logobetter.png';
+import defaultPhoto from '../../images/defaultPhoto.png';
 import DefaultLayout from './defaultLayout';
 
 export default function Productos() {
@@ -123,7 +123,12 @@ export default function Productos() {
                                 key={index}
                                 dangerouslySetInnerHTML={{ __html: link.label }}
                                 disabled={!link.url}
-                                onClick={() => router.visit(link.url)}
+                                onClick={() => {
+                                    const secureUrl = link.url?.replace('http://', 'https://');
+                                    if (secureUrl) {
+                                        router.visit(secureUrl);
+                                    }
+                                }}
                                 className={`mx-1 border px-3 py-1 ${link.active ? 'bg-gray-300' : ''}`}
                             />
                         ))}

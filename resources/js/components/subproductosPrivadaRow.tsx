@@ -4,7 +4,7 @@ import { usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useCart } from 'react-use-cart';
-import defaultPhoto from '../../images/logos/logobetter.png';
+import defaultPhoto from '../../images/defaultPhoto.png';
 
 export default function SubproductosPrivadaRow({ subProducto }) {
     const { addItem, updateItemQuantity, getItem, removeItem } = useCart();
