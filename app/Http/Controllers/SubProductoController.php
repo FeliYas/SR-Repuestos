@@ -96,6 +96,10 @@ class SubProductoController extends Controller
         ]);
     }
 
+    public function cargarSubProductos()
+    {
+        $subproductos = SubProducto::whereNull('producto_id');
+    }
 
     /**
      * Store a newly created resource in storage.

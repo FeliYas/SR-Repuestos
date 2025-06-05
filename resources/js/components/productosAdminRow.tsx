@@ -1,4 +1,4 @@
-import { faFile, faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useForm } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -100,11 +100,7 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
             <td className="align-middle">{producto?.code}</td>
             <td className="align-middle">{producto?.categoria?.name}</td>
             <td className="align-middle">{producto?.marca?.name}</td>
-            <td className="align-middle">
-                <button onClick={() => setImagenesView(true)} className="h-10 w-10 rounded-md border border-red-500 px-2 py-1 text-white">
-                    <FontAwesomeIcon icon={faFile} size="lg" color="#fb2c36" />
-                </button>
-            </td>
+
             <td>
                 <button onClick={() => setCaracteristicasView(true)} className="h-10 w-10 rounded-md border border-blue-500 px-2 py-1 text-white">
                     <FontAwesomeIcon icon={faPen} size="lg" color="#3b82f6" />
@@ -309,16 +305,6 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
                                             </option>
                                         ))}
                                     </select>
-
-                                    <label htmlFor="ficha">Ficha tecnica</label>
-
-                                    <input
-                                        type="file"
-                                        name="ficha"
-                                        id="ficha"
-                                        onChange={(e) => updateForm.setData('ficha_tecnica', e.target.files[0])}
-                                        className="file:border-primary-orange file:text-primary-orange hover:file:bg-primary-orange file:cursor-pointer file:rounded-md file:border file:px-2 file:py-1 file:transition file:duration-300 hover:file:text-white"
-                                    />
 
                                     <label htmlFor="imagenn">Imagen</label>
                                     <span className="text-base font-normal">Resolucion recomendada: 501x181px</span>

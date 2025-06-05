@@ -9,6 +9,7 @@ use App\Http\Controllers\CalidadController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ContactoController;
 use App\Http\Controllers\ImagenProductoController;
+use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InstagramController;
 use App\Http\Controllers\ListaDePreciosController;
 use App\Http\Controllers\LogosController;
@@ -127,6 +128,8 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('admin/marcasProducto', [MarcaProductoController::class, 'store'])->name('admin.marcasProducto.store');
     Route::post('admin/marcasProducto/update', [MarcaProductoController::class, 'update'])->name('admin.marcasProducto.update');
     Route::delete('admin/marcasProducto/destroy', [MarcaProductoController::class, 'destroy'])->name('admin.marcasProducto.destroy');
+
+    Route::post('/importar-excel', [ImportController::class, 'importar'])->name('importar.excel');
 
     Route::get('/admin/dashboard', function () {
         if (!Auth::guard('admin')->check()) {

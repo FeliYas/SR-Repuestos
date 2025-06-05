@@ -34,32 +34,32 @@ class ImportarProductosDesdeExcelJob implements ShouldQueue
         foreach ($rows as $index => $row) {
             if ($index === 0) continue; // Saltar encabezado
 
-            $supercodigo = trim($row[0]);
-            $codigo = trim($row[1]);
-            $name = trim($row[2]);
+            $codigo = trim($row[0]);
+            $descripcion = trim($row[1]);
+            $familia = trim($row[2]);
+            $precio_mayorista = trim($row[3]);
+            $precio_minorista = trim($row[4]);
+            $precio_dist = trim($row[5]);
 
 
-            $subproducto = SubProducto::where('code', $codigo)->first();
 
-            if ($subproducto) {
-                $producto = Producto::firstOrCreate(
-                    ['code' => $supercodigo],
-                    [
-                        'name' => $name,
-                        'code' => $supercodigo,
-                        //parabolico 1, convensional 2, repuestos 3
-                        'categoria_id' => 1
-                    ]
-                );
-            }
+            $producto = Producto::firstOrCreate(
+                ['name' => $familia],
+                [
+                    'code' => $codigo,
+                    //parabolico 1, convensional 2, repuestos 3
+                    'categoria_id' => 3
+                ]
+            );
 
-            if ($subproducto) {
-                $subproducto->update(
-                    [
-                        'producto_id' => $producto->id,
-                    ]
-                );
-            }
+
+            SubProducto::updateOrCreate([
+                'producto_id' => $producto->id,
+                'price_mayorista' => $precio_mayorista,
+                'price_minorista' => $precio_minorista,
+                'price_dist' => $precio_dist,
+                'code' => $codigo,
+            ]);
         }
 
         Log::info("Importación de productos y subproductos desde CSV completada.");

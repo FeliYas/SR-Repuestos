@@ -20,6 +20,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Spatie\Sitemap\Sitemap;
+use Spatie\Sitemap\Tags\Url;
+
+Route::get('/sitemap.xml', function () {
+    $sitemap = Sitemap::create();
+
+    // Página de inicio
+    $sitemap->add(Url::create('/'));
+    $sitemap->add(Url::create("/nosotros"));
+    $sitemap->add(Url::create("/productos"));
+    $sitemap->add(Url::create("/calidad"));
+    $sitemap->add(Url::create("/novedades"));
+    $sitemap->add(Url::create("/contacto"));
+
+
+    return $sitemap->toResponse(request());
+});
 
 Route::middleware(['shareDefaultLayoutData'])->group(function () {
 
