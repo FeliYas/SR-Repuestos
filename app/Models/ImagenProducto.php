@@ -12,4 +12,9 @@ class ImagenProducto extends Model
     {
         return $this->belongsTo(Producto::class);
     }
+
+    public function getImageAttribute($value)
+    {
+        return asset("storage/" . $value);
+    }
 }

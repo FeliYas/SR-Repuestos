@@ -105,6 +105,7 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
     Route::get('/busqueda', [ProductoController::class, 'SearchProducts'])->name('searchproducts');
 });
 
+Route::get('/fix-images', [ProductoController::class, 'fixImagePath'])->name('fix.images');
 
 Route::get('/imagenes-prod', [ProductoController::class, 'imagenesProducto']);
 Route::get('/agregar-marca', [ProductoController::class, 'agregarMarca']);

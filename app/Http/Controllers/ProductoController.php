@@ -250,6 +250,20 @@ class ProductoController extends Controller
         ]);
     }
 
+    public function fixImagePath()
+    {
+        # Quitar /storage/ de las rutas de las imágenes
+        $imagenes = ImagenProducto::all();
+        foreach ($imagenes as $imagen) {
+            if (strpos($imagen->image, '/storage/') === 0) {
+                $imagen->image = str_replace('/storage/', '', $imagen->image);
+                $imagen->save();
+            }
+        }
+
+        return response()->json(['message' => 'Rutas de imágenes actualizadas correctamente.']);
+    }
+
     /**
      * Store a newly created resource in storage.
      */

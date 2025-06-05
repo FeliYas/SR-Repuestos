@@ -221,7 +221,7 @@ export default function Contacto() {
                             <div className="flex justify-center sm:justify-start">
                                 <ReCAPTCHA
                                     ref={recaptchaRef}
-                                    sitekey={'6LeSHDArAAAAAD-dTLNBiKw16dZyaJiA3TrSnM6r'} // Replace with your actual site key
+                                    sitekey={'6LeIDkorAAAAAIR0l7veV8LXj4TYsGDJ_v5zJBzX'} // Replace with your actual site key
                                     onChange={onReCAPTCHAChange}
                                     size="normal"
                                 />
