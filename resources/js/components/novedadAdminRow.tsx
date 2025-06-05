@@ -122,7 +122,7 @@ export default function NovedadAdminRow({ novedad }) {
                                     <CustomReactQuill value={text} onChange={setText} />
                                     <label htmlFor="imagenn">Imagen</label>
 
-                                    <span className="text-base font-normal">Resolucion recomendada: 501x181px</span>
+                                    <span className="text-base font-normal">Resolucion recomendada: 392x300px</span>
                                     <div className="flex flex-row">
                                         <input
                                             type="file"

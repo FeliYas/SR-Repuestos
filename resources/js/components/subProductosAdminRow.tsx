@@ -207,7 +207,7 @@ export default function SubProdcutosAdminRow({ subprod, productos }) {
                                     />
 
                                     <label htmlFor="imagenn">Imagen</label>
-                                    <span className="text-base font-normal">Resolucion recomendada: 501x181px</span>
+                                    <span className="text-base font-normal">Resolucion recomendada: 286px x 286px</span>
                                     <div className="flex flex-row">
                                         <input
                                             type="file"

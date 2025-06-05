@@ -2,6 +2,7 @@ import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import defaultPhoto from '../../../images/defaultPhoto.png';
 import DefaultLayout from '../defaultLayout';
 
 export default function ProductoShow() {
@@ -68,7 +69,14 @@ export default function ProductoShow() {
                     <div className="flex w-full flex-col gap-8 lg:flex-row">
                         {/* product image */}
                         <div className="relative h-[300px] w-full border border-[#E0E0E0] max-sm:mb-24 sm:h-[400px] lg:h-[496px]">
-                            <img className="h-full w-full object-contain" src={currentImage} alt={producto?.name} />
+                            <img
+                                className="h-full w-full object-contain"
+                                src={currentImage || defaultPhoto}
+                                onError={(e) => {
+                                    e.currentTarget.src = defaultPhoto;
+                                }}
+                                alt={producto?.name}
+                            />
                             <div className="absolute -bottom-20 left-0 flex w-full flex-row gap-2 overflow-x-auto pb-2">
                                 {producto?.imagenes?.map((image, index) => (
                                     <button
@@ -78,7 +86,10 @@ export default function ProductoShow() {
                                     >
                                         <img
                                             className="h-full w-full object-contain"
-                                            src={image?.image}
+                                            src={image?.image || defaultPhoto}
+                                            onError={(e) => {
+                                                e.currentTarget.src = defaultPhoto;
+                                            }}
                                             alt={`${producto?.name} - imagen ${index + 1}`}
                                         />
                                     </button>
@@ -177,8 +188,11 @@ export default function ProductoShow() {
                                     <div className="h-[200px] w-full border-b border-gray-200 sm:h-[287px]">
                                         <img
                                             className="h-full w-full object-cover object-center"
-                                            src={producto?.imagenes[0]?.image}
+                                            src={producto?.imagenes[0]?.image || defaultPhoto}
                                             alt={producto?.name}
+                                            onError={(e) => {
+                                                e.currentTarget.src = defaultPhoto;
+                                            }}
                                         />
                                     </div>
                                     <div className="flex w-full flex-col gap-2 p-4">

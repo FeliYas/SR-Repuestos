@@ -1,6 +1,6 @@
 import { faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useForm } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -13,6 +13,7 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
     const imagesForm = useForm({
         order: '',
         producto_id: producto?.id,
+        id: '',
     });
 
     const caracForm = useForm({
@@ -78,9 +79,9 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
         });
     };
 
-    const deleteImage = () => {
+    const deleteImage = (id) => {
         if (confirm('¿Estas seguro de eliminar esta imagen?')) {
-            imagesForm.delete(route('admin.imagenes.destroy'), {
+            router.delete(route('admin.imagenes.destroy', { id: id }), {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success('Imagen eliminada correctamente');
@@ -307,7 +308,7 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
                                     </select>
 
                                     <label htmlFor="imagenn">Imagen</label>
-                                    <span className="text-base font-normal">Resolucion recomendada: 501x181px</span>
+                                    <span className="text-base font-normal">Resolucion recomendada: 286px x 286px</span>
 
                                     <input
                                         type="file"
@@ -353,7 +354,11 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
                                     <div className="grid w-full grid-cols-5 gap-3">
                                         {producto?.imagenes?.map((image) => (
                                             <div className="relative h-20 w-20 border">
-                                                <button onClick={deleteImage} className="absolute top-0 left-0 h-full w-full bg-black/20">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => deleteImage(image.id)}
+                                                    className="absolute top-0 left-0 h-full w-full bg-black/20"
+                                                >
                                                     <FontAwesomeIcon icon={faTrash} size="lg" color="#fb2c36" />
                                                 </button>
                                                 <img className="h-full w-full object-cover" src={image?.image} alt="" />
@@ -369,7 +374,7 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
                                         value={imagesForm.data.order}
                                         onChange={(e) => imagesForm.setData('order', e.target.value)}
                                     />
-                                    <span className="text-base font-normal">Resolucion recomendada: 501x181px</span>
+                                    <span className="text-base font-normal">Resolucion recomendada: 286px x 286px</span>
                                     <label htmlFor="imagen">Imagen:</label>
                                     <input
                                         type="file"

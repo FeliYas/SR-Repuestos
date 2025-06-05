@@ -103,7 +103,7 @@ export default function Productos() {
                         >
                             <div className="h-[200px] w-full border-b border-gray-200 sm:h-[287px]">
                                 <img
-                                    className="h-full w-full object-cover object-center"
+                                    className="h-full w-full object-contain object-center"
                                     src={Array.isArray(producto?.imagenes) && producto.imagenes[0]?.image ? producto.imagenes[0].image : defaultPhoto}
                                     alt={producto?.name}
                                 />

@@ -152,7 +152,7 @@ export default function ProductosAdmin() {
                                         </select>
 
                                         <label htmlFor="imagenn">Imagen</label>
-                                        <span className="text-base font-normal">Resolucion recomendada: 501x181px</span>
+                                        <span className="text-base font-normal">Resolucion recomendada: 286px x 286px</span>
 
                                         <input
                                             type="file"

@@ -110,14 +110,14 @@ class SubProductoController extends Controller
             'order' => 'nullable|string|max:255',
             'code' => 'required|string|max:255',
             'producto_id' => 'required|exists:productos,id',
-            'description' => 'required|string|max:255',
+            'description' => 'nullable|sometimes|string|max:255',
             'medida' => 'nullable|string|max:255',
             'componente' => 'nullable|string|max:255',
             'caracteristicas' => 'nullable|string|max:255',
             'price_mayorista' => 'required|numeric',
             'price_minorista' => 'required|numeric',
             'price_dist' => 'required|numeric',
-            'image' => 'required|file',
+            'image' => 'nullable|sometimes|file',
         ]);
 
         // Handle file upload
@@ -145,14 +145,14 @@ class SubProductoController extends Controller
             'order' => 'nullable|string|max:255',
             'code' => 'required|string|max:255',
             'producto_id' => 'required|exists:productos,id',
-            'description' => 'required|string|max:255',
+            'description' => 'nullable|sometimes|string|max:255',
             'medida' => 'nullable|string|max:255',
             'componente' => 'nullable|string|max:255',
             'caracteristicas' => 'nullable|string|max:255',
             'price_mayorista' => 'required|numeric',
             'price_minorista' => 'required|numeric',
             'price_dist' => 'required|numeric',
-            'image' => 'sometimes|file',
+            'image' => 'sometimes|nullable|file',
         ]);
 
         // Handle file upload if image exists
