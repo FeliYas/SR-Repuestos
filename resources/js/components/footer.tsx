@@ -1,13 +1,35 @@
 import { faFacebookF, faInstagram, faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { faArrowRight, faEnvelope, faLocationDot, faPhone } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { usePage } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function Footer() {
     const { contacto, logos } = usePage().props;
     const [isMobile, setIsMobile] = useState(false);
     const [isTablet, setIsTablet] = useState(false);
+
+    const { data, setData, reset, post } = useForm({
+        email: '',
+    });
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        post(route('admin.newsletter.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Newsletter creado correctamente');
+                setData('email', '');
+                reset();
+            },
+            onError: (errors) => {
+                toast.error('El mail ya se encuentra registrado');
+                console.log(errors);
+            },
+        });
+    };
 
     useEffect(() => {
         const handleResize = () => {
@@ -103,15 +125,22 @@ export default function Footer() {
                 </div>
 
                 {/* newsletter */}
-                <div className={`flex h-full flex-col items-center gap-6 lg:items-start lg:gap-10`}>
+                <form onSubmit={handleSubmit} className={`flex h-full flex-col items-center gap-6 lg:items-start lg:gap-10`}>
                     <h2 className="text-lg font-bold text-white">Suscribite al Newsletter</h2>
                     <div className="flex h-[44px] w-full items-center justify-between border border-[#E0E0E0] px-3 sm:w-[287px]">
-                        <input className="w-full bg-transparent text-white/80 outline-none focus:outline-none" placeholder="Email" type="text" />
+                        <input
+                            className="w-full bg-transparent text-white/80 outline-none focus:outline-none"
+                            placeholder="Email"
+                            type="email"
+                            required
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                        />
                         <button>
                             <FontAwesomeIcon icon={faArrowRight} color="#fb7f01" />
                         </button>
                     </div>
-                </div>
+                </form>
 
                 {/* Datos de contacto */}
                 <div className="flex h-full flex-col items-center gap-6 lg:items-start lg:gap-10">

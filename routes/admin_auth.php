@@ -13,6 +13,7 @@ use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InstagramController;
 use App\Http\Controllers\ListaDePreciosController;
 use App\Http\Controllers\LogosController;
+use App\Http\Controllers\MailNewsletterController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\MarcaProductoController;
 use App\Http\Controllers\MetadatosController;
@@ -128,6 +129,13 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('admin/marcasProducto', [MarcaProductoController::class, 'store'])->name('admin.marcasProducto.store');
     Route::post('admin/marcasProducto/update', [MarcaProductoController::class, 'update'])->name('admin.marcasProducto.update');
     Route::delete('admin/marcasProducto/destroy', [MarcaProductoController::class, 'destroy'])->name('admin.marcasProducto.destroy');
+
+    Route::get('admin/newsletter', [MailNewsletterController::class, 'index'])->name('admin.newsletter.index');
+    Route::post('admin/newsletter', [MailNewsletterController::class, 'store'])->name('admin.newsletter.store');
+    Route::post('admin/newsletter/update', [MailNewsletterController::class, 'update'])->name('admin.newsletter.update');
+    Route::delete('admin/newsletter/destroy', [MailNewsletterController::class, 'destroy'])->name('admin.newsletter.destroy');
+
+
 
     Route::post('/importar-excel', [ImportController::class, 'importar'])->name('importar.excel');
 

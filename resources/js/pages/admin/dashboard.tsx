@@ -114,7 +114,10 @@ export default function Dashboard({ children }) {
             title: 'Contacto',
             icon: faEnvelope,
             href: 'contacto',
-            subHref: [],
+            subHref: [
+                { title: 'Contenido', href: 'contacto' },
+                { title: 'Newsletter', href: 'newsletter' },
+            ],
         },
         {
             id: 'zonaprivada',

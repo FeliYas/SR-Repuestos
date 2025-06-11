@@ -144,8 +144,9 @@ export default function ProductoShow() {
 
                     {/* subproducts table */}
                     <div className="mt-16 flex flex-col md:mt-30">
-                        <div className="hidden h-[52px] grid-cols-4 items-center bg-[#F5F5F5] px-4 md:grid">
+                        <div className="hidden h-[52px] grid-cols-5 items-center bg-[#F5F5F5] px-4 md:grid">
                             <p>Código</p>
+                            <p>Descripción</p>
                             <p>Medida</p>
                             <p>Componente</p>
                             <p>Características</p>
@@ -153,11 +154,15 @@ export default function ProductoShow() {
                         {subproductos?.map((subproducto, index) => (
                             <div
                                 key={index}
-                                className="flex flex-col border-b border-[#E0E0E0] py-3 text-[#74716A] md:grid md:h-[52px] md:grid-cols-4 md:items-center md:px-4 md:py-0"
+                                className="flex flex-col border-b border-[#E0E0E0] py-3 text-[#74716A] md:grid md:h-[52px] md:grid-cols-5 md:items-center md:px-4 md:py-0"
                             >
                                 <div className="flex justify-between md:block">
                                     <p className="font-semibold md:hidden md:font-normal">Código:</p>
                                     <p>{subproducto?.code}</p>
+                                </div>
+                                <div className="flex justify-between md:block">
+                                    <p className="font-semibold md:hidden md:font-normal">Descripcion:</p>
+                                    <p>{subproducto?.description}</p>
                                 </div>
                                 <div className="flex justify-between md:block">
                                     <p className="font-semibold md:hidden md:font-normal">Medida:</p>
