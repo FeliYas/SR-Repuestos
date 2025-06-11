@@ -179,8 +179,8 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
                                         type="text"
                                         name="tonelaje"
                                         id="tonelaje"
-                                        value={caracForm.data.num_original}
-                                        onChange={(e) => caracForm.setData('num_original', e.target.value)}
+                                        value={caracForm.data.tonelaje}
+                                        onChange={(e) => caracForm.setData('tonelaje', e.target.value)}
                                     />
 
                                     <label htmlFor="espigon">
@@ -191,8 +191,8 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
                                         type="text"
                                         name="espigon"
                                         id="espigon"
-                                        value={caracForm.data.num_original}
-                                        onChange={(e) => caracForm.setData('num_original', e.target.value)}
+                                        value={caracForm.data.espigon}
+                                        onChange={(e) => caracForm.setData('espigon', e.target.value)}
                                     />
 
                                     <label htmlFor="bujes">
@@ -203,8 +203,8 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
                                         type="text"
                                         name="bujes"
                                         id="bujes"
-                                        value={caracForm.data.num_original}
-                                        onChange={(e) => caracForm.setData('num_original', e.target.value)}
+                                        value={caracForm.data.bujes}
+                                        onChange={(e) => caracForm.setData('bujes', e.target.value)}
                                     />
 
                                     <div className="flex justify-end gap-4">
