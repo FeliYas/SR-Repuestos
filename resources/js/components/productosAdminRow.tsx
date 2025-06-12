@@ -50,6 +50,21 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
         });
     };
 
+    const handleUpdateCarac = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        caracForm.post(route('admin.productos.update'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Producto actualizada correctamente');
+                setEdit(false);
+            },
+            onError: (errors) => {
+                toast.error('Error al actualizar producto');
+                console.log(errors);
+            },
+        });
+    };
+
     const deleteMarca = () => {
         if (confirm('¿Estas seguro de eliminar este producto?')) {
             updateForm.delete(route('admin.productos.destroy'), {
@@ -132,7 +147,7 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
                         exit={{ opacity: 0 }}
                         className="fixed top-0 left-0 z-50 flex h-full w-full items-center justify-center bg-black/50 text-left"
                     >
-                        <form onSubmit={handleUpdate} method="POST" className="max-h-[90vh] overflow-y-auto text-black">
+                        <form onSubmit={handleUpdateCarac} method="POST" className="max-h-[90vh] overflow-y-auto text-black">
                             <div className="w-[500px] rounded-md bg-white p-4">
                                 <h2 className="mb-4 text-2xl font-semibold">Actualizar caracteristicas</h2>
                                 <div className="flex flex-col gap-4">
