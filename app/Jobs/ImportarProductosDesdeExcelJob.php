@@ -25,43 +25,54 @@ class ImportarProductosDesdeExcelJob implements ShouldQueue
 
     public function handle()
     {
-
-
         $spreadsheet = IOFactory::load(storage_path("app/" . $this->path));
         $sheet = $spreadsheet->getActiveSheet();
         $rows = $sheet->toArray();
 
+        $actualizados = 0;
+
         foreach ($rows as $index => $row) {
             if ($index === 0) continue; // Saltar encabezado
 
-            $supercodigo = trim($row[0]);
-            $codigo = trim($row[1]);
-            $name = trim($row[2]);
-
+            $codigo = $this->formatearCodigo(trim($row[0]));
+            $bitola = trim($row[1]);
+            $medida = trim($row[2]);
+            $comp = trim($row[3]);
+            $carac = trim($row[4]);
 
             $subproducto = SubProducto::where('code', $codigo)->first();
 
             if ($subproducto) {
-                $producto = Producto::firstOrCreate(
-                    ['code' => $supercodigo],
-                    [
-                        'name' => $name,
-                        'code' => $supercodigo,
-                        //parabolico 1, convensional 2, repuestos 3
-                        'categoria_id' => 1
-                    ]
-                );
-            }
+                $subproducto->update([
+                    'medida' => $medida,
+                    'componente' => $comp,
+                    'caracteristicas' => $carac,
+                ]);
 
-            if ($subproducto) {
-                $subproducto->update(
-                    [
-                        'producto_id' => $producto->id,
-                    ]
-                );
+                $actualizados++;
             }
         }
 
-        Log::info("Importación de productos y subproductos desde CSV completada.");
+        Log::info("Importación completada. Subproductos actualizados: $actualizados");
+    }
+
+    protected function formatearCodigo($codigo)
+    {
+        $codigo = str_replace('-', '', $codigo);
+
+        // Si contiene un punto
+        if (strpos($codigo, '.') !== false) {
+            [$parteEntera, $parteDecimal] = explode('.', $codigo);
+
+            // Agregar un 0 si la parte decimal tiene solo 1 dígito
+            if (strlen($parteDecimal) === 1) {
+                $parteDecimal = '0' . $parteDecimal;
+            }
+
+            return $parteEntera . '.' . $parteDecimal;
+        }
+
+        // Si no contiene punto, retornar tal cual sin guiones
+        return $codigo;
     }
 }
