@@ -154,7 +154,7 @@ export default function ProductoShow() {
                         {subproductos?.map((subproducto, index) => (
                             <div
                                 key={index}
-                                className="flex flex-col border-b border-[#E0E0E0] py-3 text-[#74716A] md:grid md:h-[52px] md:grid-cols-5 md:items-center md:px-4 md:py-0"
+                                className="flex flex-col border-b border-[#E0E0E0] py-3 text-[#74716A] md:grid md:min-h-[52px] md:grid-cols-5 md:items-center md:px-4 md:py-0"
                             >
                                 <div className="flex justify-between md:block">
                                     <p className="font-semibold md:hidden md:font-normal">Código:</p>
