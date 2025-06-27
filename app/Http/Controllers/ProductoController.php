@@ -236,7 +236,7 @@ class ProductoController extends Controller
         }
 
         if ($request->filled('codigo')) {
-            $query->where('code', 'LIKE', '%' . $request->codigo . '%');
+            $query->where('code', 'LIKE', '%' . $request->codigo . '%')->orWhere('name', 'LIKE', '%' . $request->codigo . '%');
         }
 
         $productos = $query->with(['categoria:id,name', 'marca:id,name', 'imagenes'])

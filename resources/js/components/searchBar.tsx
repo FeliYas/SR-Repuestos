@@ -63,7 +63,7 @@ export default function SearchBar() {
                         onChange={(e) => setData('codigo', e.target.value)}
                         className="h-[55px] w-full bg-white pl-3"
                         type="text"
-                        placeholder="Código de producto"
+                        placeholder="Código o nombre de producto"
                     />
 
                     <button
