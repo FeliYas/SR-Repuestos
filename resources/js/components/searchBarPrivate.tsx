@@ -44,7 +44,7 @@ export default function SearchBarPrivate() {
                         onChange={(e) => setData('codigo', e.target.value)}
                         className="h-[55px] w-full bg-white pl-3"
                         type="text"
-                        placeholder="Código de producto"
+                        placeholder="Código o nombre de producto"
                     />
 
                     <button type="submit" disabled={processing} className="h-[55px] min-w-[184px] bg-black text-white disabled:opacity-50">

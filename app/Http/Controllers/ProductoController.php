@@ -206,8 +206,9 @@ class ProductoController extends Controller
         $subproductos = SubProducto::where('producto_id', $producto_id)->orderBy('order', 'asc')->get();
         $producto = Producto::with(['categoria:id,name', 'marca:id,name', 'imagenes'])->findOrFail($producto_id);
         $categorias = Categoria::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
-        $productosRelacionados = Producto::with(['imagenes'])
+        $productosRelacionados = Producto::with(['imagenes', 'marca:id,name', 'categoria:id,name'])
             ->where('marca_id', $producto->marca_id)
+            ->where('categoria_id', $producto->categoria_id)
             ->where('id', '!=', $producto_id)
             ->inRandomOrder()
             ->limit(3)

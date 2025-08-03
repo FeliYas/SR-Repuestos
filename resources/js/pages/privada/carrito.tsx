@@ -182,7 +182,7 @@ export default function Carrito() {
                 <div className="col-span-2">
                     <div className="">
                         <Link
-                            href={'/privado/productos'}
+                            href={'/privada/productos'}
                             className="border-primary-orange text-primary-orange hover:bg-primary-orange h-[47px] border px-5 py-2 font-semibold transition duration-300 hover:text-white"
                         >
                             SEGUIR COMPRANDO

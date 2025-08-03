@@ -11,6 +11,7 @@ use App\Models\Categoria;
 use App\Models\Contacto;
 use App\Models\Instagram;
 use App\Models\Marca;
+use App\Models\MarcaProducto;
 use App\Models\Metadatos;
 use App\Models\Nosotros;
 use App\Models\Novedades;
@@ -43,7 +44,7 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
     Route::get('/', function () {
 
         $categorias = Categoria::orderBy('order', 'asc')->get();
-        $marcas = Marca::orderBy('order', 'asc')->get();
+        $marcas = MarcaProducto::orderBy('order', 'asc')->get();
         $instagram = Instagram::orderBy('order', 'asc')->get();
         $bannerPortada = BannerPortada::first();
         $novedades = Novedades::all();

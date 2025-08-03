@@ -2,7 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Models\Producto;
 use App\Models\SubProducto;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -25,54 +24,33 @@ class ImportarProductosDesdeExcelJob implements ShouldQueue
 
     public function handle()
     {
-        $spreadsheet = IOFactory::load(storage_path("app/" . $this->path));
-        $sheet = $spreadsheet->getActiveSheet();
-        $rows = $sheet->toArray();
+        try {
+            $spreadsheet = IOFactory::load(storage_path("app/{$this->path}"));
+            $rows = $spreadsheet->getActiveSheet()->toArray();
 
-        $actualizados = 0;
+            $actualizados = 0;
 
-        foreach ($rows as $index => $row) {
-            if ($index === 0) continue; // Saltar encabezado
+            foreach ($rows as $index => $row) {
+                if ($index === 0 || empty(trim($row[0]))) continue; // saltar encabezado o fila vacía
 
-            $codigo = $this->formatearCodigo(trim($row[0]));
-            $bitola = trim($row[1]);
-            $medida = trim($row[2]);
-            $comp = trim($row[3]);
-            $carac = trim($row[4]);
+                [$codigo,, $descripcion, $medida, $comp, $carac] = array_map('trim', array_pad($row, 6, ''));
 
-            $subproducto = SubProducto::where('code', $codigo)->first();
+                $subproducto = SubProducto::where('code', $codigo)->first();
 
-            if ($subproducto) {
-                $subproducto->update([
-                    'medida' => $medida,
-                    'componente' => $comp,
-                    'caracteristicas' => $carac,
-                ]);
-
-                $actualizados++;
-            }
-        }
-
-        Log::info("Importación completada. Subproductos actualizados: $actualizados");
-    }
-
-    protected function formatearCodigo($codigo)
-    {
-        $codigo = str_replace('-', '', $codigo);
-
-        // Si contiene un punto
-        if (strpos($codigo, '.') !== false) {
-            [$parteEntera, $parteDecimal] = explode('.', $codigo);
-
-            // Agregar un 0 si la parte decimal tiene solo 1 dígito
-            if (strlen($parteDecimal) === 1) {
-                $parteDecimal = '0' . $parteDecimal;
+                if ($subproducto) {
+                    $subproducto->updateQuietly([
+                        'medida' => $medida,
+                        'componente' => $comp,
+                        'caracteristicas' => $carac,
+                        'description' => $descripcion,
+                    ]);
+                    $actualizados++;
+                }
             }
 
-            return $parteEntera . '.' . $parteDecimal;
+            Log::info("Importación completada. Subproductos actualizados: {$actualizados}");
+        } catch (\Exception $e) {
+            Log::error("Error al importar productos: " . $e->getMessage());
         }
-
-        // Si no contiene punto, retornar tal cual sin guiones
-        return $codigo;
     }
 }

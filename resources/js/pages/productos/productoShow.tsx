@@ -11,6 +11,8 @@ export default function ProductoShow() {
     const [categoriasDropdown, setCategoriasDropdown] = useState(false);
     const [currentImage, setCurrentImage] = useState(producto?.imagenes[0]?.image);
 
+    console.log(productosRelacionados);
+
     return (
         <DefaultLayout>
             <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 md:flex-row md:gap-10 md:px-6 md:py-30">
@@ -104,18 +106,23 @@ export default function ProductoShow() {
                                 <h2 className="text-[22px] font-bold text-[#202020] md:text-[28px]">{producto?.name}</h2>
                             </div>
                             <div className="flex flex-col text-[14px] md:text-[16px]">
-                                <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
-                                    <p>Aplicación</p>
-                                    <p>{producto?.aplicacion}</p>
-                                </div>
+                                {producto?.categoria?.name?.toLowerCase() != 'repuestos y frenos' && (
+                                    <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
+                                        <p>Aplicación</p>
+                                        <p>{producto?.aplicacion}</p>
+                                    </div>
+                                )}
+
                                 <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
                                     <p>Año</p>
                                     <p>{producto?.anio}</p>
                                 </div>
-                                <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
-                                    <p>Nº Original</p>
-                                    <p>{producto?.num_original}</p>
-                                </div>
+                                {producto?.categoria?.name?.toLowerCase() != 'repuestos y frenos' && (
+                                    <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
+                                        <p>Nº Original</p>
+                                        <p>{producto?.num_original}</p>
+                                    </div>
+                                )}
                                 <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
                                     <p>Tonelaje</p>
                                     <p>{producto?.tonelaje}</p>
@@ -203,7 +210,7 @@ export default function ProductoShow() {
                                     <div className="flex w-full flex-col gap-2 p-4">
                                         <p className="text-primary-orange">
                                             {' '}
-                                            <span className="font-bold">{producto?.code}</span> | {producto?.marca}
+                                            <span className="font-bold">{producto?.code}</span> | {producto?.marca?.name?.toUpperCase()}{' '}
                                         </p>
                                         <h2 className="text-[18px] font-bold text-[#202020] md:text-[20px]">{producto?.name}</h2>
                                     </div>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Categoria;
 use App\Models\Marca;
+use App\Models\MarcaProducto;
 use App\Models\Producto;
 use App\Models\SubProducto;
 use DragonCode\Support\Facades\Filesystem\File;
@@ -53,12 +54,12 @@ class SubProductoController extends Controller
         $codigo = $request->input('codigo');
 
 
-        $marcas = Marca::select('id', 'name')->get();
+        $marcas = MarcaProducto::select('id', 'name')->get();
         $categorias = Categoria::select('id', 'name')->get();
 
         $query = SubProducto::with([
             'producto' => function ($query) {
-                $query->select('id', 'name', 'marca_id', 'categoria_id')
+                $query
                     ->with(['marca' => function ($q) {
                         $q->select('id', 'name');
                     }])
@@ -70,7 +71,7 @@ class SubProductoController extends Controller
 
         // Filtrar por código del subproducto
         if ($codigo) {
-            $query->where('code', 'like', "%{$codigo}%");
+            $query->where('code', 'like', "%{$codigo}%")->orWhere('description', 'like', "%{$codigo}%");
         }
 
         // Filtrar por marca del producto
