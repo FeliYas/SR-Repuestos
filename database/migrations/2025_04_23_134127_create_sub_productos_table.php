@@ -22,9 +22,9 @@ return new class extends Migration
             $table->string('medida')->nullable();
             $table->string('componente')->nullable();
             $table->string('caracteristicas')->nullable();
-            $table->decimal('price_mayorista', 10, 2)->default(0);
-            $table->decimal('price_minorista', 10, 2)->default(0);
-            $table->decimal('price_dist', 10, 2)->default(0);
+            $table->decimal('price_mayorista', 10, 2)->default(0); //lista 1
+            $table->decimal('price_minorista', 10, 2)->default(0); // lista 2
+            $table->decimal('price_dist', 10, 2)->default(0); // lista 3
             $table->timestamps();
         });
     }

@@ -1,7 +1,7 @@
 import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import defaultPhoto from '../../../images/defaultPhoto.png';
 import DefaultLayout from '../defaultLayout';
 
@@ -10,8 +10,23 @@ export default function ProductoShow() {
 
     const [categoriasDropdown, setCategoriasDropdown] = useState(false);
     const [currentImage, setCurrentImage] = useState(producto?.imagenes[0]?.image);
+    const [seeImage, setSeeImage] = useState(false);
 
-    console.log(productosRelacionados);
+    const seeImageRef = useRef(null);
+
+    useEffect(() => {
+        if (seeImage) {
+            const handleClickOutside = (event) => {
+                if (seeImageRef.current && !seeImageRef.current.contains(event.target)) {
+                    setSeeImage(false);
+                }
+            };
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => {
+                document.removeEventListener('mousedown', handleClickOutside);
+            };
+        }
+    }, [seeImage]);
 
     return (
         <DefaultLayout>
@@ -151,7 +166,8 @@ export default function ProductoShow() {
 
                     {/* subproducts table */}
                     <div className="mt-16 flex flex-col md:mt-30">
-                        <div className="hidden h-[52px] grid-cols-5 items-center bg-[#F5F5F5] px-4 md:grid">
+                        <div className="hidden h-[52px] grid-cols-6 items-center bg-[#F5F5F5] px-4 md:grid">
+                            <p></p>
                             <p>Código</p>
                             <p>Descripción</p>
                             <p>Medida</p>
@@ -161,8 +177,26 @@ export default function ProductoShow() {
                         {subproductos?.map((subproducto, index) => (
                             <div
                                 key={index}
-                                className="flex flex-col border-b border-[#E0E0E0] py-3 text-[#74716A] md:grid md:min-h-[52px] md:grid-cols-5 md:items-center md:px-4 md:py-0"
+                                className="flex flex-col border-b border-[#E0E0E0] py-3 text-[#74716A] md:grid md:min-h-[52px] md:grid-cols-6 md:items-center md:px-4 md:py-0"
                             >
+                                {seeImage && (
+                                    <div className="fixed top-0 left-0 z-100 flex h-screen w-screen items-center justify-center bg-black/50">
+                                        <div ref={seeImageRef} className="h-[70%] w-[70%]">
+                                            <img
+                                                className="h-full w-full object-contain"
+                                                src={subproducto?.image ? subproducto?.image : producto?.imagenes[0]?.image}
+                                                alt=""
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                                <button onClick={() => setSeeImage(true)} className="my-2 h-[80px] w-[80px] rounded-sm border">
+                                    <img
+                                        className="h-full w-full rounded-sm object-contain"
+                                        src={subproducto?.image ? subproducto?.image : producto?.imagenes[0]?.image}
+                                        alt=""
+                                    />
+                                </button>
                                 <div className="flex justify-between md:block">
                                     <p className="font-semibold md:hidden md:font-normal">Código:</p>
                                     <p>{subproducto?.code}</p>

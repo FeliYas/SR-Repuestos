@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DescargarArchivo;
+use App\Http\Controllers\GenerarExcelConDatos;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\SendContactInfoController;
 use App\Models\ArchivoCalidad;
@@ -40,6 +41,9 @@ Route::get('/sitemap.xml', function () {
 });
 
 Route::middleware(['shareDefaultLayoutData'])->group(function () {
+
+    Route::get('/actualizarExcelMaestro', [GenerarExcelConDatos::class, 'actualizarExcelMaestro'])
+        ->name('actualizar.excel.maestro');
 
     Route::get('/', function () {
 
