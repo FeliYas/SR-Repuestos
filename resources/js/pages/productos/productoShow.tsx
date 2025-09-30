@@ -10,23 +10,42 @@ export default function ProductoShow() {
 
     const [categoriasDropdown, setCategoriasDropdown] = useState(false);
     const [currentImage, setCurrentImage] = useState(producto?.imagenes[0]?.image);
-    const [seeImage, setSeeImage] = useState(false);
+    const [selectedSubproductoImage, setSelectedSubproductoImage] = useState(null); // Cambiado para guardar la imagen seleccionada
 
-    const seeImageRef = useRef(null);
+    const modalRef = useRef(null);
 
     useEffect(() => {
-        if (seeImage) {
+        if (selectedSubproductoImage) {
             const handleClickOutside = (event) => {
-                if (seeImageRef.current && !seeImageRef.current.contains(event.target)) {
-                    setSeeImage(false);
+                if (modalRef.current && !modalRef.current.contains(event.target)) {
+                    setSelectedSubproductoImage(null);
                 }
             };
+            
+            const handleEscKey = (event) => {
+                if (event.key === 'Escape') {
+                    setSelectedSubproductoImage(null);
+                }
+            };
+            
             document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('keydown', handleEscKey);
+            
+            // Prevenir scroll del body cuando el modal está abierto
+            document.body.style.overflow = 'hidden';
+            
             return () => {
                 document.removeEventListener('mousedown', handleClickOutside);
+                document.removeEventListener('keydown', handleEscKey);
+                document.body.style.overflow = 'unset';
             };
         }
-    }, [seeImage]);
+    }, [selectedSubproductoImage]);
+
+    const openImageModal = (subproducto) => {
+        const imageUrl = subproducto?.image || producto?.imagenes[0]?.image || defaultPhoto;
+        setSelectedSubproductoImage(imageUrl);
+    };
 
     return (
         <DefaultLayout>
@@ -179,22 +198,17 @@ export default function ProductoShow() {
                                 key={index}
                                 className="flex flex-col border-b border-[#E0E0E0] py-3 text-[#74716A] md:grid md:min-h-[52px] md:grid-cols-6 md:items-center md:px-4 md:py-0"
                             >
-                                {seeImage && (
-                                    <div className="fixed top-0 left-0 z-100 flex h-screen w-screen items-center justify-center bg-black/50">
-                                        <div ref={seeImageRef} className="h-[70%] w-[70%]">
-                                            <img
-                                                className="h-full w-full object-contain"
-                                                src={subproducto?.image ? subproducto?.image : producto?.imagenes[0]?.image}
-                                                alt=""
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-                                <button onClick={() => setSeeImage(true)} className="my-2 h-[80px] w-[80px] rounded-sm border">
+                                <button 
+                                    onClick={() => openImageModal(subproducto)} 
+                                    className="my-2 h-[80px] w-[80px] rounded-sm border transition-all hover:border-primary-orange hover:shadow-md"
+                                >
                                     <img
                                         className="h-full w-full rounded-sm object-contain"
-                                        src={subproducto?.image ? subproducto?.image : producto?.imagenes[0]?.image}
-                                        alt=""
+                                        src={subproducto?.image || producto?.imagenes[0]?.image || defaultPhoto}
+                                        onError={(e) => {
+                                            e.currentTarget.src = defaultPhoto;
+                                        }}
+                                        alt={`${subproducto?.description || 'Subproducto'}`}
                                     />
                                 </button>
                                 <div className="flex justify-between md:block">
@@ -254,6 +268,44 @@ export default function ProductoShow() {
                     </div>
                 </div>
             </div>
+
+            {/* Modal de imagen mejorado */}
+            {selectedSubproductoImage && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                    <div 
+                        ref={modalRef} 
+                        className="relative flex h-[90vh] w-[90vw] max-w-[1200px] items-center justify-center p-4"
+                    >
+                        {/* Botón de cerrar */}
+                        <button
+                            onClick={() => setSelectedSubproductoImage(null)}
+                            className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-black shadow-lg transition-all hover:bg-white hover:scale-110"
+                            aria-label="Cerrar imagen"
+                        >
+                            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        
+                        {/* Contenedor de imagen con aspect ratio mantenido */}
+                        <div className="flex h-full w-full items-center justify-center">
+                            <img
+                                className="max-h-full max-w-full object-contain drop-shadow-2xl"
+                                src={selectedSubproductoImage}
+                                alt="Vista ampliada"
+                                onError={(e) => {
+                                    e.currentTarget.src = defaultPhoto;
+                                }}
+                            />
+                        </div>
+                        
+                        {/* Texto informativo */}
+                        <p className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-4 py-2 text-sm text-gray-700">
+                            Presiona ESC o haz clic fuera para cerrar
+                        </p>
+                    </div>
+                </div>
+            )}
         </DefaultLayout>
     );
 }
