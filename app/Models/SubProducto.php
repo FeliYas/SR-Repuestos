@@ -15,13 +15,6 @@ class SubProducto extends Model
 
     public function getImageAttribute($value)
     {
-        /* // Asegurate de que el producto y sus imágenes existan
-        if ($this->producto && $this->producto->imagenes && $this->producto->imagenes->first()) {
-            return $this->producto->imagenes->first()->image;
-        }
-
-        return null; // O una imagen por defecto si querés */
-
         return $value ? asset('storage/' . $value) : null;
     }
 }

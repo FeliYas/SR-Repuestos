@@ -72,6 +72,10 @@ export default function ProductosAdmin() {
         );
     };
 
+    const handleExport = () => {
+        window.location.href = route('admin.productos.export');
+    };
+
     return (
         <Dashboard>
             <div className="flex w-full flex-col p-6">
@@ -204,6 +208,12 @@ export default function ProductosAdmin() {
                             className="bg-primary-orange w-[200px] rounded px-4 py-1 font-bold text-white hover:bg-orange-400"
                         >
                             Crear Producto
+                        </button>
+                        <button
+                            onClick={handleExport}
+                            className="bg-primary-orange w-[260px] rounded px-4 py-1 font-bold text-white hover:bg-orange-400"
+                        >
+                            Exportar productos
                         </button>
                     </div>
                     <div className="flex w-full justify-center">

@@ -2,7 +2,7 @@ import { faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useForm } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function SubProdcutosAdminRow({ subprod, productos }) {
@@ -21,6 +21,15 @@ export default function SubProdcutosAdminRow({ subprod, productos }) {
         price_dist: subprod?.price_dist,
         id: subprod?.id,
     });
+
+    const selectedProducto = productos?.find((prod) => String(prod.id) === String(updateForm.data?.producto_id));
+    const isRepuestosFrenos = String(selectedProducto?.categoria?.name ?? '').trim().toLowerCase() === 'repuestos y frenos';
+
+    useEffect(() => {
+        if (isRepuestosFrenos && updateForm.data?.componente) {
+            updateForm.setData('componente', '');
+        }
+    }, [isRepuestosFrenos, updateForm.data?.componente, updateForm.setData]);
 
     const handleUpdate = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -157,15 +166,19 @@ export default function SubProdcutosAdminRow({ subprod, productos }) {
                                         id="medida"
                                         onChange={(e) => updateForm.setData('medida', e.target.value)}
                                     />
-                                    <label htmlFor="comp">Componente</label>
-                                    <input
-                                        defaultValue={subprod?.componente}
-                                        className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
-                                        type="text"
-                                        name="comp"
-                                        id="comp"
-                                        onChange={(e) => updateForm.setData('componente', e.target.value)}
-                                    />
+                                    {!isRepuestosFrenos && (
+                                        <>
+                                            <label htmlFor="comp">Largo total</label>
+                                            <input
+                                                defaultValue={subprod?.componente}
+                                                className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
+                                                type="text"
+                                                name="comp"
+                                                id="comp"
+                                                onChange={(e) => updateForm.setData('componente', e.target.value)}
+                                            />
+                                        </>
+                                    )}
                                     <label htmlFor="carac">Caracteristicas</label>
                                     <input
                                         defaultValue={subprod?.caracteristicas}

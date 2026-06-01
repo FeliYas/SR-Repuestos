@@ -17,4 +17,5 @@ class ImagenProducto extends Model
     {
         return asset("storage/" . $value);
     }
+
 }

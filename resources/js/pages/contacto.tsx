@@ -12,6 +12,7 @@ import DefaultLayout from './defaultLayout';
 export default function Contacto() {
     const { contacto, metadatos, producto } = usePage().props;
     const [captchaToken, setCaptchaToken] = useState(null);
+    const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY ?? '';
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
@@ -27,6 +28,11 @@ export default function Contacto() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        if (!recaptchaSiteKey) {
+            toast.error('Falta configurar la clave del captcha');
+            return;
+        }
 
         // Verificar si el captcha ha sido completado
         if (!captchaToken) {
@@ -60,8 +66,8 @@ export default function Contacto() {
                 recaptchaRef.current.reset();
                 setCaptchaToken(null);
             },
-            onError: () => {
-                toast.error('Error al enviar la consulta');
+            onError: (formErrors) => {
+                toast.error(formErrors.recaptcha || formErrors.contact || 'Error al enviar la consulta');
                 // Reset the reCAPTCHA on error as well
                 recaptchaRef.current.reset();
                 setCaptchaToken(null);
@@ -221,7 +227,7 @@ export default function Contacto() {
                             <div className="flex justify-center sm:justify-start">
                                 <ReCAPTCHA
                                     ref={recaptchaRef}
-                                    sitekey={'6LeIDkorAAAAAIR0l7veV8LXj4TYsGDJ_v5zJBzX'} // Replace with your actual site key
+                                    sitekey={recaptchaSiteKey}
                                     onChange={onReCAPTCHAChange}
                                     size="normal"
                                 />

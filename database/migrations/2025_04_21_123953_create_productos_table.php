@@ -2,7 +2,6 @@
 
 use App\Models\Categoria;
 use App\Models\ImagenProducto;
-use App\Models\Marca;
 use App\Models\MarcaProducto;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -23,9 +22,7 @@ return new class extends Migration
             $table->foreignIdFor(Categoria::class, 'categoria_id')->nullable()
                 ->constrained('categorias')
                 ->cascadeOnDelete();
-            $table->foreignIdFor(MarcaProducto::class, 'marca_id')->nullable()
-                ->constrained('marcas')
-                ->cascadeOnDelete();
+            $table->foreignIdFor(MarcaProducto::class, 'marca_id')->nullable();
             $table->string('ficha_tecnica')->nullable();
             $table->string('aplicacion')->nullable();
             $table->string('anio')->nullable();

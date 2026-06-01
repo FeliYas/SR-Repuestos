@@ -14,7 +14,6 @@ use App\Http\Controllers\InstagramController;
 use App\Http\Controllers\ListaDePreciosController;
 use App\Http\Controllers\LogosController;
 use App\Http\Controllers\MailNewsletterController;
-use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\MarcaProductoController;
 use App\Http\Controllers\MetadatosController;
 use App\Http\Controllers\NosotrosController;
@@ -57,14 +56,13 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('admin/categorias', [CategoriaController::class, 'store'])->name('admin.categorias.store');
     Route::post('admin/categorias/update', [CategoriaController::class, 'update'])->name('admin.categorias.update');
     Route::delete('admin/categorias/destroy/{id}', [CategoriaController::class, 'destroy'])->name('admin.categorias.destroy');
-    Route::get('admin/marcas', [MarcaController::class, 'index'])->name('admin.marcas');
-    Route::post('admin/marcas', [MarcaController::class, 'store'])->name('admin.marcas.store');
-    Route::post('admin/marcas/update', [MarcaController::class, 'update'])->name('admin.marcas.update');
-    Route::delete('admin/marcas/destroy', [MarcaController::class, 'destroy'])->name('admin.marcas.destroy');
     Route::get('admin/productos', [ProductoController::class, 'index'])->name('admin.productos');
     Route::post('admin/productos', [ProductoController::class, 'store'])->name('admin.productos.store');
     Route::post('admin/productos/update', [ProductoController::class, 'update'])->name('admin.productos.update');
     Route::delete('admin/productos/destroy', [ProductoController::class, 'destroy'])->name('admin.productos.destroy');
+    Route::get('admin/productos/exportar', [ProductoController::class, 'exportarExcel'])->name('admin.productos.export');
+    Route::get('admin/cargamasivaproductos', [ProductoController::class, 'cargaMasivaProductos'])->name('admin.cargamasiva.productos');
+    Route::post('admin/cargamasivaproductos/importar', [ProductoController::class, 'importarMasivoProductos'])->name('admin.cargamasiva.productos.import');
     Route::post('admin/productos/imagenes/store', [ImagenProductoController::class, 'store'])->name('admin.imagenes.store');
     Route::post('admin/productos/imagenes/update', [ImagenProductoController::class, 'update'])->name('admin.imagenes.update');
     Route::delete('admin/productos/imagenes/destroy', [ImagenProductoController::class, 'destroy'])->name('admin.imagenes.destroy');
@@ -92,6 +90,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('admin/subproductos', [SubProductoController::class, 'store'])->name('admin.subproductos.store');
     Route::post('admin/subproductos/update', [SubProductoController::class, 'update'])->name('admin.subproductos.update');
     Route::delete('admin/subproductos/destroy', [SubProductoController::class, 'destroy'])->name('admin.subproductos.destroy');
+    Route::get('admin/subproductos/exportar', [SubProductoController::class, 'exportarExcel'])->name('admin.subproductos.export');
 
     Route::get('admin/clientes', [UserController::class, 'index'])->name('admin.clientes');
     Route::post('admin/clientes', [UserController::class, 'store'])->name('admin.clientes.store');

@@ -31,7 +31,7 @@ class ImportarProductosDesdeExcelJob implements ShouldQueue
             $actualizados = 0;
 
             foreach ($rows as $index => $row) {
-                if ($index === 0 || empty(trim($row[0]))) continue; // saltar encabezado o fila vacÃ­a
+                if ($index === 0 || empty(trim($row[0]))) continue; // saltar encabezado o fila vac¨ªa
 
                 [$codigo,, $descripcion, $medida, $comp, $carac] = array_map('trim', array_pad($row, 6, ''));
 
@@ -48,7 +48,7 @@ class ImportarProductosDesdeExcelJob implements ShouldQueue
                 }
             }
 
-            Log::info("ImportaciÃ³n completada. Subproductos actualizados: {$actualizados}");
+            Log::info("Importaci¨®n completada. Subproductos actualizados: {$actualizados}");
         } catch (\Exception $e) {
             Log::error("Error al importar productos: " . $e->getMessage());
         }

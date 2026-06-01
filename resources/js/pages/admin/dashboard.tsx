@@ -58,7 +58,6 @@ export default function Dashboard({ children }) {
             href: '#',
             subHref: [
                 { title: 'Contenido', href: 'bannerportada' },
-                { title: 'Marcas', href: 'marcas' },
                 { title: 'Instagram', href: 'instagram' },
             ],
         },
@@ -84,6 +83,18 @@ export default function Dashboard({ children }) {
                 { title: 'Productos', href: 'productos' },
                 { title: 'Sub-productos', href: 'subproductos' },
                 { title: 'Marcas', href: 'marcasProducto' },
+            ],
+        },
+        {
+            id: 'cargamasiva',
+            open: false,
+            title: 'Carga masiva',
+            icon: faBoxArchive,
+            href: '#',
+            subHref: [
+                { title: 'Productos', href: 'cargamasivaproductos' },
+                { title: 'Subproductos', href: 'cargamasivasubproductos', disabled: true },
+                { title: 'Imagenes', href: 'cargamasivaimagenes', disabled: true },
             ],
         },
         {
@@ -164,7 +175,17 @@ export default function Dashboard({ children }) {
         // Verificar si estamos en el navegador antes de acceder a localStorage
         if (typeof window !== 'undefined') {
             const savedDropdowns = localStorage.getItem('dropdownsState');
-            return savedDropdowns !== null ? JSON.parse(savedDropdowns) : initialDropdowns;
+            if (savedDropdowns !== null) {
+                try {
+                    const parsed = JSON.parse(savedDropdowns);
+                    return initialDropdowns.map((drop) => {
+                        const saved = parsed.find((item) => item.id === drop.id);
+                        return saved ? { ...drop, open: saved.open } : drop;
+                    });
+                } catch (error) {
+                    console.error('Error parsing dropdownsState:', error);
+                }
+            }
         }
         return initialDropdowns;
     });
@@ -275,17 +296,24 @@ export default function Dashboard({ children }) {
                                         style={{ maxHeight: drop.open ? '500px' : '0' }}
                                     >
                                         <ul className="border-primary-orange ml-6 flex h-fit flex-col gap-2 border-l py-2">
-                                            {drop.subHref.map((sub, index) => (
-                                                <Link
-                                                    className={`hover:bg-primary-orange mx-4 rounded-full px-2 py-1 transition duration-200 hover:text-white ${
-                                                        currentPath === sub.href ? 'bg-primary-orange text-white' : ''
-                                                    }`}
-                                                    key={index}
-                                                    href={sub.href}
-                                                >
-                                                    {sub.title}
-                                                </Link>
-                                            ))}
+                                            {drop.subHref.map((sub, index) =>
+                                                sub.disabled ? (
+                                                    <span className="mx-4 cursor-not-allowed rounded-full px-2 py-1 text-gray-400" key={index}>
+                                                        {sub.title}
+                                                    </span>
+                                                ) : (
+                                                    <Link
+                                                        className={
+                                                            'hover:bg-primary-orange mx-4 rounded-full px-2 py-1 transition duration-200 hover:text-white ' +
+                                                            (currentPath === sub.href ? 'bg-primary-orange text-white' : '')
+                                                        }
+                                                        key={index}
+                                                        href={sub.href}
+                                                    >
+                                                        {sub.title}
+                                                    </Link>
+                                                )
+                                            )}
                                         </ul>
                                     </div>
                                 )}

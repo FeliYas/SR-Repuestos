@@ -10,6 +10,8 @@ export default function MarcasProductoAdmin() {
 
     const { data, setData, post, reset } = useForm({
         name: '',
+        order: '',
+        image: null,
     });
 
     const [createView, setCreateView] = useState(false);
@@ -65,6 +67,25 @@ export default function MarcasProductoAdmin() {
                                             onChange={(e) => setData('name', e.target.value)}
                                         />
 
+                                        <label htmlFor="imagenn">Imagen</label>
+                                        <span className="text-base font-normal">Resolucion recomendada: 501x181px</span>
+                                        <div className="flex flex-row">
+                                            <input
+                                                type="file"
+                                                name="imagen"
+                                                id="imagenn"
+                                                onChange={(e) => setData('image', e.target.files?.[0] || null)}
+                                                className="hidden"
+                                            />
+                                            <label
+                                                className="border-primary-orange text-primary-orange hover:bg-primary-orange cursor-pointer rounded-md border px-2 py-1 transition duration-300 hover:text-white"
+                                                htmlFor="imagenn"
+                                            >
+                                                Elegir imagen
+                                            </label>
+                                            <p className="self-center px-2">{data?.image?.name}</p>
+                                        </div>
+
                                         <div className="flex justify-end gap-4">
                                             <button
                                                 type="button"
@@ -103,7 +124,7 @@ export default function MarcasProductoAdmin() {
                                 <tr>
                                     <td className="text-center">ORDEN</td>
                                     <td className="px-3 py-2 text-center">NOMBRE</td>
-
+                                    <td className="w-[260px] px-3 py-2 text-center">IMAGEN</td>
                                     <td className="text-center">EDITAR</td>
                                 </tr>
                             </thead>

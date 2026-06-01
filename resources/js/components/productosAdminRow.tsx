@@ -187,7 +187,7 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
                                     />
 
                                     <label htmlFor="tonelaje">
-                                        Tonelaje <span className="text-red-500">*</span>
+                                        Piton <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
@@ -199,7 +199,7 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
                                     />
 
                                     <label htmlFor="espigon">
-                                        Espigón <span className="text-red-500">*</span>
+                                        Curva del piton <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"

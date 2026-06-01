@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contacto;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 class SendContactInfoController extends Controller
 {
@@ -27,14 +28,20 @@ class SendContactInfoController extends Controller
         // Comprobar respuesta
         $responseData = $response->json();
 
-        if (!$responseData['success']) {
-            // Si la verificación falla, devuelve un error
-            return response()->json(['error' => 'Verificación de reCAPTCHA fallida'], 422);
+        if (!data_get($responseData, 'success', false)) {
+
+            throw ValidationException::withMessages([
+                'recaptcha' => 'Verificación de reCAPTCHA fallida'
+            ]);
         }
 
         // Si el reCAPTCHA es válido, envía el correo
         $htmlContent = $request->html; // Recibe el HTML renderizado
-        $contactInfo = Contacto::first()->mail;
+        $contactInfo = env('CONTACT_FORM_TO_EMAIL') ?: optional(Contacto::first())->mail;
+
+        if (!$contactInfo) {
+            throw ValidationException::withMessages(['contact' => 'No hay un destinatario configurado para el formulario de contacto']);
+        }
 
         Mail::send([], [], function ($message) use ($htmlContent, $contactInfo) {
             $message->to($contactInfo)
@@ -43,6 +50,6 @@ class SendContactInfoController extends Controller
         });
 
         // Devuelve una respuesta exitosa
-        return response()->json(['success' => 'Correo enviado correctamente']);
+        return back()->with('success', 'Correo enviado correctamente');
     }
 }

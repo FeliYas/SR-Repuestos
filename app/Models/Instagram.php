@@ -10,6 +10,14 @@ class Instagram extends Model
 
     public function getImageAttribute($value)
     {
-        return url("storage/" . $value);
+        if (!$value) {
+            return null;
+        }
+
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+            return $value;
+        }
+
+        return url('storage/' . $value);
     }
 }

@@ -1,0 +1,44 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: srrepuestos-app
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+    env_file:
+      - .env.docker
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:10.11
+    container_name: srrepuestos-db
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: srrepuestos
+      MARIADB_USER: sruser
+      MARIADB_PASSWORD: srpass
+      TZ: America/Argentina/Buenos_Aires
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+
+  node:
+    image: node:20-alpine
+    container_name: srrepuestos-node
+    working_dir: /var/www/html
+    command: sh -lc "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./:/var/www/html
+
+volumes:
+  db_data:

@@ -19,7 +19,7 @@ export default function ClientesAdminRow({ cliente }) {
         cuit: cliente?.cuit,
         direccion: cliente?.direccion,
         telefono: cliente?.telefono,
-        lista: cliente?.lista,
+        lista: cliente?.lista ? String(cliente.lista) : '',
         provincia: cliente?.provincia,
         localidad: cliente?.localidad,
         autorizado: cliente?.autorizado,
@@ -36,7 +36,8 @@ export default function ClientesAdminRow({ cliente }) {
                 setEdit(false);
             },
             onError: (errors) => {
-                toast.error('Error al actualizar cliente');
+                const firstError = Object.values(errors)[0] as string | undefined;
+                toast.error(firstError || 'Error al actualizar cliente');
                 console.log(errors);
             },
         });
@@ -50,7 +51,8 @@ export default function ClientesAdminRow({ cliente }) {
                     toast.success('Cliente eliminada correctamente');
                 },
                 onError: (errors) => {
-                    toast.error('Error al eliminar cliente');
+                    const firstError = Object.values(errors)[0] as string | undefined;
+                    toast.error(firstError || 'Error al eliminar cliente');
                     console.log(errors);
                 },
             });

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 export default function InstagramInicio() {
     const { instagram } = usePage().props;
+    const instagramPosts = Array.isArray(instagram) ? instagram : [];
     const [visibleItems, setVisibleItems] = useState(4);
 
     useEffect(() => {
@@ -34,7 +35,7 @@ export default function InstagramInicio() {
                 <h2 className="text-2xl font-bold text-white sm:text-3xl">Seguinos en instagram</h2>
 
                 <div className="flex flex-col justify-center gap-4 pb-2 max-sm:overflow-x-auto sm:flex-row sm:justify-between">
-                    {instagram.slice(0, visibleItems).map((item, index) => (
+                    {instagramPosts.slice(0, visibleItems).map((item, index) => (
                         <a
                             key={index}
                             href={item?.link}
@@ -47,10 +48,10 @@ export default function InstagramInicio() {
                     ))}
                 </div>
 
-                {visibleItems < instagram.length && (
+                {visibleItems < instagramPosts.length && (
                     <div className="mt-4 flex justify-center lg:hidden">
                         <button
-                            onClick={() => setVisibleItems(instagram.length)}
+                            onClick={() => setVisibleItems(instagramPosts.length)}
                             className="bg-primary-orange rounded-md px-4 py-2 font-medium text-white"
                         >
                             Ver más posts

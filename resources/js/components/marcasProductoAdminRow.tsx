@@ -12,10 +12,21 @@ export default function MarcasProductoAdminRow({ marca }) {
         name: marca?.name,
         order: marca?.order,
         id: marca?.id,
+        image: null,
     });
 
     const handleUpdate = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        updateForm.transform((data) => {
+            if (!data.image) {
+                const { image, ...rest } = data;
+                return rest;
+            }
+
+            return data;
+        });
+
         updateForm.post(route('admin.marcasProducto.update'), {
             preserveScroll: true,
             onSuccess: () => {
@@ -48,6 +59,13 @@ export default function MarcasProductoAdminRow({ marca }) {
         <tr className={`border text-black odd:bg-gray-100 even:bg-white`}>
             <td className="align-middle">{marca?.order}</td>
             <td className="h-[90px] align-middle">{marca?.name}</td>
+            <td className="h-[90px] align-middle">
+                {marca?.image ? (
+                    <img src={marca.image} alt={marca?.name} className="mx-auto h-[60px] w-[180px] object-contain" />
+                ) : (
+                    <span className="text-gray-400">Sin imagen</span>
+                )}
+            </td>
 
             <td className="w-[140px] text-center">
                 <div className="flex flex-row justify-center gap-3">
@@ -91,6 +109,24 @@ export default function MarcasProductoAdminRow({ marca }) {
                                         value={updateForm?.data?.name}
                                         onChange={(e) => updateForm.setData('name', e.target.value)}
                                     />
+
+                                    <label htmlFor={`imagen-${marca?.id}`}>Imagen</label>
+                                    <div className="flex flex-row items-center gap-3">
+                                        <input
+                                            type="file"
+                                            name="imagen"
+                                            id={`imagen-${marca?.id}`}
+                                            onChange={(e) => updateForm.setData('image', e.target.files?.[0] || null)}
+                                            className="hidden"
+                                        />
+                                        <label
+                                            className="border-primary-orange text-primary-orange hover:bg-primary-orange cursor-pointer rounded-md border px-2 py-1 transition duration-300 hover:text-white"
+                                            htmlFor={`imagen-${marca?.id}`}
+                                        >
+                                            Elegir imagen
+                                        </label>
+                                        <p className="text-sm text-gray-500">{updateForm?.data?.image?.name}</p>
+                                    </div>
 
                                     <div className="flex justify-end gap-4">
                                         <button

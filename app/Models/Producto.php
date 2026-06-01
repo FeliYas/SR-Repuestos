@@ -30,7 +30,7 @@ class Producto extends Model
 
     public function getImageAttribute($value)
     {
-        return url("storage/" . $value);
+        return asset("storage/" . $value);
     }
 
     public function getFichaTecnicaAttribute($value)

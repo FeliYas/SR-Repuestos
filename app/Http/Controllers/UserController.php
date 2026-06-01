@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Provincia;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -49,12 +50,19 @@ class UserController extends Controller
             'provincia' => 'nullable|string|max:255',
             'localidad' => 'nullable|string|max:255',
             'telefono' => 'nullable|string|max:20',
-            'lista' => 'nullable|string|max:255',
+            'lista' => 'nullable|integer|between:1,3',
+            'password' => 'nullable|string|min:8|confirmed',
             'autorizado' => 'nullable|boolean'
         ]);
-
+        if (!$request->filled('password')) {
+            unset($data['password']);
+        } else {
+            $data['password'] = Hash::make($data['password']);
+        }
 
         $user->update($data);
+
+        return redirect()->back()->with('success', 'Cliente actualizado correctamente');
     }
 
     public function destroy(Request $request)

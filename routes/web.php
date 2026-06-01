@@ -1,18 +1,18 @@
 <?php
 
 use App\Http\Controllers\DescargarArchivo;
-use App\Http\Controllers\GenerarExcelConDatos;
+use App\Http\Controllers\InstagramController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\SendContactInfoController;
+use App\Services\InstagramFeedService;
 use App\Models\ArchivoCalidad;
 use App\Models\BannerNovedades;
 use App\Models\BannerPortada;
 use App\Models\Calidad;
+use App\Http\Controllers\GenerarExcelConDatos;
 use App\Models\Categoria;
-use App\Models\Contacto;
-use App\Models\Instagram;
-use App\Models\Marca;
 use App\Models\MarcaProducto;
+use App\Models\Contacto;
 use App\Models\Metadatos;
 use App\Models\Nosotros;
 use App\Models\Novedades;
@@ -40,8 +40,11 @@ Route::get('/sitemap.xml', function () {
     return $sitemap->toResponse(request());
 });
 
-Route::middleware(['shareDefaultLayoutData'])->group(function () {
+Route::get('/instagram/image/{encoded}', [InstagramController::class, 'proxyImage'])
+    ->name('instagram.image.proxy');
 
+Route::middleware(['shareDefaultLayoutData'])->group(function () {
+    
     Route::get('/actualizarExcelMaestro', [GenerarExcelConDatos::class, 'actualizarExcelMaestro'])
         ->name('actualizar.excel.maestro');
 
@@ -49,7 +52,7 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
 
         $categorias = Categoria::orderBy('order', 'asc')->get();
         $marcas = MarcaProducto::orderBy('order', 'asc')->get();
-        $instagram = Instagram::orderBy('order', 'asc')->get();
+        $instagram = app(InstagramFeedService::class)->getLatestPosts(8);
         $bannerPortada = BannerPortada::first();
         $novedades = Novedades::all();
         $metadatos = Metadatos::where('title', 'Inicio')->first();
@@ -127,7 +130,7 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
     Route::get('/busqueda', [ProductoController::class, 'SearchProducts'])->name('searchproducts');
 });
 
-Route::get('/fix-images', [ProductoController::class, 'fixImagePath'])->name('fix.images');
+
 
 Route::get('/imagenes-prod', [ProductoController::class, 'imagenesProducto']);
 Route::get('/agregar-marca', [ProductoController::class, 'agregarMarca']);

@@ -5,14 +5,24 @@ namespace App\Http\Controllers;
 use App\Models\Categoria;
 use App\Models\Contacto;
 use App\Models\ImagenProducto;
-use App\Models\Marca;
 use App\Models\MarcaProducto;
 use App\Models\Metadatos;
 use App\Models\Producto;
 use App\Models\SubProducto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Throwable;
 
 class ProductoController extends Controller
 {
@@ -61,7 +71,7 @@ class ProductoController extends Controller
 
     /* public function indexInicio(Request $request, $id)
     {
-        $marcas = Marca::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
+        $marcas = MarcaProducto::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
 
         $categorias = Categoria::select('id', 'name', 'order')
             ->orderBy('order', 'asc')
@@ -85,6 +95,20 @@ class ProductoController extends Controller
 
         ]);
     } */
+    
+    public function fixImagePath()
+    {
+        # Quitar /storage/ de las rutas de las imágenes
+        $imagenes = ImagenProducto::all();
+        foreach ($imagenes as $imagen) {
+            if (strpos($imagen->image, '/storage/') === 0) {
+                $imagen->image = str_replace('/storage/', '', $imagen->image);
+                $imagen->save();
+            }
+        }
+
+        return response()->json(['message' => 'Rutas de imágenes actualizadas correctamente.']);
+    }
 
     public function indexInicio(Request $request, $id)
     {
@@ -98,7 +122,8 @@ class ProductoController extends Controller
 
         $query = Producto::where('categoria_id', $id)
             ->with('marca', 'imagenes')
-            ->orderBy('order', 'asc');
+            ->orderBy('order', 'asc')
+            ->orderBy('id', 'asc');
 
         if ($request->filled('marca')) {
             $query->where('marca_id', $request->marca);
@@ -237,14 +262,25 @@ class ProductoController extends Controller
         }
 
         if ($request->filled('codigo')) {
-            $query->where('code', 'LIKE', '%' . $request->codigo . '%')->orWhere('name', 'LIKE', '%' . $request->codigo . '%');
+            $searchTerm = $request->codigo;
+
+            $query->where(function ($searchQuery) use ($searchTerm) {
+                $searchQuery->where('code', 'LIKE', '%' . $searchTerm . '%')
+                    ->orWhere('name', 'LIKE', '%' . $searchTerm . '%')
+                    ->orWhereHas('marca', function ($marcaQuery) use ($searchTerm) {
+                        $marcaQuery->where('name', 'LIKE', '%' . $searchTerm . '%');
+                    })
+                    ->orWhereHas('subproductos', function ($subproductoQuery) use ($searchTerm) {
+                        $subproductoQuery->where('medida', 'LIKE', '%' . $searchTerm . '%');
+                    });
+            });
         }
 
         $productos = $query->with(['categoria:id,name', 'marca:id,name', 'imagenes'])
             ->get();
 
         $categorias = Categoria::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
-        $marcas = Marca::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
+        $marcas = MarcaProducto::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
 
         return Inertia::render('productos/productoSearch', [
             'productos' => $productos, // Cambié 'producto' a 'productos' (plural)
@@ -253,19 +289,7 @@ class ProductoController extends Controller
         ]);
     }
 
-    public function fixImagePath()
-    {
-        # Quitar /storage/ de las rutas de las imágenes
-        $imagenes = ImagenProducto::all();
-        foreach ($imagenes as $imagen) {
-            if (strpos($imagen->image, '/storage/') === 0) {
-                $imagen->image = str_replace('/storage/', '', $imagen->image);
-                $imagen->save();
-            }
-        }
-
-        return response()->json(['message' => 'Rutas de imágenes actualizadas correctamente.']);
-    }
+    
 
     /**
      * Store a newly created resource in storage.
@@ -277,7 +301,7 @@ class ProductoController extends Controller
             'order' => 'sometimes|string|max:255',
             'code' => 'required|string|max:255',
             'categoria_id' => 'required|exists:categorias,id',
-            'marca_id' => 'nullable|sometimes|exists:marcas_productos,id',
+            'marca_id' => 'nullable|sometimes|exists:marca_productos,id',
             'ficha_tecnica' => 'sometimes|file',
             'aplicacion' => 'nullable|string|max:255',
             'anio' => 'nullable|string|max:255',
@@ -369,5 +393,450 @@ class ProductoController extends Controller
         $producto->delete();
 
         return redirect()->back()->with('success', 'Producto eliminado correctamente.');
+    }
+    public function cargaMasivaProductos()
+    {
+        return Inertia::render('admin/cargaMasivaProductos');
+    }
+
+    public function importarMasivoProductos(Request $request)
+    {
+        $request->validate([
+            'archivo' => 'required|file|mimes:xlsx,xls',
+        ]);
+
+        $summary = [
+            'total_rows' => 0,
+            'created' => 0,
+            'updated' => 0,
+            'omitted' => 0,
+            'errors' => [],
+        ];
+
+        try {
+            $spreadsheet = IOFactory::load($request->file('archivo')->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray(null, true, true, true);
+
+            $headerRow = $rows[1] ?? [];
+            $headerMapping = $this->resolveHeaderMapping($headerRow);
+
+            $requiredFields = ['name', 'code', 'categoria_id', 'marca_id'];
+            $missingFields = array_values(array_diff($requiredFields, array_keys($headerMapping)));
+
+            if (!empty($missingFields)) {
+                $summary['errors'][] = [
+                    'fila' => 1,
+                    'code' => null,
+                    'motivo' => 'Faltan columnas obligatorias: ' . implode(', ', array_map(fn(string $field) => $this->humanHeaderLabel($field), $missingFields)),
+                ];
+
+                return redirect()->back()->with('mass_upload_summary', $summary);
+            }
+
+            $categoryNameToId = Categoria::select('id', 'name')
+                ->get()
+                ->mapWithKeys(fn($categoria) => [$this->normalizeExcelText((string) $categoria->name) => $categoria->id])
+                ->all();
+
+            $brandNameToId = MarcaProducto::select('id', 'name')
+                ->get()
+                ->mapWithKeys(fn($marca) => [$this->normalizeExcelText((string) $marca->name) => $marca->id])
+                ->all();
+
+            $optionalFields = ['aplicacion', 'anio', 'num_original', 'tonelaje', 'espigon', 'bujes'];
+            $maxRow = count($rows);
+
+            for ($rowNumber = 2; $rowNumber <= $maxRow; $rowNumber++) {
+                $row = $rows[$rowNumber] ?? [];
+
+                if ($this->isSpreadsheetRowEmpty($row)) {
+                    continue;
+                }
+
+                $summary['total_rows']++;
+
+                $code = $this->getMappedValue($row, $headerMapping, 'code');
+                if ($code === '') {
+                    $summary['omitted']++;
+                    $summary['errors'][] = [
+                        'fila' => $rowNumber,
+                        'code' => null,
+                        'motivo' => 'Código vacío.',
+                    ];
+                    continue;
+                }
+
+                $matchedProducts = Producto::where('code', $code)->get(['id']);
+                if ($matchedProducts->count() > 1) {
+                    $summary['omitted']++;
+                    $summary['errors'][] = [
+                        'fila' => $rowNumber,
+                        'code' => $code,
+                        'motivo' => 'Hay más de un producto en la base con ese código.',
+                    ];
+                    continue;
+                }
+
+                $name = $this->getMappedValue($row, $headerMapping, 'name');
+                $categoriaRaw = $this->getMappedValue($row, $headerMapping, 'categoria_id');
+                $marcaRaw = $this->getMappedValue($row, $headerMapping, 'marca_id');
+
+                $categoriaId = null;
+                if ($categoriaRaw !== '') {
+                    $categoriaKey = $this->normalizeExcelText($categoriaRaw);
+                    $categoriaId = $categoryNameToId[$categoriaKey] ?? null;
+
+                    if ($categoriaId === null) {
+                        $summary['omitted']++;
+                        $summary['errors'][] = [
+                            'fila' => $rowNumber,
+                            'code' => $code,
+                            'motivo' => 'Categoría inexistente: ' . $categoriaRaw,
+                        ];
+                        continue;
+                    }
+                }
+
+                $marcaId = null;
+                if ($marcaRaw !== '') {
+                    $marcaKey = $this->normalizeExcelText($marcaRaw);
+                    $marcaId = $brandNameToId[$marcaKey] ?? null;
+
+                    if ($marcaId === null) {
+                        $summary['omitted']++;
+                        $summary['errors'][] = [
+                            'fila' => $rowNumber,
+                            'code' => $code,
+                            'motivo' => 'Marca inexistente: ' . $marcaRaw,
+                        ];
+                        continue;
+                    }
+                }
+
+                if ($matchedProducts->isEmpty()) {
+                    if ($name === '' || $categoriaRaw === '' || $marcaRaw === '') {
+                        $summary['omitted']++;
+                        $summary['errors'][] = [
+                            'fila' => $rowNumber,
+                            'code' => $code,
+                            'motivo' => 'Para crear producto son obligatorios nombre, categoría y marca.',
+                        ];
+                        continue;
+                    }
+
+                    $createData = [
+                        'name' => $name,
+                        'code' => $code,
+                        'categoria_id' => $categoriaId,
+                        'marca_id' => $marcaId,
+                    ];
+
+                    foreach ($optionalFields as $field) {
+                        $createData[$field] = isset($headerMapping[$field])
+                            ? ($this->getMappedValue($row, $headerMapping, $field) ?: null)
+                            : null;
+                    }
+
+                    Producto::create($createData);
+                    $summary['created']++;
+                    continue;
+                }
+
+                $updateData = [];
+
+                if ($name !== '') {
+                    $updateData['name'] = $name;
+                }
+
+                if ($categoriaRaw !== '') {
+                    $updateData['categoria_id'] = $categoriaId;
+                }
+
+                if ($marcaRaw !== '') {
+                    $updateData['marca_id'] = $marcaId;
+                }
+
+                foreach ($optionalFields as $field) {
+                    if (!isset($headerMapping[$field])) {
+                        continue;
+                    }
+
+                    $value = $this->getMappedValue($row, $headerMapping, $field);
+                    if ($value !== '') {
+                        $updateData[$field] = $value;
+                    }
+                }
+
+                if (empty($updateData)) {
+                    $summary['omitted']++;
+                    $summary['errors'][] = [
+                        'fila' => $rowNumber,
+                        'code' => $code,
+                        'motivo' => 'Fila sin datos válidos para actualizar.',
+                    ];
+                    continue;
+                }
+
+                $matchedProducts->first()->update($updateData);
+                $summary['updated']++;
+            }
+        } catch (Throwable $exception) {
+            $summary['errors'][] = [
+                'fila' => null,
+                'code' => null,
+                'motivo' => 'Error al procesar el archivo: ' . $exception->getMessage(),
+            ];
+        }
+
+        return redirect()->back()->with('mass_upload_summary', $summary);
+    }
+
+    private function resolveHeaderMapping(array $headerRow): array
+    {
+        $aliasMap = [
+            'name' => ['name', 'nombre'],
+            'code' => ['code', 'codigo'],
+            'categoria_id' => ['categoria', 'categoria id', 'categoria_id'],
+            'marca_id' => ['marca', 'marca id', 'marca_id'],
+            'aplicacion' => ['aplicacion'],
+            'anio' => ['anio'],
+            'num_original' => ['num original', 'numero original', 'num_original', 'numero_original'],
+            'tonelaje' => ['tonelaje'],
+            'espigon' => ['espigon'],
+            'bujes' => ['bujes'],
+        ];
+
+        $normalizedAliasMap = [];
+        foreach ($aliasMap as $field => $aliases) {
+            $normalizedAliasMap[$field] = array_map(fn(string $alias) => $this->normalizeExcelText($alias), $aliases);
+        }
+
+        $mapping = [];
+
+        foreach ($headerRow as $column => $rawHeader) {
+            $normalizedHeader = $this->normalizeExcelText($this->cellToString($rawHeader));
+            if ($normalizedHeader === '') {
+                continue;
+            }
+
+            foreach ($normalizedAliasMap as $field => $aliases) {
+                if (isset($mapping[$field])) {
+                    continue;
+                }
+
+                if (in_array($normalizedHeader, $aliases, true)) {
+                    $mapping[$field] = $column;
+                    break;
+                }
+            }
+        }
+
+        return $mapping;
+    }
+
+    private function getMappedValue(array $row, array $headerMapping, string $field): string
+    {
+        if (!isset($headerMapping[$field])) {
+            return '';
+        }
+
+        $column = $headerMapping[$field];
+
+        return $this->cellToString($row[$column] ?? null);
+    }
+
+    private function isSpreadsheetRowEmpty(array $row): bool
+    {
+        foreach ($row as $value) {
+            if ($this->cellToString($value) !== '') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function cellToString(mixed $value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+
+        if (is_string($value)) {
+            return trim($value);
+        }
+
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+
+        if (is_int($value)) {
+            return (string) $value;
+        }
+
+        if (is_float($value)) {
+            if ((float) (int) $value === $value) {
+                return (string) (int) $value;
+            }
+
+            return rtrim(rtrim(sprintf('%.12F', $value), '0'), '.');
+        }
+
+        return trim((string) $value);
+    }
+
+    private function normalizeExcelText(string $value): string
+    {
+        return (string) Str::of($value)
+            ->squish()
+            ->lower()
+            ->ascii();
+    }
+
+    private function humanHeaderLabel(string $field): string
+    {
+        $labels = [
+            'name' => 'Nombre',
+            'code' => 'Código',
+            'categoria_id' => 'Categoría',
+            'marca_id' => 'Marca',
+            'aplicacion' => 'Aplicación',
+            'anio' => 'Año',
+            'num_original' => 'Número original',
+            'tonelaje' => 'Tonelaje',
+            'espigon' => 'Espigón',
+            'bujes' => 'Bujes',
+        ];
+
+        return $labels[$field] ?? $field;
+    }
+    public function exportarExcel(): StreamedResponse
+    {
+        $excludedColumns = ['id', 'order', 'ficha_tecnica', 'created_at', 'updated_at'];
+
+        $allColumns = Schema::getColumnListing('productos');
+
+        $queryColumns = collect($allColumns)
+            ->reject(fn(string $column) => in_array($column, $excludedColumns, true))
+            ->values()
+            ->all();
+
+        $headerLabels = [
+            'name' => 'Nombre',
+            'code' => 'Codigo',
+            'categoria_id' => 'Categoria',
+            'marca_id' => 'Marca',
+            'aplicacion' => 'Aplicacion',
+            'anio' => 'Año',
+            'num_original' => 'Numero original',
+            'tonelaje' => 'Tonelaje',
+            'espigon' => 'Espigon',
+            'bujes' => 'Bujes',
+        ];
+
+        $productos = Producto::query()
+            ->with(['categoria:id,name', 'marca:id,name'])
+            ->select($queryColumns)
+            ->orderBy('order', 'asc')
+            ->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Productos');
+
+        $displayHeaders = array_map(
+            fn(string $column): string => $headerLabels[$column] ?? ucwords(str_replace('_', ' ', $column)),
+            $queryColumns
+        );
+
+        $sheet->fromArray($displayHeaders, null, 'A1');
+
+        $rowNumber = 2;
+        foreach ($productos as $producto) {
+            $rowData = [];
+
+            foreach ($queryColumns as $column) {
+                if ($column === 'categoria_id') {
+                    $rowData[] = $producto->categoria?->name;
+                    continue;
+                }
+
+                if ($column === 'marca_id') {
+                    $rowData[] = $producto->marca?->name;
+                    continue;
+                }
+
+                $rowData[] = $producto->{$column};
+            }
+
+            $sheet->fromArray($rowData, null, "A{$rowNumber}");
+            $rowNumber++;
+        }
+
+        $lastColumn = Coordinate::stringFromColumnIndex(count($queryColumns));
+        $lastRow = max($rowNumber - 1, 1);
+
+        $headerRange = "A1:{$lastColumn}1";
+        $fullRange = "A1:{$lastColumn}{$lastRow}";
+
+        $sheet->getStyle($headerRange)->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 11,
+                'color' => ['argb' => 'FFFFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FF1F2937'],
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+
+        $sheet->getStyle($fullRange)->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['argb' => 'FFD1D5DB'],
+                ],
+            ],
+            'alignment' => [
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+
+        $numOriginalIndex = array_search('num_original', $queryColumns, true);
+        if ($numOriginalIndex !== false && $lastRow >= 2) {
+            $numOriginalColumn = Coordinate::stringFromColumnIndex($numOriginalIndex + 1);
+            $numOriginalRange = "{$numOriginalColumn}2:{$numOriginalColumn}{$lastRow}";
+            $sheet->getStyle($numOriginalRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        }
+
+        $sheet->freezePane('A2');
+        $sheet->setAutoFilter($headerRange);
+        $sheet->getDefaultRowDimension()->setRowHeight(20);
+        $sheet->getRowDimension(1)->setRowHeight(24);
+
+        for ($columnIndex = 1; $columnIndex <= count($queryColumns); $columnIndex++) {
+            $columnLetter = Coordinate::stringFromColumnIndex($columnIndex);
+            $sheet->getColumnDimension($columnLetter)->setAutoSize(true);
+            if ($sheet->getColumnDimension($columnLetter)->getWidth() < 16) {
+                $sheet->getColumnDimension($columnLetter)->setWidth(16);
+            }
+        }
+
+        $fileName = 'productos_' . now()->format('d-m-Y_Hi') . '.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 }

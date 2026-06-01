@@ -3,12 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Categoria;
-use App\Models\Marca;
-use App\Models\MarcaProducto;
 use App\Models\Producto;
+use App\Models\MarcaProducto;
 use App\Models\SubProducto;
 use DragonCode\Support\Facades\Filesystem\File;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SubProductoController extends Controller
 {
@@ -18,7 +25,11 @@ class SubProductoController extends Controller
     public function index(Request $request)
     {
 
-        $productos = Producto::select('id', 'name')->get();
+        $productos = Producto::select('id', 'name', 'categoria_id')
+            ->with(['categoria' => function ($query) {
+                $query->select('id', 'name');
+            }])
+            ->get();
 
         $perPage = $request->input('per_page', 10);
 
@@ -181,5 +192,119 @@ class SubProductoController extends Controller
         }
 
         $subProducto->delete();
+    }
+
+    public function exportarExcel(): StreamedResponse
+    {
+        $excludedColumns = ['id', 'order', 'image', 'created_at', 'updated_at'];
+
+        $columns = collect(Schema::getColumnListing('sub_productos'))
+            ->reject(fn(string $column) => in_array($column, $excludedColumns, true))
+            ->values()
+            ->all();
+
+        $headerLabels = [
+            'code' => 'Codigo',
+            'producto_id' => 'Producto',
+            'description' => 'Descripcion',
+            'medida' => 'Medida',
+            'componente' => 'Componente',
+            'caracteristicas' => 'Caracteristicas',
+            'price_mayorista' => 'Precio mayorista',
+            'price_minorista' => 'Precio minorista',
+            'price_dist' => 'Precio distribuidor',
+        ];
+
+        $subProductos = SubProducto::query()
+            ->with('producto:id,name')
+            ->select($columns)
+            ->orderBy('order', 'asc')
+            ->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Subproductos');
+
+        $displayHeaders = array_map(
+            fn(string $column): string => $headerLabels[$column] ?? ucwords(str_replace('_', ' ', $column)),
+            $columns
+        );
+
+        $sheet->fromArray($displayHeaders, null, 'A1');
+
+        $rowNumber = 2;
+        foreach ($subProductos as $subProducto) {
+            $rowData = [];
+
+            foreach ($columns as $column) {
+                if ($column === 'producto_id') {
+                    $rowData[] = $subProducto->producto?->name;
+                    continue;
+                }
+
+                $rowData[] = $subProducto->{$column};
+            }
+
+            $sheet->fromArray($rowData, null, "A{$rowNumber}");
+            $rowNumber++;
+        }
+
+        $lastColumn = Coordinate::stringFromColumnIndex(count($columns));
+        $lastRow = max($rowNumber - 1, 1);
+
+        $headerRange = "A1:{$lastColumn}1";
+        $fullRange = "A1:{$lastColumn}{$lastRow}";
+
+        $sheet->getStyle($headerRange)->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 11,
+                'color' => ['argb' => 'FFFFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FF1F2937'],
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+
+        $sheet->getStyle($fullRange)->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['argb' => 'FFD1D5DB'],
+                ],
+            ],
+            'alignment' => [
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+
+        $sheet->freezePane('A2');
+        $sheet->setAutoFilter($headerRange);
+        $sheet->getDefaultRowDimension()->setRowHeight(20);
+        $sheet->getRowDimension(1)->setRowHeight(24);
+
+        for ($columnIndex = 1; $columnIndex <= count($columns); $columnIndex++) {
+            $columnLetter = Coordinate::stringFromColumnIndex($columnIndex);
+            $sheet->getColumnDimension($columnLetter)->setAutoSize(true);
+            if ($sheet->getColumnDimension($columnLetter)->getWidth() < 16) {
+                $sheet->getColumnDimension($columnLetter)->setWidth(16);
+            }
+        }
+
+        $fileName = 'subproductos_' . now()->format('Ymd_His') . '.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 }

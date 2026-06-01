@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MarcaProducto;
+use DragonCode\Support\Facades\Filesystem\File;
 use Illuminate\Http\Request;
 
 class MarcaProductoController extends Controller
@@ -27,10 +28,14 @@ class MarcaProductoController extends Controller
         $data = $request->validate([
             'order' => 'sometimes|string|max:255',
             'name' => 'required|string|max:255',
+            'image' => 'required|file',
 
         ]);
 
-
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('images', 'public');
+            $data['image'] = $imagePath;
+        }
 
         MarcaProducto::create($data);
 
@@ -57,7 +62,19 @@ class MarcaProductoController extends Controller
         $data = $request->validate([
             'order' => 'sometimes|string|max:255',
             'name' => 'required|string|max:255',
+            'image' => 'sometimes|file',
         ]);
+
+        if ($request->hasFile('image')) {
+            $rawImagePath = $marcaProducto->getRawOriginal('image');
+            $absolutePath = $rawImagePath ? public_path('storage/' . $rawImagePath) : null;
+            if ($absolutePath && File::exists($absolutePath)) {
+                File::delete($absolutePath);
+            }
+
+            $imagePath = $request->file('image')->store('images', 'public');
+            $data['image'] = $imagePath;
+        }
 
         $marcaProducto->update($data);
 
@@ -74,6 +91,14 @@ class MarcaProductoController extends Controller
         // Check if the MarcaProducto entry exists
         if (!$marcaProducto) {
             return redirect()->back()->with('error', 'MarcaProducto not found.');
+        }
+
+        $rawImagePath = $marcaProducto->getRawOriginal('image');
+        if ($rawImagePath) {
+            $absolutePath = public_path('storage/' . $rawImagePath);
+            if (File::exists($absolutePath)) {
+                File::delete($absolutePath);
+            }
         }
 
         $marcaProducto->delete();

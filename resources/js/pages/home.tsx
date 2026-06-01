@@ -1,5 +1,5 @@
 import BannerInicio from '@/components/bannerInicio';
-import Carousel from '@/components/Carousel';
+import Carousel from '@/components/carousel';
 import InstagramInicio from '@/components/instagramInicio';
 import MarcasInicio from '@/components/marcasInicio';
 import NovedadesInicio from '@/components/novedadesInicio';

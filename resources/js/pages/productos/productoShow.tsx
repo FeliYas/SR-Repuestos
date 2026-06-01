@@ -14,6 +14,9 @@ export default function ProductoShow() {
 
     const modalRef = useRef(null);
 
+    const hasValue = (value) => value !== null && value !== undefined && String(value).trim() !== '';
+    const isRepuestosFrenos = String(producto?.categoria?.name ?? '').trim().toLowerCase() === 'repuestos y frenos';
+
     useEffect(() => {
         if (selectedSubproductoImage) {
             const handleClickOutside = (event) => {
@@ -140,35 +143,43 @@ export default function ProductoShow() {
                                 <h2 className="text-[22px] font-bold text-[#202020] md:text-[28px]">{producto?.name}</h2>
                             </div>
                             <div className="flex flex-col text-[14px] md:text-[16px]">
-                                {producto?.categoria?.name?.toLowerCase() != 'repuestos y frenos' && (
+                                {producto?.categoria?.name?.toLowerCase() != 'repuestos y frenos' && hasValue(producto?.aplicacion) && (
                                     <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
                                         <p>Aplicación</p>
                                         <p>{producto?.aplicacion}</p>
                                     </div>
                                 )}
 
-                                <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
-                                    <p>Año</p>
-                                    <p>{producto?.anio}</p>
-                                </div>
-                                {producto?.categoria?.name?.toLowerCase() != 'repuestos y frenos' && (
+                                {hasValue(producto?.anio) && (
+                                    <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
+                                        <p>Año</p>
+                                        <p>{producto?.anio}</p>
+                                    </div>
+                                )}
+                                {producto?.categoria?.name?.toLowerCase() != 'repuestos y frenos' && hasValue(producto?.num_original) && (
                                     <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
                                         <p>Nº Original</p>
                                         <p>{producto?.num_original}</p>
                                     </div>
                                 )}
-                                <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
-                                    <p>Tonelaje</p>
-                                    <p>{producto?.tonelaje}</p>
-                                </div>
-                                <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
-                                    <p>Espigón</p>
-                                    <p>{producto?.espigon}</p>
-                                </div>
-                                <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
-                                    <p>Bujes</p>
-                                    <p>{producto?.bujes}</p>
-                                </div>
+                                {hasValue(producto?.tonelaje) && (
+                                    <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
+                                        <p>Piton</p>
+                                        <p>{producto?.tonelaje}</p>
+                                    </div>
+                                )}
+                                {hasValue(producto?.espigon) && (
+                                    <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
+                                        <p>Curva del piton</p>
+                                        <p>{producto?.espigon}</p>
+                                    </div>
+                                )}
+                                {hasValue(producto?.bujes) && (
+                                    <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
+                                        <p>Bujes</p>
+                                        <p>{producto?.bujes}</p>
+                                    </div>
+                                )}
                             </div>
                             <div className="flex flex-col gap-2">
                                 <Link
@@ -185,18 +196,24 @@ export default function ProductoShow() {
 
                     {/* subproducts table */}
                     <div className="mt-16 flex flex-col md:mt-30">
-                        <div className="hidden h-[52px] grid-cols-6 items-center bg-[#F5F5F5] px-4 md:grid">
+                        <div
+                            className={`hidden h-[52px] items-center bg-[#F5F5F5] px-4 md:grid ${
+                                isRepuestosFrenos ? 'grid-cols-5' : 'grid-cols-6'
+                            }`}
+                        >
                             <p></p>
                             <p>Código</p>
                             <p>Descripción</p>
                             <p>Medida</p>
-                            <p>Componente</p>
+                            {!isRepuestosFrenos && <p>Largo total</p>}
                             <p>Características</p>
                         </div>
                         {subproductos?.map((subproducto, index) => (
                             <div
                                 key={index}
-                                className="flex flex-col border-b border-[#E0E0E0] py-3 text-[#74716A] md:grid md:min-h-[52px] md:grid-cols-6 md:items-center md:px-4 md:py-0"
+                                className={`flex flex-col border-b border-[#E0E0E0] py-3 text-[#74716A] md:grid md:min-h-[52px] md:items-center md:px-4 md:py-0 ${
+                                    isRepuestosFrenos ? 'md:grid-cols-5' : 'md:grid-cols-6'
+                                }`}
                             >
                                 <button 
                                     onClick={() => openImageModal(subproducto)} 
@@ -223,10 +240,12 @@ export default function ProductoShow() {
                                     <p className="font-semibold md:hidden md:font-normal">Medida:</p>
                                     <p>{subproducto?.medida}</p>
                                 </div>
-                                <div className="flex justify-between md:block">
-                                    <p className="font-semibold md:hidden md:font-normal">Componente:</p>
-                                    <p>{subproducto?.componente}</p>
-                                </div>
+                                {!isRepuestosFrenos && (
+                                    <div className="flex justify-between md:block">
+                                        <p className="font-semibold md:hidden md:font-normal">Largo total:</p>
+                                        <p>{subproducto?.componente}</p>
+                                    </div>
+                                )}
                                 <div className="flex justify-between md:block">
                                     <p className="font-semibold md:hidden md:font-normal">Características:</p>
                                     <p>{subproducto?.caracteristicas}</p>
@@ -239,31 +258,39 @@ export default function ProductoShow() {
                     <div className="flex flex-col gap-3 pt-10 md:pt-20">
                         <h2 className="text-[20px] font-semibold md:text-[24px]">Productos relacionados</h2>
                         <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {productosRelacionados?.map((producto, index) => (
-                                <Link
-                                    href={`/productos/${producto?.id}`}
-                                    key={index}
-                                    className="flex h-auto w-full flex-col border border-gray-200 sm:h-[400px]"
-                                >
-                                    <div className="h-[200px] w-full border-b border-gray-200 sm:h-[287px]">
-                                        <img
-                                            className="h-full w-full object-cover object-center"
-                                            src={producto?.imagenes[0]?.image || defaultPhoto}
-                                            alt={producto?.name}
-                                            onError={(e) => {
-                                                e.currentTarget.src = defaultPhoto;
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="flex w-full flex-col gap-2 p-4">
-                                        <p className="text-primary-orange">
-                                            {' '}
-                                            <span className="font-bold">{producto?.code}</span> | {producto?.marca?.name?.toUpperCase()}{' '}
-                                        </p>
-                                        <h2 className="text-[18px] font-bold text-[#202020] md:text-[20px]">{producto?.name}</h2>
-                                    </div>
-                                </Link>
-                            ))}
+                            {productosRelacionados?.map((relacionado, index) => {
+                                const relatedCategoryId = relacionado?.categoria?.id ?? relacionado?.categoria_id;
+                                const relatedHref = relatedCategoryId
+                                    ? `/productos/${relatedCategoryId}/${relacionado?.id}`
+                                    : `/productos/${relacionado?.id}`;
+
+                                return (
+                                    <Link
+                                        href={relatedHref}
+                                        key={index}
+                                        className="flex h-auto w-full flex-col border border-gray-200 sm:h-[400px]"
+                                    >
+                                        <div className="h-[200px] w-full border-b border-gray-200 sm:h-[287px]">
+                                            <img
+                                                className="h-full w-full object-cover object-center"
+                                                src={relacionado?.imagenes[0]?.image || defaultPhoto}
+                                                alt={relacionado?.name}
+                                                onError={(e) => {
+                                                    e.currentTarget.src = defaultPhoto;
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="flex w-full flex-col gap-2 p-4">
+                                            <p className="text-primary-orange">
+                                                {' '}
+                                                <span className="font-bold">{relacionado?.code}</span> |{' '}
+                                                {relacionado?.marca?.name?.toUpperCase()}{' '}
+                                            </p>
+                                            <h2 className="text-[18px] font-bold text-[#202020] md:text-[20px]">{relacionado?.name}</h2>
+                                        </div>
+                                    </Link>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'instagram' => [
+        'public_username' => env('INSTAGRAM_PUBLIC_USERNAME', 'sr.repuestos'),
+        'public_app_id' => env('INSTAGRAM_PUBLIC_APP_ID', '936619743392459'),
+        'api_version' => env('INSTAGRAM_API_VERSION', 'v22.0'),
+        'user_id' => env('INSTAGRAM_USER_ID'),
+        'access_token' => env('INSTAGRAM_ACCESS_TOKEN'),
+        'cache_minutes' => env('INSTAGRAM_CACHE_MINUTES', 30),
+    ],
+
 ];

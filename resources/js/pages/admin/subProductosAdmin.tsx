@@ -1,6 +1,6 @@
 import { router, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import SubProductosAdminRow from '../../components/subProductosAdminRow';
 import Dashboard from './dashboard';
@@ -25,6 +25,15 @@ export default function SubProductosAdmin() {
     const [searchTerm, setSearchTerm] = useState('');
     const [createView, setCreateView] = useState(false);
     const [importar, setImportar] = useState(false);
+
+    const selectedProducto = productos?.find((prod) => String(prod.id) === String(data.producto_id));
+    const isRepuestosFrenos = String(selectedProducto?.categoria?.name ?? '').trim().toLowerCase() === 'repuestos y frenos';
+
+    useEffect(() => {
+        if (isRepuestosFrenos && data.componente) {
+            setData('componente', '');
+        }
+    }, [isRepuestosFrenos, data.componente, setData]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -92,6 +101,10 @@ export default function SubProductosAdmin() {
         );
     };
 
+    const handleExport = () => {
+        window.location.href = route('admin.subproductos.export');
+    };
+
     return (
         <Dashboard>
             <div className="flex w-full flex-col p-6">
@@ -154,14 +167,18 @@ export default function SubProductosAdmin() {
                                             id="medida"
                                             onChange={(e) => setData('medida', e.target.value)}
                                         />
-                                        <label htmlFor="comp">Componente</label>
-                                        <input
-                                            className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
-                                            type="text"
-                                            name="comp"
-                                            id="comp"
-                                            onChange={(e) => setData('componente', e.target.value)}
-                                        />
+                                        {!isRepuestosFrenos && (
+                                            <>
+                                                <label htmlFor="comp">Largo total</label>
+                                                <input
+                                                    className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
+                                                    type="text"
+                                                    name="comp"
+                                                    id="comp"
+                                                    onChange={(e) => setData('componente', e.target.value)}
+                                                />
+                                            </>
+                                        )}
                                         <label htmlFor="carac">Caracteristicas</label>
                                         <input
                                             className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
@@ -317,6 +334,12 @@ export default function SubProductosAdmin() {
                             className="bg-primary-orange w-[300px] rounded px-4 py-1 font-bold text-white hover:bg-orange-400"
                         >
                             Actualizar precios
+                        </button>
+                        <button
+                            onClick={handleExport}
+                            className="bg-primary-orange w-[320px] rounded px-4 py-1 font-bold text-white hover:bg-orange-400"
+                        >
+                            Exportar subproductos
                         </button>
                     </div>
 
