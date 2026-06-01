@@ -91,6 +91,10 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('admin/subproductos/update', [SubProductoController::class, 'update'])->name('admin.subproductos.update');
     Route::delete('admin/subproductos/destroy', [SubProductoController::class, 'destroy'])->name('admin.subproductos.destroy');
     Route::get('admin/subproductos/exportar', [SubProductoController::class, 'exportarExcel'])->name('admin.subproductos.export');
+    Route::get('admin/cargamasivasubproductos', [SubProductoController::class, 'cargaMasivaSubproductos'])->name('admin.cargamasiva.subproductos');
+    Route::post('admin/cargamasivasubproductos/importar', [SubProductoController::class, 'importarMasivoSubproductos'])->name('admin.cargamasiva.subproductos.import');
+    Route::get('admin/cargamasivaimagenes', [ImagenProductoController::class, 'cargaMasivaImagenes'])->name('admin.cargamasiva.imagenes');
+    Route::post('admin/cargamasivaimagenes/importar', [ImagenProductoController::class, 'importarMasivoImagenes'])->name('admin.cargamasiva.imagenes.import');
 
     Route::get('admin/clientes', [UserController::class, 'index'])->name('admin.clientes');
     Route::post('admin/clientes', [UserController::class, 'store'])->name('admin.clientes.store');

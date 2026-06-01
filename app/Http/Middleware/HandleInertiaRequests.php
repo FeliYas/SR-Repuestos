@@ -50,6 +50,8 @@ class HandleInertiaRequests extends Middleware
                 'pedido_id' => fn() => $request->session()->get('pedido_id'),
                 'message' => fn() => $request->session()->get('message'),
                 'mass_upload_summary' => fn() => $request->session()->get('mass_upload_summary'),
+                'mass_upload_subproductos_summary' => fn() => $request->session()->get('mass_upload_subproductos_summary'),
+                'mass_upload_images_summary' => fn() => $request->session()->get('mass_upload_images_summary'),
             ],
             'ziggy' => fn(): array => [
                 ...(new Ziggy)->toArray(),

@@ -93,8 +93,8 @@ export default function Dashboard({ children }) {
             href: '#',
             subHref: [
                 { title: 'Productos', href: 'cargamasivaproductos' },
-                { title: 'Subproductos', href: 'cargamasivasubproductos', disabled: true },
-                { title: 'Imagenes', href: 'cargamasivaimagenes', disabled: true },
+                { title: 'Subproductos', href: 'cargamasivasubproductos' },
+                { title: 'Imagenes', href: 'cargamasivaimagenes' },
             ],
         },
         {
