@@ -31,7 +31,7 @@ export default function CategoriasAdminRow({ categoria }) {
 
     const deleteMarca = () => {
         if (confirm('¿Estas seguro de eliminar esta categoria?')) {
-            updateForm.delete(route('admin.categorias.destroy'), {
+            updateForm.delete(route('admin.categorias.destroy', { id: categoria.id }), {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success('Categoria eliminada correctamente');

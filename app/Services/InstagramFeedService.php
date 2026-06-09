@@ -3,36 +3,47 @@
 namespace App\Services;
 
 use App\Models\Instagram;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class InstagramFeedService
 {
     public function getLatestPosts(int $limit = 8): Collection
     {
         $username = (string) config('services.instagram.public_username', 'sr.repuestos');
-
         $cacheMinutes = max((int) config('services.instagram.cache_minutes', 30), 1);
         $cacheKey = "instagram.feed.latest.{$username}.{$limit}";
 
         return Cache::remember($cacheKey, now()->addMinutes($cacheMinutes), function () use ($limit, $username) {
-            $posts = $this->fetchFromPublicEndpoint($username, $limit);
+            $this->syncLatestPosts($username, max($limit, 12));
 
-            if ($posts->isNotEmpty()) {
-                return $posts;
-            }
-
-            if ($this->isOfficialConfigured()) {
-                $posts = $this->fetchFromOfficialApi($limit);
-                if ($posts->isNotEmpty()) {
-                    return $posts;
-                }
-            }
-
-            return $this->getManualPosts($limit);
+            return $this->getStoredPosts($limit);
         });
+    }
+
+    public function syncLatestPosts(string $username, int $limit = 12): Collection
+    {
+        $posts = $this->fetchFromPublicEndpoint($username, $limit);
+
+        if ($posts->isEmpty() && $this->isOfficialConfigured()) {
+            $posts = $this->fetchFromOfficialApi($limit);
+        }
+
+        if ($posts->isEmpty()) {
+            return collect();
+        }
+
+        foreach ($posts as $post) {
+            $this->persistSyncedPost($post);
+        }
+
+        $this->pruneOldSyncedPosts($limit);
+
+        return $this->getStoredPosts(min($limit, 8));
     }
 
     private function fetchFromPublicEndpoint(string $username, int $limit): Collection
@@ -64,7 +75,7 @@ class InstagramFeedService
                 ]);
 
             if (!$response->successful()) {
-                Log::warning('No se pudo obtener el feed público de Instagram.', [
+                Log::warning('No se pudo obtener el feed publico de Instagram.', [
                     'status' => $response->status(),
                     'body' => $response->body(),
                     'username' => $username,
@@ -89,13 +100,13 @@ class InstagramFeedService
             ->map(function (array $edge, int $index) {
                 $node = $edge['node'] ?? [];
                 $shortcode = $node['shortcode'] ?? null;
-                $image = $node['display_url'] ?? $node['thumbnail_src'] ?? null;
+                $imageUrl = $node['display_url'] ?? $node['thumbnail_src'] ?? null;
 
-                if (!$image && isset($node['edge_sidecar_to_children']['edges'][0]['node']['display_url'])) {
-                    $image = $node['edge_sidecar_to_children']['edges'][0]['node']['display_url'];
+                if (!$imageUrl && isset($node['edge_sidecar_to_children']['edges'][0]['node']['display_url'])) {
+                    $imageUrl = $node['edge_sidecar_to_children']['edges'][0]['node']['display_url'];
                 }
 
-                if (!$shortcode || !$image) {
+                if (!$shortcode || !$imageUrl) {
                     return null;
                 }
 
@@ -103,9 +114,9 @@ class InstagramFeedService
                 $caption = $captionEdges[0]['node']['text'] ?? null;
 
                 return [
-                    'id' => $node['id'] ?? null,
+                    'external_id' => $shortcode,
                     'order' => (string) ($index + 1),
-                    'image' => $this->proxiedImageUrl($image),
+                    'image_url' => $imageUrl,
                     'link' => "https://www.instagram.com/p/{$shortcode}/",
                     'caption' => $caption,
                     'timestamp' => $node['taken_at_timestamp'] ?? null,
@@ -139,28 +150,28 @@ class InstagramFeedService
             return collect();
         }
 
-        $items = collect($response->json('data', []))
+        return collect($response->json('data', []))
             ->map(function (array $item, int $index) {
-                $image = $this->resolveImageUrl($item);
+                $imageUrl = $this->resolveImageUrl($item);
                 $link = $item['permalink'] ?? null;
+                $externalId = $this->extractExternalIdFromLink($link) ?? ($item['id'] ?? null);
 
-                if (!$image || !$link) {
+                if (!$imageUrl || !$link || !$externalId) {
                     return null;
                 }
 
                 return [
-                    'id' => $item['id'] ?? null,
+                    'external_id' => (string) $externalId,
                     'order' => (string) ($index + 1),
-                    'image' => $this->proxiedImageUrl($image),
+                    'image_url' => $imageUrl,
                     'link' => $link,
                     'caption' => $item['caption'] ?? null,
                     'timestamp' => $item['timestamp'] ?? null,
                 ];
             })
             ->filter()
+            ->take($limit)
             ->values();
-
-        return $items;
     }
 
     private function resolveImageUrl(array $item): ?string
@@ -185,23 +196,131 @@ class InstagramFeedService
         return $item['media_url'] ?? null;
     }
 
-    private function getManualPosts(int $limit): Collection
+    private function getStoredPosts(int $limit): Collection
     {
-        return Instagram::orderBy('order', 'asc')
+        $synced = Instagram::where('source', 'instagram_public')
+            ->orderByDesc('published_at')
             ->limit($limit)
             ->get();
+
+        if ($synced->isNotEmpty()) {
+            return $synced;
+        }
+
+        return $this->getManualPosts($limit);
+    }
+
+    private function getManualPosts(int $limit): Collection
+    {
+        return Instagram::where('source', 'manual')
+            ->orderBy('order', 'asc')
+            ->limit($limit)
+            ->get();
+    }
+
+    private function persistSyncedPost(array $post): Instagram
+    {
+        $publishedAt = !empty($post['timestamp']) ? Carbon::createFromTimestamp((int) $post['timestamp']) : null;
+        $existing = Instagram::where('source', 'instagram_public')
+            ->where('external_id', $post['external_id'])
+            ->first();
+
+        if ($existing) {
+            $existing->forceFill([
+                'order' => $post['order'] ?? $existing->order,
+                'link' => $post['link'] ?? $existing->link,
+                'caption' => $post['caption'] ?? $existing->caption,
+                'published_at' => $publishedAt ?? $existing->published_at,
+            ]);
+
+            if (!$existing->image || str_starts_with((string) $existing->image, 'http://') || str_starts_with((string) $existing->image, 'https://')) {
+                $existing->image = $this->downloadImageToStorage($post['image_url'], $post['external_id']);
+            }
+
+            $existing->save();
+
+            return $existing;
+        }
+
+        $instagram = new Instagram();
+        $instagram->source = 'instagram_public';
+        $instagram->external_id = $post['external_id'];
+        $instagram->order = $post['order'] ?? 'zzz';
+        $instagram->image = $this->downloadImageToStorage($post['image_url'], $post['external_id']);
+        $instagram->link = $post['link'] ?? null;
+        $instagram->caption = $post['caption'] ?? null;
+        $instagram->published_at = $publishedAt;
+        $instagram->save();
+
+        return $instagram;
+    }
+
+    private function downloadImageToStorage(string $imageUrl, string $externalId): string
+    {
+        $response = Http::timeout(20)
+            ->withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+                'Accept' => 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                'Referer' => 'https://www.instagram.com/',
+            ])
+            ->withOptions([
+                'curl' => [
+                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_2_0,
+                    CURLOPT_ENCODING => '',
+                ],
+            ])
+            ->get($imageUrl);
+
+        if (!$response->successful()) {
+            Log::warning('No se pudo descargar la imagen de Instagram.', [
+                'status' => $response->status(),
+                'url' => $imageUrl,
+                'external_id' => $externalId,
+            ]);
+
+            return $this->fallbackImagePath($externalId);
+        }
+
+        $path = "instagram/{$externalId}.jpg";
+        Storage::disk('public')->put($path, $response->body());
+
+        return $path;
+    }
+
+    private function fallbackImagePath(string $externalId): string
+    {
+        return "instagram/{$externalId}.jpg";
+    }
+
+    private function pruneOldSyncedPosts(int $keepCount): void
+    {
+        $syncedIds = Instagram::where('source', 'instagram_public')
+            ->orderByDesc('published_at')
+            ->pluck('id');
+
+        $toDelete = $syncedIds->slice($keepCount)->values();
+
+        if ($toDelete->isNotEmpty()) {
+            Instagram::whereIn('id', $toDelete)->delete();
+        }
+    }
+
+    private function extractExternalIdFromLink(?string $link): ?string
+    {
+        if (!$link) {
+            return null;
+        }
+
+        if (preg_match('#instagram\.com/(p|reel)/([^/?]+)#', $link, $matches)) {
+            return $matches[2];
+        }
+
+        return null;
     }
 
     private function isOfficialConfigured(): bool
     {
         return filled(config('services.instagram.user_id'))
             && filled(config('services.instagram.access_token'));
-    }
-
-    private function proxiedImageUrl(string $imageUrl): string
-    {
-        $encoded = rtrim(strtr(base64_encode($imageUrl), '+/', '-_'), '=');
-
-        return route('instagram.image.proxy', ['encoded' => $encoded]);
     }
 }

@@ -68,33 +68,6 @@ class ProductoController extends Controller
             'productos' => $productos,
         ]);
     }
-
-    /* public function indexInicio(Request $request, $id)
-    {
-        $marcas = MarcaProducto::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
-
-        $categorias = Categoria::select('id', 'name', 'order')
-            ->orderBy('order', 'asc')
-            ->get();
-        $metadatos = Metadatos::where('title', 'Productos')->first();
-        if ($request->has('marca') && !empty($request->marca)) {
-            $productos = Producto::where('categoria_id', $id)->whereHas('subproductos')->whereHas('imagenes')->where('marca_id', $request->marca)->with('marca', 'imagenes')->orderBy('order', 'asc')->get();
-        } else {
-            $productos = Producto::where('categoria_id', $id)->whereHas('subproductos')->whereHas('imagenes')->with('marca', 'imagenes')->orderBy('order', 'asc')->get();
-        }
-        $subproductos = SubProducto::orderBy('order', 'asc')->get();
-
-        return Inertia::render('productos', [
-            'productos' => $productos,
-            'categorias' => $categorias,
-            'marcas' => $marcas,
-            'metadatos' => $metadatos,
-            'id' => $id,
-            'marca_id' => $request->marca,
-            'subproductos' => $subproductos,
-
-        ]);
-    } */
     
     public function fixImagePath()
     {
@@ -231,13 +204,7 @@ class ProductoController extends Controller
         $subproductos = SubProducto::where('producto_id', $producto_id)->orderBy('order', 'asc')->get();
         $producto = Producto::with(['categoria:id,name', 'marca:id,name', 'imagenes'])->findOrFail($producto_id);
         $categorias = Categoria::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
-        $productosRelacionados = Producto::with(['imagenes', 'marca:id,name', 'categoria:id,name'])
-            ->where('marca_id', $producto->marca_id)
-            ->where('categoria_id', $producto->categoria_id)
-            ->where('id', '!=', $producto_id)
-            ->inRandomOrder()
-            ->limit(3)
-            ->get();
+        $productosRelacionados = $this->getProductosRelacionados($producto);
 
 
         return Inertia::render('productos/productoShow', [
@@ -247,6 +214,179 @@ class ProductoController extends Controller
             'productosRelacionados' => $productosRelacionados,
         ]);
     }
+
+
+    private function getProductosRelacionados(Producto $producto)
+    {
+        $relacionados = $this->getProductosRelacionadosPorCodigo($producto, 3);
+
+        if ($relacionados->isNotEmpty()) {
+            return $relacionados;
+        }
+
+        $relacionados = $this->getProductosRelacionadosPorTitulo($producto, 3);
+
+        if ($relacionados->isNotEmpty()) {
+            return $relacionados;
+        }
+
+        return $this->getProductosRelacionadosPorCategoriaOMarca($producto, 3);
+    }
+
+    private function getProductosRelacionadosPorCodigo(Producto $producto, int $limit = 3)
+    {
+        $prefijo = $this->extraerPrefijoCodigo($producto->code);
+
+        if ($prefijo === '') {
+            return collect();
+        }
+
+        return Producto::with(['imagenes', 'marca:id,name', 'categoria:id,name'])
+            ->where('id', '!=', $producto->id)
+            ->whereRaw('UPPER(code) LIKE ?', [$prefijo . '%'])
+            ->orderByRaw('CHAR_LENGTH(code) ASC')
+            ->orderBy('id', 'asc')
+            ->limit($limit)
+            ->get();
+    }
+
+    private function getProductosRelacionadosPorTitulo(Producto $producto, int $limit = 3)
+    {
+        $tokens = $this->extraerTokensRelacionados((string) $producto->name);
+
+        if (empty($tokens)) {
+            return collect();
+        }
+
+        $query = Producto::with(['imagenes', 'marca:id,name', 'categoria:id,name'])
+            ->where('id', '!=', $producto->id)
+            ->where(function ($builder) use ($tokens) {
+                foreach ($tokens as $token) {
+                    $builder->orWhereRaw('UPPER(name) LIKE ?', ['%' . $token . '%']);
+                }
+            });
+
+        $candidatos = $query->get();
+
+        return $candidatos
+            ->map(function (Producto $candidato) use ($tokens) {
+                $score = $this->puntuarSimilitudTitulo((string) $candidato->name, $tokens);
+
+                return [
+                    'producto' => $candidato,
+                    'score' => $score,
+                ];
+            })
+            ->filter(fn (array $item) => $item['score'] > 0)
+            ->sortByDesc('score')
+            ->take($limit)
+            ->pluck('producto')
+            ->values();
+    }
+
+    private function getProductosRelacionadosPorCategoriaOMarca(Producto $producto, int $limit = 3)
+    {
+        $query = Producto::with(['imagenes', 'marca:id,name', 'categoria:id,name'])
+            ->where('id', '!=', $producto->id)
+            ->where(function ($builder) use ($producto) {
+                $builder->where('categoria_id', $producto->categoria_id);
+
+                if ($producto->marca_id !== null) {
+                    $builder->orWhere('marca_id', $producto->marca_id);
+                }
+            });
+
+        return $query
+            ->orderByRaw('CASE WHEN categoria_id = ? THEN 0 ELSE 1 END', [$producto->categoria_id])
+            ->orderByRaw('CASE WHEN marca_id = ? THEN 0 ELSE 1 END', [$producto->marca_id])
+            ->orderBy('order', 'asc')
+            ->orderBy('id', 'asc')
+            ->limit($limit)
+            ->get();
+    }
+
+    private function extraerPrefijoCodigo(?string $code): string
+    {
+        $code = strtoupper(trim((string) $code));
+
+        if ($code === '') {
+            return '';
+        }
+
+        return preg_match('/^[A-Z]+/', $code, $matches) ? $matches[0] : '';
+    }
+
+    private function extraerTokensRelacionados(string $nombre): array
+    {
+        $normalizado = Str::of($nombre)
+            ->ascii()
+            ->upper()
+            ->replaceMatches('/[^A-Z0-9]+/', ' ')
+            ->trim()
+            ->toString();
+
+        if ($normalizado === '') {
+            return [];
+        }
+
+        $stopwords = [
+            'A', 'AL', 'CON', 'DE', 'DEL', 'DESDE', 'EL', 'EN', 'LA', 'LAS', 'LOS',
+            'O', 'P', 'PARA', 'POR', 'SIN', 'Y',
+            'DELANTERA', 'DELANTERO', 'DELANTERAS', 'DELANTEROS',
+            'TRASERA', 'TRASERO', 'TRASERAS', 'TRASEROS',
+        ];
+
+        $tokens = array_values(array_filter(explode(' ', $normalizado), function (string $token) use ($stopwords) {
+            if ($token === '') {
+                return false;
+            }
+
+            if (ctype_digit($token)) {
+                return true;
+            }
+
+            if (strlen($token) < 3) {
+                return false;
+            }
+
+            return !in_array($token, $stopwords, true);
+        }));
+
+        return array_slice(array_values(array_unique($tokens)), 0, 5);
+    }
+
+    private function puntuarSimilitudTitulo(string $nombre, array $tokens): int
+    {
+        $normalizado = Str::of($nombre)
+            ->ascii()
+            ->upper()
+            ->replaceMatches('/[^A-Z0-9]+/', ' ')
+            ->trim()
+            ->toString();
+
+        if ($normalizado === '') {
+            return 0;
+        }
+
+        $score = 0;
+
+        foreach ($tokens as $index => $token) {
+            if ($token === '') {
+                continue;
+            }
+
+            if (str_contains($normalizado, $token)) {
+                $score += $index === 0 ? 4 : 2;
+            }
+        }
+
+        if ($score > 0 && str_starts_with($normalizado, $tokens[0])) {
+            $score += 2;
+        }
+
+        return $score;
+    }
+
 
     public function SearchProducts(Request $request)
     {
@@ -271,7 +411,8 @@ class ProductoController extends Controller
                         $marcaQuery->where('name', 'LIKE', '%' . $searchTerm . '%');
                     })
                     ->orWhereHas('subproductos', function ($subproductoQuery) use ($searchTerm) {
-                        $subproductoQuery->where('medida', 'LIKE', '%' . $searchTerm . '%');
+                        $subproductoQuery->where('code', 'LIKE', '%' . $searchTerm . '%')
+                            ->orWhere('medida', 'LIKE', '%' . $searchTerm . '%');
                     });
             });
         }

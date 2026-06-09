@@ -44,7 +44,11 @@ class SendContactInfoController extends Controller
         }
 
         Mail::send([], [], function ($message) use ($htmlContent, $contactInfo) {
+            $fromAddress = config('mail.from.address');
+            $fromName = config('mail.from.name');
+
             $message->to($contactInfo)
+                ->from($fromAddress, $fromName)
                 ->subject('Correo de Contacto')
                 ->html($htmlContent);
         });

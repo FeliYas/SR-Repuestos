@@ -54,7 +54,7 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
         $marcas = MarcaProducto::orderBy('order', 'asc')->get();
         $instagram = app(InstagramFeedService::class)->getLatestPosts(8);
         $bannerPortada = BannerPortada::first();
-        $novedades = Novedades::all();
+        $novedades = Novedades::latest()->take(3)->get();
         $metadatos = Metadatos::where('title', 'Inicio')->first();
 
         return Inertia::render('home', [

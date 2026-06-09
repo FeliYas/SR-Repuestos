@@ -5,17 +5,44 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import Dashboard from './dashboard';
 
-export default function CategoriasAdmin() {
-    const { categorias } = usePage().props;
+type Categoria = {
+    id: number;
+    order: string | number;
+    name: string;
+    image: string;
+};
 
-    const { data, setData, post, reset } = useForm({
+type PaginacionCategorias = {
+    data: Categoria[];
+    links: Array<{
+        url: string | null;
+        label: string;
+        active: boolean;
+    }>;
+    from: number | null;
+    to: number | null;
+    total: number;
+};
+
+type CategoriaForm = {
+    order: string;
+    name: string;
+    image: File | null;
+};
+
+export default function CategoriasAdmin() {
+    const { categorias } = usePage<{ categorias: PaginacionCategorias }>().props;
+
+    const { data, setData, post, reset } = useForm<CategoriaForm>({
+        order: '',
         name: '',
+        image: null,
     });
 
     const [searchTerm, setSearchTerm] = useState('');
     const [createView, setCreateView] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         post(route('admin.categorias.store'), {
@@ -26,14 +53,14 @@ export default function CategoriasAdmin() {
                 setCreateView(false);
             },
             onError: (errors) => {
-                toast.error('Error al crear categoria');
+                toast.error(errors.image || errors.name || errors.order || 'Error al crear categoria');
                 console.log(errors);
             },
         });
     };
 
     // Manejadores para la paginación del backend
-    const handlePageChange = (page) => {
+    const handlePageChange = (page: string | number) => {
         router.get(
             route('admin.categorias'),
             {
@@ -103,7 +130,7 @@ export default function CategoriasAdmin() {
                                                 type="file"
                                                 name="imagen"
                                                 id="imagenn"
-                                                onChange={(e) => setData('image', e.target.files[0])}
+                                                onChange={(e) => setData('image', e.target.files?.[0] ?? null)}
                                                 className="hidden"
                                             />
                                             <label
@@ -112,7 +139,7 @@ export default function CategoriasAdmin() {
                                             >
                                                 Elegir imagen
                                             </label>
-                                            <p className="self-center px-2">{data?.image?.name}</p>
+                                            <p className="self-center px-2">{data.image?.name}</p>
                                         </div>
 
                                         <div className="flex justify-end gap-4">

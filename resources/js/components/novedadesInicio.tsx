@@ -61,17 +61,20 @@ export default function NovedadesInicio() {
                         <Link
                             key={novedad?.id}
                             href={`/novedades/${novedad?.id}`}
-                            className="flex h-auto w-full flex-col gap-2 border border-gray-300 sm:h-[480px] md:h-[520px] md:max-w-[calc(33.33%-16px)] lg:h-[540px]"
+                            className="flex h-fit w-full flex-col gap-2 border border-gray-300"
                         >
-                            <div className="aspect-[16/9] w-full sm:aspect-[392/300] sm:max-h-[240px] md:max-h-[300px]">
-                                <img className="h-full w-full object-cover" src={novedad?.image} alt={novedad?.title || 'Imagen de novedad'} />
+                            <div className="h-[474px] w-full overflow-hidden">
+                                <img className="h-full w-full object-cover" src={novedad?.image} alt="" />
                             </div>
                             <div className="flex h-full flex-col justify-between p-3">
                                 <div className="flex flex-col gap-2">
                                     <p className="text-primary-orange text-sm font-bold uppercase">{novedad?.type}</p>
                                     <div>
-                                        <p className="text-xl font-bold sm:text-2xl">{novedad?.title}</p>
-                                        <div dangerouslySetInnerHTML={{ __html: truncateString(novedad?.text, getTruncateLength()) }} />
+                                        <p className="line-clamp-2 text-xl font-bold sm:text-2xl">{novedad?.title}</p>
+                                        <div
+                                            className="line-clamp-2 overflow-hidden text-sm break-words sm:text-base"
+                                            dangerouslySetInnerHTML={{ __html: novedad?.text }}
+                                        />
                                     </div>
                                 </div>
                                 <button type="button" className="mt-4 flex flex-row items-center justify-between">

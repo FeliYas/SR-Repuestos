@@ -257,41 +257,47 @@ export default function ProductoShow() {
                     {/* related products */}
                     <div className="flex flex-col gap-3 pt-10 md:pt-20">
                         <h2 className="text-[20px] font-semibold md:text-[24px]">Productos relacionados</h2>
-                        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {productosRelacionados?.map((relacionado, index) => {
-                                const relatedCategoryId = relacionado?.categoria?.id ?? relacionado?.categoria_id;
-                                const relatedHref = relatedCategoryId
-                                    ? `/productos/${relatedCategoryId}/${relacionado?.id}`
-                                    : `/productos/${relacionado?.id}`;
+                        {productosRelacionados?.length > 0 ? (
+                            <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                {productosRelacionados?.map((relacionado, index) => {
+                                    const relatedCategoryId = relacionado?.categoria?.id ?? relacionado?.categoria_id;
+                                    const relatedHref = relatedCategoryId
+                                        ? `/productos/${relatedCategoryId}/${relacionado?.id}`
+                                        : `/productos/${relacionado?.id}`;
 
-                                return (
-                                    <Link
-                                        href={relatedHref}
-                                        key={index}
-                                        className="flex h-auto w-full flex-col border border-gray-200 sm:h-[400px]"
-                                    >
-                                        <div className="h-[200px] w-full border-b border-gray-200 sm:h-[287px]">
-                                            <img
-                                                className="h-full w-full object-cover object-center"
-                                                src={relacionado?.imagenes[0]?.image || defaultPhoto}
-                                                alt={relacionado?.name}
-                                                onError={(e) => {
-                                                    e.currentTarget.src = defaultPhoto;
-                                                }}
-                                            />
-                                        </div>
-                                        <div className="flex w-full flex-col gap-2 p-4">
-                                            <p className="text-primary-orange">
-                                                {' '}
-                                                <span className="font-bold">{relacionado?.code}</span> |{' '}
-                                                {relacionado?.marca?.name?.toUpperCase()}{' '}
-                                            </p>
-                                            <h2 className="text-[18px] font-bold text-[#202020] md:text-[20px]">{relacionado?.name}</h2>
-                                        </div>
-                                    </Link>
-                                );
-                            })}
-                        </div>
+                                    return (
+                                        <Link
+                                            href={relatedHref}
+                                            key={index}
+                                            className="flex h-auto w-full flex-col border border-gray-200 sm:h-[400px]"
+                                        >
+                                            <div className="h-[200px] w-full border-b border-gray-200 sm:h-[287px]">
+                                                <img
+                                                    className="h-full w-full object-cover object-center"
+                                                    src={relacionado?.imagenes[0]?.image || defaultPhoto}
+                                                    alt={relacionado?.name}
+                                                    onError={(e) => {
+                                                        e.currentTarget.src = defaultPhoto;
+                                                    }}
+                                                />
+                                            </div>
+                                            <div className="flex w-full flex-col gap-2 p-4">
+                                                <p className="text-primary-orange">
+                                                    {" "}
+                                                    <span className="font-bold">{relacionado?.code}</span> | {" "}
+                                                    {relacionado?.marca?.name?.toUpperCase()} {" "}
+                                                </p>
+                                                <h2 className="text-[18px] font-bold text-[#202020] md:text-[20px]">{relacionado?.name}</h2>
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="rounded border border-dashed border-gray-300 bg-white px-4 py-8 text-sm text-[#74716A]">
+                                No se encontraron productos relacionados con estas reglas.
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

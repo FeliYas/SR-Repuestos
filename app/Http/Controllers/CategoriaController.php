@@ -43,6 +43,11 @@ class CategoriaController extends Controller
             'order' => 'required|string',
             'name' => 'required|string|max:255',
             'image' => 'required|file',
+        ], [
+            'image.required' => 'La imagen es obligatoria.',
+            'image.file' => 'La imagen debe ser un archivo válido.',
+            'name.required' => 'El nombre es obligatorio.',
+            'order.required' => 'El orden es obligatorio.',
         ]);
 
         // Store the image

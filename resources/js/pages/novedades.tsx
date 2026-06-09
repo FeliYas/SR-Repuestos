@@ -35,16 +35,16 @@ export default function Novedades() {
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         {novedades.map((novedad, index) => (
                             <Link key={index} href={`/novedades/${novedad?.id}`} className="flex h-fit w-full flex-col gap-2 border border-gray-300">
-                                <div className="aspect-[16/10] w-full sm:aspect-[392/300]">
+                                <div className="h-[474px] w-full overflow-hidden">
                                     <img className="h-full w-full object-cover" src={novedad?.image} alt="" />
                                 </div>
                                 <div className="flex h-full flex-col justify-between p-3">
                                     <div className="flex flex-col gap-2">
                                         <p className="text-primary-orange text-sm font-bold uppercase">{novedad?.type}</p>
                                         <div>
-                                            <p className="text-xl font-bold sm:text-2xl">{novedad?.title}</p>
+                                            <p className="text-xl font-bold line-clamp-2 sm:text-2xl">{novedad?.title}</p>
                                             <div
-                                                className="line-clamp-3 overflow-hidden text-sm break-words sm:text-base"
+                                                className="line-clamp-2 overflow-hidden text-sm break-words sm:text-base"
                                                 dangerouslySetInnerHTML={{ __html: novedad?.text }}
                                             />
                                         </div>

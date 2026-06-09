@@ -30,7 +30,7 @@ export default function InstagramInicio() {
     }, []);
 
     return (
-        <div className="flex flex-col bg-[#202020] py-8 sm:py-10 md:h-auto lg:h-[417px]">
+        <div className="flex flex-col bg-[#202020] py-8 sm:py-10 md:h-auto lg:h-[490px]">
             <div className="mx-auto flex h-full w-full max-w-[1200px] flex-col gap-6 px-4 sm:gap-8">
                 <h2 className="text-2xl font-bold text-white sm:text-3xl">Seguinos en instagram</h2>
 
@@ -41,9 +41,9 @@ export default function InstagramInicio() {
                             href={item?.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mx-auto h-[285px] w-full min-w-[288px] sm:mx-0 sm:w-[calc(50%-8px)] md:w-[calc(33.33%-11px)] lg:w-[288px]"
+                            className="mx-auto h-[350px] w-full sm:mx-0 sm:w-[calc(50%-8px)] md:w-[calc(33.33%-11px)] lg:w-[288px]"
                         >
-                            <img className="h-full w-full object-cover" src={item?.image} alt={`Instagram post ${index + 1}`} />
+                            <img className="h-full w-full object-fill" src={item?.image} alt={`Instagram post ${index + 1}`} />
                         </a>
                     ))}
                 </div>
