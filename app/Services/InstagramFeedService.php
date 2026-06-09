@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Instagram;
 use Carbon\Carbon;
+use Throwable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -18,11 +19,20 @@ class InstagramFeedService
         $cacheMinutes = max((int) config('services.instagram.cache_minutes', 30), 1);
         $cacheKey = "instagram.feed.latest.{$username}.{$limit}";
 
-        return Cache::remember($cacheKey, now()->addMinutes($cacheMinutes), function () use ($limit, $username) {
-            $this->syncLatestPosts($username, max($limit, 12));
+        try {
+            return Cache::store('database')->remember($cacheKey, now()->addMinutes($cacheMinutes), function () use ($limit, $username) {
+                $this->syncLatestPosts($username, max($limit, 12));
+
+                return $this->getStoredPosts($limit);
+            });
+        } catch (Throwable $e) {
+            Log::warning('No se pudo resolver el feed de Instagram.', [
+                'message' => $e->getMessage(),
+                'username' => $username,
+            ]);
 
             return $this->getStoredPosts($limit);
-        });
+        }
     }
 
     public function syncLatestPosts(string $username, int $limit = 12): Collection

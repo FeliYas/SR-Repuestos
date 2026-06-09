@@ -50,7 +50,10 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
 
     Route::get('/', function () {
 
-        $categorias = Categoria::orderBy('order', 'asc')->get();
+        $categorias = Categoria::withCount('productos')
+        ->orderByDesc('productos_count')
+        ->limit(3)
+        ->get();
         $marcas = MarcaProducto::orderBy('order', 'asc')->get();
         $instagram = app(InstagramFeedService::class)->getLatestPosts(8);
         $bannerPortada = BannerPortada::first();
