@@ -8,8 +8,8 @@ export default function Whatsapp() {
         <a
             target="_blank"
             rel="noopener noreferrer"
-            href={`https://wa.me/${contacto?.wp?.replace(/[^0-9]/g, '')}`}
-            className="fixed right-0 bottom-0"
+            href={`https://wa.me/${contacto?.phone?.replace(/[^0-9]/g, '')}`}
+            className="fixed right-15 bottom-30"
         >
             <img src={wpIcon} alt="" />
         </a>

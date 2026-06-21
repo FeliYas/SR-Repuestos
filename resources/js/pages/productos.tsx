@@ -1,17 +1,39 @@
-import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import CatalogSidebarSection from '@/components/catalogSidebarSection';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import defaultPhoto from '../../images/defaultPhoto.png';
 import DefaultLayout from './defaultLayout';
 
+interface CatalogItem {
+    id: number;
+    name: string;
+}
+
+interface ProductosPageProps {
+    [key: string]: unknown;
+    categorias?: CatalogItem[];
+    marcas?: CatalogItem[];
+    productos: {
+        data?: Array<{
+            id: number;
+            name: string;
+            code: string;
+            imagenes?: Array<{ image?: string }>;
+            marca?: { name?: string };
+        }>;
+        links?: Array<{ label: string; url: string | null; active: boolean }>;
+    };
+    id: number | string;
+    metadatos?: { description?: string; keywords?: string };
+    marca_id?: number | string | null;
+}
+
 export default function Productos() {
-    const { categorias, marcas, productos, ziggy, id, metadatos, marca_id, subproductos } = usePage().props;
+    const { categorias, marcas, productos, id, metadatos, marca_id } = usePage<ProductosPageProps>().props;
+
 
     const [categoriasDropdown, setCategoriasDropdown] = useState(true);
     const [marcasDropdown, setMarcasDropdown] = useState(true);
-
-    console.log(productos);
 
     return (
         <DefaultLayout>
@@ -34,65 +56,29 @@ export default function Productos() {
 
                 {/* Sidebar - responsive */}
                 <div className="mb-6 flex w-full flex-col gap-6 md:mb-0 md:w-1/4 md:gap-10">
-                    <div className="flex flex-col">
-                        <button
-                            onClick={() => setCategoriasDropdown(!categoriasDropdown)}
-                            className="flex flex-row items-center justify-between border-b border-[#E0E0E0] pr-2 pb-1"
-                        >
-                            <h2 className="text-[18px] font-semibold md:text-[20px]">Categorias</h2>
-                            <FontAwesomeIcon
-                                icon={faChevronUp}
-                                color="#74716A"
-                                className={`transition-transform duration-300 ${categoriasDropdown ? 'rotate-180' : ''}`}
-                            />
-                        </button>
-                        <div
-                            className={`overflow-hidden transition-all duration-300 ease-in-out ${categoriasDropdown ? 'max-h-[500px]' : 'max-h-0'}`}
-                        >
-                            <div className="flex flex-col">
-                                {categorias?.map((categoria, index) => (
-                                    <div key={index} className="border-b border-[#E0E0E0] py-2">
-                                        <Link
-                                            className={`w-full text-[14px] text-[#74716A] transition-colors hover:text-black md:text-[16px] ${ziggy.location.split('/')[4] == categoria?.id ? 'font-bold' : ''}`}
-                                            href={`/productos/${categoria?.id}`}
-                                        >
-                                            {categoria?.name}
-                                        </Link>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex flex-col">
-                        <button
-                            onClick={() => setMarcasDropdown(!marcasDropdown)}
-                            className="flex flex-row items-center justify-between border-b border-[#E0E0E0] pr-2 pb-1"
-                        >
-                            <h2 className="text-[18px] font-semibold md:text-[20px]">Marcas</h2>
-                            <FontAwesomeIcon
-                                icon={faChevronUp}
-                                color="#74716A"
-                                className={`transition-transform duration-300 ${marcasDropdown ? 'rotate-180' : ''}`}
-                            />
-                        </button>
-                        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${marcasDropdown ? 'max-h-[500px]' : 'max-h-0'}`}>
-                            <div className="flex flex-col">
-                                {marcas?.map((marca, index) => (
-                                    <div key={index} className="border-b border-[#E0E0E0] py-2">
-                                        <Link
-                                            className={`text-[14px] text-[#74716A] transition-colors hover:text-black md:text-[16px] ${marca_id == marca?.id ? 'font-bold' : ''}`}
-                                            href={`/productos/${id}`}
-                                            data={{ marca: marca?.id }}
-                                        >
-                                            {marca?.name}
-                                        </Link>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+                    <CatalogSidebarSection
+                        title="Categorias"
+                        items={categorias}
+                        activeId={id}
+                        isOpen={categoriasDropdown}
+                        onToggle={() => setCategoriasDropdown(!categoriasDropdown)}
+                        searchPlaceholder="Buscar categoría"
+                        emptyMessage="Sin categorías coincidentes."
+                        getHref={(categoria) => `/productos/${categoria.id}`}
+                    />
+                    <CatalogSidebarSection
+                        title="Marcas"
+                        items={marcas}
+                        activeId={marca_id}
+                        isOpen={marcasDropdown}
+                        onToggle={() => setMarcasDropdown(!marcasDropdown)}
+                        searchPlaceholder="Buscar marca"
+                        emptyMessage="Sin marcas coincidentes."
+                        getHref={() => `/productos/${id}`}
+                        getData={(marca) => ({ marca: marca.id })}
+                    />
                 </div>
-                
+
                 {/* Products Grid - responsive */}
                 <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {productos.data?.map((producto) => (

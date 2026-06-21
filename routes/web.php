@@ -54,6 +54,7 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
         ->orderByDesc('productos_count')
         ->limit(3)
         ->get();
+        $allcategorias = Categoria::orderBy('order', 'asc')->get();
         $marcas = MarcaProducto::orderBy('order', 'asc')->get();
         $instagram = app(InstagramFeedService::class)->getLatestPosts(8);
         $bannerPortada = BannerPortada::first();
@@ -63,6 +64,7 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
         return Inertia::render('home', [
             'bannerPortada' => $bannerPortada,
             'categorias' => $categorias,
+            'allcategorias' => $allcategorias,
             'marcas' => $marcas,
             'novedades' => $novedades,
             'instagram' => $instagram,

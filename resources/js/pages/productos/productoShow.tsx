@@ -1,31 +1,75 @@
-import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import CatalogSidebarSection from '@/components/catalogSidebarSection';
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import defaultPhoto from '../../../images/defaultPhoto.png';
 import DefaultLayout from '../defaultLayout';
 
+interface CatalogItem {
+    id: number;
+    name: string;
+}
+
+interface SubproductoItem {
+    image?: string;
+    code?: string;
+    description?: string;
+    medida?: string;
+    componente?: string;
+    caracteristicas?: string;
+}
+
+interface RelatedProduct {
+    id: number;
+    name: string;
+    code?: string;
+    categoria?: { id?: number };
+    categoria_id?: number;
+    marca?: { name?: string };
+    imagenes?: Array<{ image?: string }>;
+}
+
+interface ProductoShowPageProps {
+    [key: string]: unknown;
+    producto: {
+        id: number;
+        name: string;
+        aplicacion?: string;
+        anio?: string;
+        num_original?: string;
+        tonelaje?: string;
+        espigon?: string;
+        bujes?: string;
+        categoria?: { id?: number; name?: string };
+        marca?: { name?: string };
+        imagenes?: Array<{ image?: string }>;
+    };
+    categorias?: CatalogItem[];
+    subproductos?: SubproductoItem[];
+    productosRelacionados?: RelatedProduct[];
+}
+
 export default function ProductoShow() {
-    const { producto, categorias, subproductos, productosRelacionados } = usePage().props;
+    const { producto, categorias, subproductos, productosRelacionados } = usePage<ProductoShowPageProps>().props;
+
 
     const [categoriasDropdown, setCategoriasDropdown] = useState(false);
-    const [currentImage, setCurrentImage] = useState(producto?.imagenes[0]?.image);
-    const [selectedSubproductoImage, setSelectedSubproductoImage] = useState(null); // Cambiado para guardar la imagen seleccionada
+    const [currentImage, setCurrentImage] = useState<string>(producto?.imagenes?.[0]?.image ?? defaultPhoto);
+    const [selectedSubproductoImage, setSelectedSubproductoImage] = useState<string | null>(null);
 
-    const modalRef = useRef(null);
+    const modalRef = useRef<HTMLDivElement | null>(null);
 
-    const hasValue = (value) => value !== null && value !== undefined && String(value).trim() !== '';
+    const hasValue = (value: unknown) => value !== null && value !== undefined && String(value).trim() !== '';
     const isRepuestosFrenos = String(producto?.categoria?.name ?? '').trim().toLowerCase() === 'repuestos y frenos';
 
     useEffect(() => {
         if (selectedSubproductoImage) {
-            const handleClickOutside = (event) => {
-                if (modalRef.current && !modalRef.current.contains(event.target)) {
+            const handleClickOutside = (event: MouseEvent) => {
+                if (modalRef.current && event.target instanceof Node && !modalRef.current.contains(event.target)) {
                     setSelectedSubproductoImage(null);
                 }
             };
             
-            const handleEscKey = (event) => {
+            const handleEscKey = (event: KeyboardEvent) => {
                 if (event.key === 'Escape') {
                     setSelectedSubproductoImage(null);
                 }
@@ -45,8 +89,8 @@ export default function ProductoShow() {
         }
     }, [selectedSubproductoImage]);
 
-    const openImageModal = (subproducto) => {
-        const imageUrl = subproducto?.image || producto?.imagenes[0]?.image || defaultPhoto;
+    const openImageModal = (subproducto: SubproductoItem) => {
+        const imageUrl = subproducto?.image || producto?.imagenes?.[0]?.image || defaultPhoto;
         setSelectedSubproductoImage(imageUrl);
     };
 
@@ -71,35 +115,16 @@ export default function ProductoShow() {
 
                 {/* sidebar - responsive */}
                 <div className="mb-6 flex w-full flex-col gap-6 md:mb-0 md:w-1/4 md:gap-10">
-                    <div className="flex flex-col">
-                        <button
-                            onClick={() => setCategoriasDropdown(!categoriasDropdown)}
-                            className="flex flex-row items-center justify-between border-b border-[#E0E0E0] pr-2 pb-1"
-                        >
-                            <h2 className="text-[18px] font-semibold md:text-[20px]">Categorias</h2>
-                            <FontAwesomeIcon
-                                icon={faChevronUp}
-                                color="#74716A"
-                                className={`transition-transform duration-300 ${categoriasDropdown ? 'rotate-180' : ''}`}
-                            />
-                        </button>
-                        <div
-                            className={`overflow-hidden transition-all duration-300 ease-in-out ${categoriasDropdown ? 'max-h-[500px]' : 'max-h-0'}`}
-                        >
-                            <div className="flex flex-col">
-                                {categorias?.map((categoria, index) => (
-                                    <div key={index} className="border-b border-[#E0E0E0] py-2">
-                                        <Link
-                                            className={`w-full text-[14px] text-[#74716A] transition-colors hover:text-black md:text-[16px] ${categoria?.id == producto?.categoria?.id ? 'font-bold' : ''}`}
-                                            href={`/productos/${categoria?.id}`}
-                                        >
-                                            {categoria?.name}
-                                        </Link>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+                    <CatalogSidebarSection
+                        title="Categorias"
+                        items={categorias}
+                        activeId={producto?.categoria?.id}
+                        isOpen={categoriasDropdown}
+                        onToggle={() => setCategoriasDropdown(!categoriasDropdown)}
+                        searchPlaceholder="Buscar categoría"
+                        emptyMessage="Sin categorías coincidentes."
+                        getHref={(categoria) => `/productos/${categoria.id}`}
+                    />
                 </div>
 
                 {/* content - responsive */}
@@ -119,9 +144,9 @@ export default function ProductoShow() {
                             <div className="absolute -bottom-20 left-0 flex w-full flex-row gap-2 overflow-x-auto pb-2">
                                 {producto?.imagenes?.map((image, index) => (
                                     <button
-                                        className={`h-[66px] w-[66px] flex-shrink-0 border ${image == currentImage ? 'border-primary-orange' : 'border-[#E0E0E0]'}`}
+                                        className={`h-[66px] w-[66px] flex-shrink-0 border ${image?.image === currentImage ? 'border-primary-orange' : 'border-[#E0E0E0]'}`}
                                         key={index}
-                                        onClick={() => setCurrentImage(image?.image)}
+                                        onClick={() => setCurrentImage(image?.image ?? defaultPhoto)}
                                     >
                                         <img
                                             className="h-full w-full object-contain"
@@ -221,7 +246,7 @@ export default function ProductoShow() {
                                 >
                                     <img
                                         className="h-full w-full rounded-sm object-contain"
-                                        src={subproducto?.image || producto?.imagenes[0]?.image || defaultPhoto}
+                                        src={subproducto?.image || producto?.imagenes?.[0]?.image || defaultPhoto}
                                         onError={(e) => {
                                             e.currentTarget.src = defaultPhoto;
                                         }}
@@ -257,9 +282,9 @@ export default function ProductoShow() {
                     {/* related products */}
                     <div className="flex flex-col gap-3 pt-10 md:pt-20">
                         <h2 className="text-[20px] font-semibold md:text-[24px]">Productos relacionados</h2>
-                        {productosRelacionados?.length > 0 ? (
+                        {(productosRelacionados?.length ?? 0) > 0 ? (
                             <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                {productosRelacionados?.map((relacionado, index) => {
+                                {productosRelacionados?.map((relacionado) => {
                                     const relatedCategoryId = relacionado?.categoria?.id ?? relacionado?.categoria_id;
                                     const relatedHref = relatedCategoryId
                                         ? `/productos/${relatedCategoryId}/${relacionado?.id}`
@@ -268,13 +293,13 @@ export default function ProductoShow() {
                                     return (
                                         <Link
                                             href={relatedHref}
-                                            key={index}
+                                            key={relacionado.id}
                                             className="flex h-auto w-full flex-col border border-gray-200 sm:h-[400px]"
                                         >
                                             <div className="h-[200px] w-full border-b border-gray-200 sm:h-[287px]">
                                                 <img
                                                     className="h-full w-full object-cover object-center"
-                                                    src={relacionado?.imagenes[0]?.image || defaultPhoto}
+                                                    src={relacionado?.imagenes?.[0]?.image || defaultPhoto}
                                                     alt={relacionado?.name}
                                                     onError={(e) => {
                                                         e.currentTarget.src = defaultPhoto;

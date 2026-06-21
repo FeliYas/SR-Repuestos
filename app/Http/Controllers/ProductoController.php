@@ -58,12 +58,14 @@ class ProductoController extends Controller
     public function indexVistaPrevia()
     {
         $productos = Producto::select('id', 'code')->get();
-        $categorias = Categoria::orderBy('order', 'asc')->get();
+        $categorias = Categoria::whereNotNull('image')->orderBy('order', 'asc')->get();
+        $allcategorias = Categoria::orderBy('order', 'asc')->get();
         $marcas = MarcaProducto::select('id', 'name')->get();
 
 
         return Inertia::render('productosVistaPrevia', [
             'categorias' => $categorias,
+            'allcategorias' => $allcategorias,
             'marcas' => $marcas,
             'productos' => $productos,
         ]);

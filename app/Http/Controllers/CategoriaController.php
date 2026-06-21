@@ -42,16 +42,17 @@ class CategoriaController extends Controller
         $data = $request->validate([
             'order' => 'required|string',
             'name' => 'required|string|max:255',
-            'image' => 'required|file',
+            'image' => 'nullable|file',
         ], [
-            'image.required' => 'La imagen es obligatoria.',
             'image.file' => 'La imagen debe ser un archivo válido.',
             'name.required' => 'El nombre es obligatorio.',
             'order.required' => 'El orden es obligatorio.',
         ]);
 
         // Store the image
-        $data['image'] = $request->file('image')->store('images', 'public');
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('images', 'public');
+        }
 
         // Create the category
         Categoria::create($data);

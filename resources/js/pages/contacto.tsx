@@ -89,14 +89,16 @@ export default function Contacto() {
         },
         {
             name: contacto?.phone,
-            icon: faPhone,
+            icon: faWhatsapp,
             href: `tel:${contacto?.phone?.replace(/\s/g, '')}`,
+            sector: 'Ventas',
         },
         {
             name: contacto?.wp,
             icon: faWhatsapp,
             href: `https://wa.me/${contacto?.wp?.replace(/[^0-9]/g, '')}`,
             target: '_blank',
+            sector: 'Administración',
         },
         {
             name: contacto?.mail,
@@ -142,8 +144,11 @@ export default function Contacto() {
                                 target={dato.target}
                                 className="flex flex-row items-center gap-3 transition-opacity hover:opacity-80"
                             >
-                                <FontAwesomeIcon icon={dato?.icon} color="#fb7f01" size="lg" />
+                                <FontAwesomeIcon icon={dato?.icon} color="#fb7f01" size="xl" />
                                 <p className="text-base text-[16px] text-[#74716A] sm:text-[18px]">{dato?.name}</p>
+                                {dato?.sector && (
+                                    <p className="text-base text-[#74716A]">- {dato?.sector}</p>
+                                )}
                             </a>
                         ))}
                     </div>

@@ -1,1 +1,0 @@
-import{j as r}from"./app-BF62fn90.js";import i from"./dashboard-xdgu5-1z.js";import"./index-JOcwlKBQ.js";import"./logo-B32zw1ai.js";function n(){return r.jsx(i,{children:r.jsx("div",{children:"askljdnaksjndkjasd"})})}export{n as default};

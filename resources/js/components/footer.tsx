@@ -64,14 +64,16 @@ export default function Footer() {
         },
         {
             name: contacto?.phone,
-            icon: faPhone,
+            icon: faWhatsapp,
             href: `tel:${contacto?.phone?.replace(/\s/g, '')}`,
+            sector: 'Ventas',
         },
         {
             name: contacto?.wp,
             icon: faWhatsapp,
             href: `https://wa.me/${contacto?.wp?.replace(/[^0-9]/g, '')}`,
             target: '_blank',
+            sector: 'Administración',
         },
         {
             name: contacto?.mail,
@@ -153,8 +155,11 @@ export default function Footer() {
                                 target={dato.target}
                                 className="flex flex-row items-center gap-2 transition-opacity hover:opacity-80"
                             >
-                                <FontAwesomeIcon icon={dato?.icon} color="#fb7f01" size="lg" />
+                                <FontAwesomeIcon icon={dato?.icon} color="#fb7f01" size="xl" />
                                 <p className="max-w-[250px] text-base break-words text-white/80">{dato?.name}</p>
+                                {dato?.sector && (
+                                    <p className="text-base text-white/80">- {dato?.sector}</p>
+                                )}
                             </a>
                         ))}
                     </div>

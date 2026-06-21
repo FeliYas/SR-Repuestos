@@ -2,7 +2,7 @@ import { useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 export default function SearchBar() {
-    const { categorias, marcas } = usePage().props;
+    const { allcategorias, marcas } = usePage().props;
     const [isMobile, setIsMobile] = useState(false);
 
     const { data, setData, get, processing } = useForm({
@@ -42,7 +42,7 @@ export default function SearchBar() {
                 <form onSubmit={handleSubmit} className={`flex w-full ${isMobile ? 'flex-col' : 'flex-row'} items-center gap-4`}>
                     <select value={data.categoria} onChange={(e) => setData('categoria', e.target.value)} className="h-[55px] w-full bg-white pl-3">
                         <option value="">Todas las categorías</option>
-                        {categorias?.map((categoria) => (
+                        {allcategorias?.map((categoria) => (
                             <option key={categoria.id} value={categoria.id}>
                                 {categoria.name}
                             </option>
