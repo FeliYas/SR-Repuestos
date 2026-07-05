@@ -181,6 +181,7 @@ export default function ClientesAdminRow({ cliente }) {
                                         <option value="1">Lista 1</option>
                                         <option value="2">Lista 2</option>
                                         <option value="3">Lista 3</option>
+                                        <option value="4">Lista 4</option>
                                     </select>
                                 </div>
 

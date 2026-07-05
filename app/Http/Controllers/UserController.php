@@ -32,6 +32,27 @@ class UserController extends Controller
         ]);
     }
 
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'cuit' => 'required|string|max:20',
+            'direccion' => 'nullable|string|max:255',
+            'provincia' => 'nullable|string|max:255',
+            'localidad' => 'nullable|string|max:255',
+            'telefono' => 'nullable|string|max:20',
+            'lista' => 'nullable|integer|between:1,4',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $data['password'] = Hash::make($data['password']);
+
+        User::create($data);
+
+        return redirect()->back()->with('success', 'Cliente creado correctamente');
+    }
+    
     public function changeStatus(Request $request)
     {
         $user = User::findOrFail($request->id);
@@ -50,7 +71,7 @@ class UserController extends Controller
             'provincia' => 'nullable|string|max:255',
             'localidad' => 'nullable|string|max:255',
             'telefono' => 'nullable|string|max:20',
-            'lista' => 'nullable|integer|between:1,3',
+            'lista' => 'nullable|integer|between:1,4',
             'password' => 'nullable|string|min:8|confirmed',
             'autorizado' => 'nullable|boolean'
         ]);

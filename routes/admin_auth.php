@@ -18,6 +18,7 @@ use App\Http\Controllers\MarcaProductoController;
 use App\Http\Controllers\MetadatosController;
 use App\Http\Controllers\NosotrosController;
 use App\Http\Controllers\NovedadesController;
+use App\Http\Controllers\NovedadesPrivadasController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\PrivadaController;
 use App\Http\Controllers\ProductoController;
@@ -139,6 +140,11 @@ Route::middleware('auth:admin')->group(function () {
     Route::delete('admin/newsletter/destroy', [MailNewsletterController::class, 'destroy'])->name('admin.newsletter.destroy');
 
 
+
+    Route::get('admin/novedadesprivadas', [NovedadesPrivadasController::class, 'indexAdmin'])->name('admin.novedadesprivadas');
+    Route::post('admin/novedadesprivadas', [NovedadesPrivadasController::class, 'store'])->name('admin.novedadesprivadas.store');
+    Route::post('admin/novedadesprivadas/update', [NovedadesPrivadasController::class, 'update'])->name('admin.novedadesprivadas.update');
+    Route::delete('admin/novedadesprivadas/destroy', [NovedadesPrivadasController::class, 'destroy'])->name('admin.novedadesprivadas.destroy');
 
     Route::post('/importar-excel', [ImportController::class, 'importar'])->name('importar.excel');
 

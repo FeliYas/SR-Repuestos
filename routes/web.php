@@ -50,8 +50,7 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
 
     Route::get('/', function () {
 
-        $categorias = Categoria::withCount('productos')
-        ->orderByDesc('productos_count')
+        $categorias = Categoria::whereNotNull('image')->orderBy('order', 'asc')
         ->limit(3)
         ->get();
         $allcategorias = Categoria::orderBy('order', 'asc')->get();

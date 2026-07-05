@@ -12,7 +12,7 @@ class SendPedidoController extends Controller
     {
         $htmlContent = $request->input('html'); // Recibe el HTML renderizado
         $attachments = $request->file('attachments'); // Recibe los archivos adjuntos
-        $contactInfo = Contacto::first()->mail;
+        $contactInfo = 'adrianfarias.sr@gmail.com'; // Dirección de correo del contacto
 
         Mail::send([], [], function ($message) use ($htmlContent, $attachments, $contactInfo) {
             $message->to($contactInfo)

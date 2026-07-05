@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\ListaDePreciosController;
+use App\Http\Controllers\NovedadesPrivadasController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\PedidoProductoController;
 use App\Http\Controllers\PrivadaController;
@@ -40,7 +41,7 @@ Route::middleware('guest')->group(function () {
         ->name('password.store');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'single.user.session'])->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');
 
@@ -66,6 +67,8 @@ Route::middleware('auth')->group(function () {
 
         Route::get('privada/mispedidos', [PedidoController::class, 'misPedidos']);
         Route::get('privada/listadeprecios', [ListaDePreciosController::class, 'index']);
+        Route::get('privada/novedades', [NovedadesPrivadasController::class, 'indexPrivada'])->name('privada.novedades');
+        Route::get('privada/novedades/{id}', [NovedadesPrivadasController::class, 'showPrivada'])->name('privada.novedades.show');
     });
 
 

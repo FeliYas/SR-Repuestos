@@ -38,6 +38,15 @@ class AuthenticatedSessionController extends Controller
 
         if (Auth::guard()->attempt($credentials)) {
             $request->session()->regenerate();
+
+            $user = $request->user();
+
+            if ($user) {
+                $user->forceFill([
+                    'active_session_id' => $request->session()->getId(),
+                ])->save();
+            }
+
             return redirect()->intended('/privada/productos');
         }
 
@@ -51,7 +60,18 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request)
     {
+        $user = $request->user();
+        $currentSessionId = $request->session()->getId();
+
+        if ($user && $user->active_session_id === $currentSessionId) {
+            $user->forceFill([
+                'active_session_id' => null,
+            ])->save();
+        }
+
         Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect('/')->with('status', 'Has cerrado sesión correctamente.');
     }

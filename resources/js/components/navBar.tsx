@@ -2,11 +2,12 @@ import { Link, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function NavBar() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const { ziggy, auth, provincias, logos } = usePage().props;
+    const { ziggy, auth, provincias, logos, flash } = usePage().props;
     const [signupView, setSignupView] = useState(false);
     const [loginView, setLoginView] = useState(false);
 
@@ -48,6 +49,12 @@ export default function NavBar() {
         };
     }, [scrolled]);
 
+    useEffect(() => {
+        if (flash?.message) {
+            toast.error(flash.message);
+        }
+    }, [flash?.message]);
+
     const defaultLinks = [
         { title: 'Nosotros', href: '/nosotros' },
         { title: 'Productos', href: '/productos' },
@@ -60,7 +67,8 @@ export default function NavBar() {
         { title: 'Productos', href: '/privada/productos' },
         { title: 'Carrito', href: '/privada/carrito' },
         { title: 'Mis pedidos', href: '/privada/mispedidos' },
-        { title: 'Lista de precios', href: '/privada/listadeprecios' },
+        { title: 'Catalogos', href: '/privada/listadeprecios' },
+        { title: 'Novedades', href: '/privada/novedades' },
     ];
 
     const login = (e) => {

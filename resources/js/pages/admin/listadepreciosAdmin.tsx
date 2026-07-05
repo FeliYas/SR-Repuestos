@@ -70,6 +70,7 @@ export default function ListaDePreciosAdmin() {
                                             <option value="1">Lista 1</option>
                                             <option value="2">Lista 2</option>
                                             <option value="3">Lista 3</option>
+                                            <option value="4">Lista 4</option>
                                         </select>
 
                                         <label htmlFor="archivo">Archivo</label>
@@ -114,7 +115,7 @@ export default function ListaDePreciosAdmin() {
                 </AnimatePresence>
                 <div className="mx-auto flex w-full flex-col gap-3">
                     <div className="border-primary-orange flex flex-row border-b-3 py-1">
-                        <h2 className="text-primary-orange text-bold w-full text-2xl">Lista de precios</h2>
+                        <h2 className="text-primary-orange text-bold w-full text-2xl">Catalogos</h2>
                         <button
                             onClick={() => setCreateView(true)}
                             className="bg-primary-orange w-[200px] rounded px-4 py-1 font-bold text-white hover:bg-orange-400"

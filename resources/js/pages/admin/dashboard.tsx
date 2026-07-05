@@ -140,7 +140,8 @@ export default function Dashboard({ children }) {
                 { title: 'Clientes', href: 'clientes' },
                 { title: 'Carrito', href: 'carrito' },
                 { title: 'Mis Pedidos', href: 'pedidos' },
-                { title: 'Lista de precios', href: 'listadeprecios' },
+                { title: 'Catalogos', href: 'listadeprecios' },
+                { title: 'Novedades', href: 'novedadesprivadas' },
             ],
         },
         {

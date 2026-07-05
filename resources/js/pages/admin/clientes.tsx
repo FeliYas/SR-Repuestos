@@ -21,12 +21,13 @@ export default function Clientes() {
         provincia: '',
         localidad: '',
         telefono: '',
+        lista: '',
         autorizado: 1,
     });
 
     const signup = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        signupForm.post(route('register'), {
+        signupForm.post(route('admin.clientes.store'), {
             onSuccess: () => {
                 setCreateView(false);
             },
@@ -180,6 +181,7 @@ export default function Clientes() {
                                             <option value="1">Lista 1</option>
                                             <option value="2">Lista 2</option>
                                             <option value="3">Lista 3</option>
+                                            <option value="4">Lista 4</option>
                                         </select>
                                     </div>
 
