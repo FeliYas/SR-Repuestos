@@ -44,6 +44,9 @@ export default function SubproductosPrivadaRow({ subProducto }) {
         if (user.lista == '3') {
             price = subProducto?.price_dist;
         }
+        if (user.lista == '4') {
+            price = subProducto?.price_lista_4;
+        }
 
         return Number(price);
     };
@@ -54,6 +57,8 @@ export default function SubproductosPrivadaRow({ subProducto }) {
         }
     }, [cantidad]);
 
+    const imageSrc = subProducto?.display_image || defaultPhoto;
+
     return (
         <div className="grid h-fit grid-cols-8 items-center border-b border-gray-200 py-2 text-[15px] text-[#74716A]">
             {showMore && (
@@ -62,13 +67,11 @@ export default function SubproductosPrivadaRow({ subProducto }) {
                         <button className="absolute top-4 right-4" onClick={() => setShowMore(false)}>
                             <FontAwesomeIcon icon={faX} />
                         </button>
-                        {/* product info section */}
                         <div className="flex w-full flex-col gap-8 lg:flex-row">
-                            {/* product image */}
                             <div className="relative h-[300px] w-full border border-[#E0E0E0] max-sm:mb-24 sm:h-[400px] lg:h-[496px]">
                                 <img
                                     className="h-full w-full object-contain"
-                                    src={subProducto?.image ?? ''}
+                                    src={imageSrc}
                                     onError={(e) => {
                                         e.currentTarget.src = defaultPhoto;
                                     }}
@@ -76,7 +79,6 @@ export default function SubproductosPrivadaRow({ subProducto }) {
                                 />
                             </div>
 
-                            {/* product details */}
                             <div className="flex w-full flex-col justify-between gap-5 pt-2">
                                 <div className="flex flex-col">
                                     <p className="text-primary-orange text-[16px] font-bold">{subProducto?.producto?.marca?.name}</p>
@@ -147,7 +149,14 @@ export default function SubproductosPrivadaRow({ subProducto }) {
                 </div>
             )}
             <button onClick={() => setShowMore(true)} className="h-[85px] w-[85px] rounded-sm border">
-                <img src={subProducto?.image || defaultPhoto} className="h-full w-full rounded-sm object-contain" alt="" />
+                <img
+                    src={imageSrc}
+                    className="h-full w-full rounded-sm object-contain"
+                    alt=""
+                    onError={(e) => {
+                        e.currentTarget.src = defaultPhoto;
+                    }}
+                />
             </button>
             <p className="">{subProducto?.code}</p>
             <p className="">{subProducto?.producto?.marca?.name}</p>

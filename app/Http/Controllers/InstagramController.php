@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Instagram;
+use App\Services\InstagramFeedService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
@@ -97,6 +98,8 @@ class InstagramController extends Controller
 
         Instagram::create($data);
 
+        app(InstagramFeedService::class)->clearLatestPostsCache();
+
         return redirect()->back()->with('success', 'Instagram created successfully.');
     }
 
@@ -137,6 +140,8 @@ class InstagramController extends Controller
 
         $instagram->update($data);
 
+        app(InstagramFeedService::class)->clearLatestPostsCache();
+
         return redirect()->back()->with('success', 'Instagram updated successfully.');
     }
 
@@ -160,6 +165,8 @@ class InstagramController extends Controller
         }
 
         $instagram->delete();
+
+        app(InstagramFeedService::class)->clearLatestPostsCache();
 
         return redirect()->back()->with('success', 'Instagram deleted successfully.');
     }

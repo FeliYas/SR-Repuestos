@@ -1,13 +1,22 @@
 import { useForm, usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
 
 export default function SearchBarPrivate() {
-    const { categorias, marcas } = usePage().props;
+    const { categorias, marcas, filters } = usePage().props;
 
     const { data, setData, get, processing } = useForm({
-        categoria: '',
-        marca: '',
-        codigo: '',
+        categoria: filters?.categoria ?? '',
+        marca: filters?.marca ?? '',
+        codigo: filters?.codigo ?? '',
     });
+
+    useEffect(() => {
+        setData({
+            categoria: filters?.categoria ?? '',
+            marca: filters?.marca ?? '',
+            codigo: filters?.codigo ?? '',
+        });
+    }, [filters?.categoria, filters?.marca, filters?.codigo]);
 
     const handleSubmit = (e) => {
         e.preventDefault();

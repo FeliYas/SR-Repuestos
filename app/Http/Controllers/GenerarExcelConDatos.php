@@ -53,7 +53,7 @@ class GenerarExcelConDatos extends Controller
         }
 
         // Autoajustar columnas
-        foreach (range('A', 'Q') as $col) {
+        foreach (range('A', 'R') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -79,15 +79,16 @@ class GenerarExcelConDatos extends Controller
             'F1' => 'PRECIO LISTA 1',
             'G1' => 'PRECIO LISTA 2',
             'H1' => 'PRECIO LISTA 3',
-            'I1' => 'MARCA',
-            'J1' => 'COMPONENTE',
-            'K1' => 'CARACTERISTICAS',
-            'L1' => 'APLICACIÓN',
-            'M1' => 'AÑO',
-            'N1' => 'Nº ORIGINAL',
-            'O1' => 'TONELAJE',
-            'P1' => 'ESPIGÓN',
-            'Q1' => 'BUJES',
+            'I1' => 'PRECIO LISTA 4',
+            'J1' => 'MARCA',
+            'K1' => 'COMPONENTE',
+            'L1' => 'CARACTERISTICAS',
+            'M1' => 'APLICACIÓN',
+            'N1' => 'AÑO',
+            'O1' => 'Nº ORIGINAL',
+            'P1' => 'TONELAJE',
+            'Q1' => 'ESPIGÓN',
+            'R1' => 'BUJES',
 
         ];
 
@@ -97,7 +98,7 @@ class GenerarExcelConDatos extends Controller
         }
 
         // Estilo para encabezados
-        $sheet->getStyle('A1:Q1')->applyFromArray([
+        $sheet->getStyle('A1:R1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => ['rgb' => 'FFFFFF']
@@ -127,19 +128,20 @@ class GenerarExcelConDatos extends Controller
         $sheet->setCellValue('F' . $fila, $subproducto->price_mayorista ? '$' . number_format($subproducto->price_mayorista, 2) : 'Sin precio');
         $sheet->setCellValue('G' . $fila, $subproducto->price_minorista ? '$' . number_format($subproducto->price_minorista, 2) : 'Sin precio');
         $sheet->setCellValue('H' . $fila, $subproducto->price_dist ? '$' . number_format($subproducto->price_dist, 2) : 'Sin precio');
-        $sheet->setCellValue('I' . $fila, $subproducto->producto->marca->name ?? 'Sin marca');
-        $sheet->setCellValue('J' . $fila, $subproducto->componente ?? 'Sin componente');
-        $sheet->setCellValue('K' . $fila, $subproducto->caracteristicas ?? 'Sin características');
-        $sheet->setCellValue('L' . $fila, $subproducto->producto->aplicacion ?? 'Sin aplicación');
-        $sheet->setCellValue('M' . $fila, $subproducto->producto->anio ?? 'Sin año');
-        $sheet->setCellValue('N' . $fila, $subproducto->producto->num_original ?? 'Sin número original');
-        $sheet->setCellValue('O' . $fila, $subproducto->producto->tonelaje ?? 'Sin tonelaje');
-        $sheet->setCellValue('P' . $fila, $subproducto->producto->espigon ?? 'Sin espigón');
-        $sheet->setCellValue('Q' . $fila, $subproducto->producto->bujes ?? 'Sin bujes');
+        $sheet->setCellValue('I' . $fila, $subproducto->price_lista_4 ? '$' . number_format($subproducto->price_lista_4, 2) : 'Sin precio');
+        $sheet->setCellValue('J' . $fila, $subproducto->producto->marca->name ?? 'Sin marca');
+        $sheet->setCellValue('K' . $fila, $subproducto->componente ?? 'Sin componente');
+        $sheet->setCellValue('L' . $fila, $subproducto->caracteristicas ?? 'Sin características');
+        $sheet->setCellValue('M' . $fila, $subproducto->producto->aplicacion ?? 'Sin aplicación');
+        $sheet->setCellValue('N' . $fila, $subproducto->producto->anio ?? 'Sin año');
+        $sheet->setCellValue('O' . $fila, $subproducto->producto->num_original ?? 'Sin número original');
+        $sheet->setCellValue('P' . $fila, $subproducto->producto->tonelaje ?? 'Sin tonelaje');
+        $sheet->setCellValue('Q' . $fila, $subproducto->producto->espigon ?? 'Sin espigón');
+        $sheet->setCellValue('R' . $fila, $subproducto->producto->bujes ?? 'Sin bujes');
 
 
         // Aplicar bordes a la nueva fila
-        $sheet->getStyle('A' . $fila . ':Q' . $fila)->applyFromArray([
+        $sheet->getStyle('A' . $fila . ':R' . $fila)->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN,

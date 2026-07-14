@@ -1,63 +1,54 @@
-import PedidoTemplate from '@/components/pedidoTemplate';
-import SubproductosPrivadaRow from '@/components/subproductosPrivadaRow';
-import { Link, useForm, usePage } from '@inertiajs/react';
-import axios from 'axios';
-import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import ReactDOMServer from 'react-dom/server';
-import { useCart } from 'react-use-cart';
-import DefaultLayout from '../defaultLayout';
-
-//import PedidoTemplate from "../components/PedidoTemplate";
-//import ProductRow from "../components/ProductRow";
+import PedidoTemplate from "@/components/pedidoTemplate";
+import SubproductosPrivadaRow from "@/components/subproductosPrivadaRow";
+import { Link, useForm, usePage } from "@inertiajs/react";
+import axios from "axios";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import ReactDOMServer from "react-dom/server";
+import { useCart } from "react-use-cart";
+import DefaultLayout from "../defaultLayout";
 
 export default function Carrito() {
     const { informacion, auth } = usePage().props;
     const { user } = auth;
     const { items, emptyCart } = useCart();
 
-    const [selected, setSelected] = useState('retiro');
+    const [selected, setSelected] = useState("retiro");
     const [subtotal, setSubtotal] = useState();
     const [iva, setIva] = useState();
-    const [iibb, setIibb] = useState();
     const [totalFinal, setTotalFinal] = useState();
-    const [tipo_entrega, setTipo_entrega] = useState('retiro cliente');
+    const [tipo_entrega, setTipo_entrega] = useState("retiro cliente");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(false);
     const [succ, setSucc] = useState(false);
     const [succID, setSuccID] = useState();
 
     useEffect(() => {
-        let subtotal = 0;
-        let iva = 0;
-        let iibb = 0;
-        let total = 0;
+        let nextSubtotal = 0;
 
         items.forEach((prod) => {
-            subtotal += prod.price * prod.quantity;
+            nextSubtotal += prod.price * prod.quantity;
         });
 
-        iibb = subtotal * 0.03; // 3% de IIBB
-        iva = subtotal * 0.21; // 21% de IVA
-        total = subtotal + iva + iibb; // Total final
+        const nextIva = nextSubtotal * 0.21;
+        const nextTotal = nextSubtotal + nextIva;
 
-        setSubtotal(subtotal);
-        setIibb(iibb);
-        setIva(iva);
-        setTotalFinal(total);
+        setSubtotal(nextSubtotal);
+        setIva(nextIva);
+        setTotalFinal(nextTotal);
     }, [items]);
 
     const pedidoForm = useForm({
-        tipo_entrega: tipo_entrega,
-        subtotal: subtotal,
-        iva: iva,
-        iibb: iibb,
+        tipo_entrega,
+        subtotal,
+        iva,
+        iibb: 0,
         total: totalFinal,
         user_id: user?.id,
     });
 
     const emailForm = useForm({
-        html: '',
+        html: "",
     });
 
     const handleSubmit = async (e) => {
@@ -66,15 +57,13 @@ export default function Carrito() {
         setError(false);
 
         try {
-            // Primero, crear el pedido principal
-            const pedidoResponse = pedidoForm.post(route('pedido.store'), {
+            pedidoForm.post(route("pedido.store"), {
                 preserveScroll: true,
                 onSuccess: async (response) => {
-                    const pedidoId = response.props.flash.pedido_id; // Asegúrate de que el ID del pedido se retorne correctamente desde el backend
-                    // o donde retornes el ID
+                    const pedidoId = response.props.flash.pedido_id;
 
                     const productPromises = items.map((prod) => {
-                        return axios.post(route('pedidoProducto.store'), {
+                        return axios.post(route("pedidoProducto.store"), {
                             pedido_id: Number(pedidoId),
                             subproducto_id: prod.id,
                             cantidad: prod.quantity,
@@ -84,15 +73,14 @@ export default function Carrito() {
 
                     await Promise.all(productPromises);
 
-                    // Generar y enviar email
                     const htmlContent = ReactDOMServer.renderToString(
                         <PedidoTemplate pedido={{ ...pedidoForm.data, id: pedidoId }} user={user} productos={items} />,
                     );
 
-                    emailForm.setData('html', htmlContent);
+                    emailForm.setData("html", htmlContent);
 
                     await axios
-                        .post(route('sendPedido'), {
+                        .post(route("sendPedido"), {
                             html: htmlContent,
                             attachments: pedidoForm.data.archivo,
                         })
@@ -115,17 +103,16 @@ export default function Carrito() {
         }
     };
 
-    // Actualizar los valores del formulario cuando cambien
     useEffect(() => {
         pedidoForm.setData({
-            tipo_entrega: tipo_entrega,
-            subtotal: subtotal,
-            iva: iva,
-            iibb: iibb,
+            tipo_entrega,
+            subtotal,
+            iva,
+            iibb: 0,
             total: totalFinal,
             user_id: user?.id,
         });
-    }, [tipo_entrega, subtotal, iva, iibb, totalFinal, user]);
+    }, [tipo_entrega, subtotal, iva, totalFinal, user]);
 
     return (
         <DefaultLayout>
@@ -153,7 +140,7 @@ export default function Carrito() {
                                         dudes en contactarnos.
                                     </p>
                                     <Link
-                                        href={'/privada/productos'}
+                                        href="/privada/productos"
                                         className="bg-primary-orange flex h-[47px] w-[253px] items-center justify-center text-white"
                                     >
                                         VOLVER A PRODUCTOS
@@ -180,9 +167,9 @@ export default function Carrito() {
                     </div>
                 </div>
                 <div className="col-span-2">
-                    <div className="">
+                    <div>
                         <Link
-                            href={'/privada/productos'}
+                            href="/privada/productos"
                             className="border-primary-orange text-primary-orange hover:bg-primary-orange h-[47px] border px-5 py-2 font-semibold transition duration-300 hover:text-white"
                         >
                             SEGUIR COMPRANDO
@@ -190,7 +177,7 @@ export default function Carrito() {
                     </div>
                 </div>
 
-                <div className="h-[206px] border max-sm:order-1 max-sm:col-span-2">
+                <div className="h-[250px] border max-sm:order-1 max-sm:col-span-2">
                     <div className="bg-[#EAEAEA]">
                         <h2 className="p-3 text-xl font-bold">Informacion importante</h2>
                     </div>
@@ -207,62 +194,60 @@ export default function Carrito() {
                     </div>
 
                     <div className="flex h-[160px] w-full flex-col justify-center gap-6 text-[#74716A]">
-                        {/* Opción: Retiro Cliente */}
                         <div
-                            className={`flex cursor-pointer items-center justify-between rounded-lg pl-3`}
+                            className="flex cursor-pointer items-center justify-between rounded-lg pl-3"
                             onClick={() => {
-                                setSelected('retiro');
-                                setTipo_entrega('retiro cliente');
+                                setSelected("retiro");
+                                setTipo_entrega("retiro cliente");
                             }}
                         >
                             <div className="flex items-center gap-3">
                                 <div
                                     className={`h-5 w-5 rounded-full border-2 ${
-                                        selected === 'retiro' ? 'border-primary-orange flex items-center justify-center' : 'border-gray-400'
+                                        selected === "retiro" ? "border-primary-orange flex items-center justify-center" : "border-gray-400"
                                     }`}
                                 >
-                                    {selected === 'retiro' && <div className="bg-primary-orange h-[10px] w-[10px] rounded-full"></div>}
+                                    {selected === "retiro" && <div className="bg-primary-orange h-[10px] w-[10px] rounded-full"></div>}
                                 </div>
                                 <label className="cursor-pointer">Retiro cliente</label>
                             </div>
                         </div>
 
                         <div
-                            className={`flex cursor-pointer items-center justify-between rounded-lg pl-3`}
+                            className="flex cursor-pointer items-center justify-between rounded-lg pl-3"
                             onClick={() => {
-                                setSelected('reparto SR Repuestos');
-                                setTipo_entrega('reparto SR Repuestos');
+                                setSelected("reparto SR Repuestos");
+                                setTipo_entrega("reparto SR Repuestos");
                             }}
                         >
                             <div className="flex items-center gap-3">
                                 <div
                                     className={`h-5 w-5 rounded-full border-2 ${
-                                        selected === 'reparto SR Repuestos'
-                                            ? 'border-primary-orange flex items-center justify-center'
-                                            : 'border-gray-400'
+                                        selected === "reparto SR Repuestos"
+                                            ? "border-primary-orange flex items-center justify-center"
+                                            : "border-gray-400"
                                     }`}
                                 >
-                                    {selected === 'reparto SR Repuestos' && <div className="bg-primary-orange h-[10px] w-[10px] rounded-full"></div>}
+                                    {selected === "reparto SR Repuestos" && <div className="bg-primary-orange h-[10px] w-[10px] rounded-full"></div>}
                                 </div>
                                 <label className="cursor-pointer">Reparto SR Repuestos</label>
                             </div>
                         </div>
 
-                        {/* Opción: A convenir */}
                         <div
-                            className={`flex cursor-pointer items-center rounded-lg pl-3`}
+                            className="flex cursor-pointer items-center rounded-lg pl-3"
                             onClick={() => {
-                                setSelected('acon');
-                                setTipo_entrega('A Convenir');
+                                setSelected("acon");
+                                setTipo_entrega("A Convenir");
                             }}
                         >
                             <div className="flex items-center gap-3">
                                 <div
                                     className={`h-5 w-5 rounded-full border-2 ${
-                                        selected === 'acon' ? 'border-primary-orange flex items-center justify-center' : 'border-gray-400'
+                                        selected === "acon" ? "border-primary-orange flex items-center justify-center" : "border-gray-400"
                                     }`}
                                 >
-                                    {selected === 'acon' && <div className="bg-primary-orange h-[10px] w-[10px] rounded-full"></div>}
+                                    {selected === "acon" && <div className="bg-primary-orange h-[10px] w-[10px] rounded-full"></div>}
                                 </div>
                                 <label className="cursor-pointer">A Convenir</label>
                             </div>
@@ -271,16 +256,14 @@ export default function Carrito() {
                 </div>
 
                 <div className="flex h-[206px] flex-col gap-3 max-sm:order-2 max-sm:col-span-2">
-                    <div className="">
+                    <div>
                         <h2 className="text-xl font-bold">Escribinos un mensaje</h2>
                     </div>
                     <textarea
                         onChange={(e) => {
-                            pedidoForm.setData('mensaje', e.target.value);
+                            pedidoForm.setData("mensaje", e.target.value);
                         }}
                         className="h-[222px] w-full border p-3"
-                        name=""
-                        id=""
                         rows={10}
                         placeholder="Dias especiales de entrega, cambios de domicilio, expresos, requerimientos especiales en la mercaderia, exenciones."
                     ></textarea>
@@ -295,8 +278,8 @@ export default function Carrito() {
                         <div className="flex w-full flex-row justify-between">
                             <p>Subtotal</p>
                             <p>
-                                ${' '}
-                                {Number(subtotal)?.toLocaleString('es-AR', {
+                                ${" "}
+                                {Number(subtotal)?.toLocaleString("es-AR", {
                                     minimumFractionDigits: 2,
                                 })}
                             </p>
@@ -305,18 +288,8 @@ export default function Carrito() {
                         <div className="flex w-full flex-row justify-between">
                             <p>IVA 21%</p>
                             <p>
-                                ${' '}
-                                {Number(iva)?.toLocaleString('es-AR', {
-                                    minimumFractionDigits: 2,
-                                })}
-                            </p>
-                        </div>
-
-                        <div className="flex w-full flex-row justify-between">
-                            <p>Retención IIBB 3%</p>
-                            <p>
-                                ${' '}
-                                {Number(iibb)?.toLocaleString('es-AR', {
+                                ${" "}
+                                {Number(iva)?.toLocaleString("es-AR", {
                                     minimumFractionDigits: 2,
                                 })}
                             </p>
@@ -324,11 +297,11 @@ export default function Carrito() {
                     </div>
                     <div className="flex flex-row justify-between p-3 text-[#74716A]">
                         <p className="text-2xl font-medium">
-                            Total <span className="text-base">{'(IVA + IIBB)'}</span>
+                            Total <span className="text-base">{"(IVA incluido)"}</span>
                         </p>
                         <p className="text-2xl">
-                            ${' '}
-                            {Number(totalFinal)?.toLocaleString('es-AR', {
+                            ${" "}
+                            {Number(totalFinal)?.toLocaleString("es-AR", {
                                 minimumFractionDigits: 2,
                             })}
                         </p>
@@ -350,7 +323,7 @@ export default function Carrito() {
                             id="fileInput"
                             className="hidden"
                             onChange={(e) => {
-                                pedidoForm.setData('archivo', e.target.files[0]);
+                                pedidoForm.setData("archivo", e.target.files[0]);
                             }}
                         />
                     </div>
@@ -358,7 +331,7 @@ export default function Carrito() {
 
                 <div className="flex w-full flex-row items-end gap-3 max-sm:order-6 max-sm:col-span-2">
                     <Link
-                        href={'/privado/productos'}
+                        href="/privado/productos"
                         onClick={emptyCart}
                         className="border-primary-orange text-primary-orange flex h-[47px] w-full items-center justify-center border transition-transform hover:scale-95"
                     >
@@ -366,9 +339,9 @@ export default function Carrito() {
                     </Link>
                     <button
                         onClick={handleSubmit}
-                        className={`h-[47px] w-full text-white transition-transform hover:scale-95 ${isSubmitting ? 'bg-gray-400' : 'bg-primary-orange'}`}
+                        className={`h-[47px] w-full text-white transition-transform hover:scale-95 ${isSubmitting ? "bg-gray-400" : "bg-primary-orange"}`}
                     >
-                        {isSubmitting ? 'Enviando pedido...' : 'REALIZAR PEDIDO'}
+                        {isSubmitting ? "Enviando pedido..." : "REALIZAR PEDIDO"}
                     </button>
                 </div>
             </div>

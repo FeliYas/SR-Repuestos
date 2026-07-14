@@ -6,17 +6,11 @@ import DefaultLayout from '../defaultLayout';
 export default function ProductosPrivada() {
     const { subProductos } = usePage().props;
 
-    const handlePageChange = (page) => {
-        router.get(
-            route('index.privada.subproductos'),
-            {
-                page: page,
-            },
-            {
-                preserveState: true,
-                preserveScroll: true,
-            },
-        );
+    const handlePageChange = (url) => {
+        router.visit(url, {
+            preserveState: true,
+            preserveScroll: true,
+        });
     };
 
     return (
@@ -34,7 +28,7 @@ export default function ProductosPrivada() {
                         <p className="text-center">Cantidad</p>
                         <p></p>
                     </div>
-                    {subProductos?.data?.map((subProducto, index) => <SubproductosPrivadaRow key={subProducto?.id} subProducto={subProducto} />)}
+                    {subProductos?.data?.map((subProducto) => <SubproductosPrivadaRow key={subProducto?.id} subProducto={subProducto} />)}
                 </div>
                 <div className="mt-4 flex justify-center">
                     {subProductos.links && (
@@ -42,7 +36,7 @@ export default function ProductosPrivada() {
                             {subProductos.links.map((link, index) => (
                                 <button
                                     key={index}
-                                    onClick={() => link.url && handlePageChange(link.url.split('page=')[1])}
+                                    onClick={() => link.url && handlePageChange(link.url)}
                                     disabled={!link.url}
                                     className={`px-4 py-2 ${
                                         link.active
@@ -58,7 +52,6 @@ export default function ProductosPrivada() {
                     )}
                 </div>
 
-                {/* Información de paginación */}
                 <div className="mt-2 text-center text-sm text-gray-600">
                     Mostrando {subProductos.from || 0} a {subProductos.to || 0} de {subProductos.total} resultados
                 </div>

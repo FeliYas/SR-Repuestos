@@ -8,49 +8,48 @@ use Illuminate\Http\Request;
 
 class PedidoController extends Controller
 {
-
-
-
-
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
         $data = $request->validate([
-            'user_id' => 'nullable | exists:users,id',
-            'tipo_entrega' => 'nullable | string',
-            'mensaje' => 'sometimes | string',
-            'archivo' => 'sometimes | file',
-            'subtotal' => 'nullable | numeric',
-            'iva' => 'nullable | numeric',
-            'iibb' => 'nullable | numeric',
-            'total' => 'nullable | numeric',
-            'entregado' => 'nullable | boolean',
+            "user_id" => "nullable | exists:users,id",
+            "tipo_entrega" => "nullable | string",
+            "mensaje" => "sometimes | string",
+            "archivo" => "sometimes | file",
+            "subtotal" => "nullable | numeric",
+            "iva" => "nullable | numeric",
+            "iibb" => "nullable | numeric",
+            "total" => "nullable | numeric",
+            "entregado" => "nullable | boolean",
         ]);
 
-        // Guardar la nueva imagen
-        if ($request->hasFile('archivo')) {
-            $archivoPath = $request->file('archivo')->store('files', 'public');
+        $data["subtotal"] = round((float) ($data["subtotal"] ?? 0), 2);
+        $data["iva"] = round((float) ($data["iva"] ?? 0), 2);
+        $data["iibb"] = 0;
+        $data["total"] = round($data["subtotal"] + $data["iva"], 2);
+
+        if ($request->hasFile("archivo")) {
+            $archivoPath = $request->file("archivo")->store("files", "public");
             $data["archivo"] = $archivoPath;
         }
 
         $pedido = Pedido::create($data);
 
         return redirect()->back()->with([
-            'pedido_id' => $pedido->id,
-            'message' => 'Pedido creado exitosamente'
+            "pedido_id" => $pedido->id,
+            "message" => "Pedido creado exitosamente",
         ]);
     }
 
     public function misPedidos()
     {
-        $pedidos = Pedido::where('user_id', auth()->user()->id)
-            ->with('productos')
-            ->orderBy('created_at', 'desc')
+        $pedidos = Pedido::where("user_id", auth()->user()->id)
+            ->with("productos")
+            ->orderBy("created_at", "desc")
             ->get();
 
-        // Get all subproducto_ids from all pedidos
         $subproductoIds = [];
         foreach ($pedidos as $pedido) {
             foreach ($pedido->productos as $producto) {
@@ -60,43 +59,41 @@ class PedidoController extends Controller
             }
         }
 
-        // Get subproductos using the collected ids
-        $subproductos = SubProducto::whereIn('id', $subproductoIds)
-            ->with(['producto' => function ($query) {
-                $query->select('id', 'name', 'marca_id')->with('marca');
+        $subproductos = SubProducto::whereIn("id", $subproductoIds)
+            ->with(["producto" => function ($query) {
+                $query->select("id", "name", "marca_id")->with("marca");
             }])
             ->get();
 
-        return inertia('privada/mispedidos', [
-            'pedidos' => $pedidos,
-            'subproductos' => $subproductos,
+        return inertia("privada/mispedidos", [
+            "pedidos" => $pedidos,
+            "subproductos" => $subproductos,
         ]);
     }
 
     public function misPedidosAdmin(Request $request)
     {
-        $perPage = $request->input('per_page', 10);
+        $perPage = $request->input("per_page", 10);
 
-        $query = Pedido::query()->with(['productos', 'user'])
-            ->orderBy('created_at', 'desc');
+        $query = Pedido::query()->with(["productos", "user"])
+            ->orderBy("created_at", "desc");
 
-        if ($request->has('search') && !empty($request->search)) {
+        if ($request->has("search") && !empty($request->search)) {
             $searchTerm = $request->search;
-            $query->where('id',  $searchTerm);
+            $query->where("id", $searchTerm);
         }
 
-        $subProductos = SubProducto::with(['producto' => function ($query) {
-            $query->select('id', 'name', 'marca_id')->with('marca');
-        }])
-            ->get();;
+        $subProductos = SubProducto::with(["producto" => function ($query) {
+            $query->select("id", "name", "marca_id")->with("marca");
+        }])->get();
 
         $pedidos = $query->paginate($perPage);
-        return inertia('admin/pedidosAdmin', [
-            'pedidos' => $pedidos,
-            'subProductos' => $subProductos,
+
+        return inertia("admin/pedidosAdmin", [
+            "pedidos" => $pedidos,
+            "subProductos" => $subProductos,
         ]);
     }
-
 
     /**
      * Update the specified resource in storage.
@@ -106,13 +103,12 @@ class PedidoController extends Controller
         $pedido = Pedido::find($request->id);
 
         if (!$pedido) {
-            return redirect()->back()->with('error', 'Pedido not found.');
+            return redirect()->back()->with("error", "Pedido not found.");
         }
 
-        // Toggle the current value of entregado
         $pedido->entregado = !$pedido->entregado;
         $pedido->save();
 
-        return redirect()->back()->with('success', 'Pedido updated successfully.');
+        return redirect()->back()->with("success", "Pedido updated successfully.");
     }
 }

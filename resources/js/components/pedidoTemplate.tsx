@@ -216,14 +216,6 @@ export default function PedidoTemplate({ pedido, user, productos }) {
                         })}
                     </p>
 
-                    <p>
-                        <strong>IIBB:</strong> $
-                        {Number(pedido?.iibb)?.toLocaleString('es-AR', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                        })}
-                    </p>
-
                     <p
                         style={{
                             fontSize: '18px',

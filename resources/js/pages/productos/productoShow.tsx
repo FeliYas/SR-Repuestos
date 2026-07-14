@@ -189,13 +189,13 @@ export default function ProductoShow() {
                                 )}
                                 {hasValue(producto?.tonelaje) && (
                                     <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
-                                        <p>Piton</p>
+                                        <p>Curva</p>
                                         <p>{producto?.tonelaje}</p>
                                     </div>
                                 )}
                                 {hasValue(producto?.espigon) && (
                                     <div className="flex flex-row justify-between border-b border-[#E0E0E0] py-2">
-                                        <p>Curva del piton</p>
+                                        <p>Piton</p>
                                         <p>{producto?.espigon}</p>
                                     </div>
                                 )}

@@ -15,7 +15,7 @@ class ShareDefaultLayoutData
     public function handle($request, Closure $next)
     {
         if (Auth::check()) {
-            return redirect('/privada/productos');  // O la URL que prefieras
+            return redirect('/privada/novedades');  // O la URL que prefieras
         }
         Inertia::share([
             'contacto' => fn() => Contacto::first(),

@@ -22,6 +22,9 @@ export default function MispedidosRow({ pedido }) {
         if (user.lista == '3') {
             price = subProducto?.price_dist;
         }
+        if (user.lista == '4') {
+            price = subProducto?.price_lista_4;
+        }
 
         return Number(price);
     };

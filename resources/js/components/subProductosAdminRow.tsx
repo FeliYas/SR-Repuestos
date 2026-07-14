@@ -19,6 +19,7 @@ export default function SubProdcutosAdminRow({ subprod, productos }) {
         price_mayorista: subprod?.price_mayorista,
         price_minorista: subprod?.price_minorista,
         price_dist: subprod?.price_dist,
+        price_lista_4: subprod?.price_lista_4,
         id: subprod?.id,
     });
 
@@ -84,6 +85,12 @@ export default function SubProdcutosAdminRow({ subprod, productos }) {
                 ${' '}
                 {subprod?.price_dist
                     ? Number(subprod?.price_dist)?.toLocaleString('es-AR', { maximumFractionDigits: 2, minimumFractionDigits: 2 })
+                    : 0}
+            </td>
+            <td className="align-middle">
+                ${' '}
+                {subprod?.price_lista_4
+                    ? Number(subprod?.price_lista_4)?.toLocaleString('es-AR', { maximumFractionDigits: 2, minimumFractionDigits: 2 })
                     : 0}
             </td>
 
@@ -189,7 +196,7 @@ export default function SubProdcutosAdminRow({ subprod, productos }) {
                                         onChange={(e) => updateForm.setData('caracteristicas', e.target.value)}
                                     />
 
-                                    <label htmlFor="mayo">Precio mayorista {'(Lista 1)'}</label>
+                                    <label htmlFor="mayo">Lista 1</label>
                                     <input
                                         defaultValue={subprod?.price_mayorista}
                                         className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
@@ -199,7 +206,7 @@ export default function SubProdcutosAdminRow({ subprod, productos }) {
                                         onChange={(e) => updateForm.setData('price_mayorista', e.target.value)}
                                     />
 
-                                    <label htmlFor="min">Precio minorista {'(Lista 2)'}</label>
+                                    <label htmlFor="min">Lista 2</label>
                                     <input
                                         defaultValue={subprod?.price_minorista}
                                         className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
@@ -209,7 +216,7 @@ export default function SubProdcutosAdminRow({ subprod, productos }) {
                                         onChange={(e) => updateForm.setData('price_minorista', e.target.value)}
                                     />
 
-                                    <label htmlFor="dist">Precio distribuidor {'(Lista 3)'}</label>
+                                    <label htmlFor="dist">Lista 3</label>
                                     <input
                                         defaultValue={subprod?.price_dist}
                                         className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
@@ -217,6 +224,16 @@ export default function SubProdcutosAdminRow({ subprod, productos }) {
                                         name="dist"
                                         id="dist"
                                         onChange={(e) => updateForm.setData('price_dist', e.target.value)}
+                                    />
+
+                                    <label htmlFor="lista4">Lista 4</label>
+                                    <input
+                                        defaultValue={subprod?.price_lista_4}
+                                        className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
+                                        type="number"
+                                        name="lista4"
+                                        id="lista4"
+                                        onChange={(e) => updateForm.setData('price_lista_4', e.target.value)}
                                     />
 
                                     <label htmlFor="imagenn">Imagen</label>

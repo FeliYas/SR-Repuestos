@@ -53,8 +53,6 @@ class SubProductoController extends Controller
 
         $subProductos = $query->paginate($perPage);
 
-
-
         return inertia('admin/subProductosAdmin', [
             'subProductos' => $subProductos,
             'productos' => $productos,
@@ -68,47 +66,57 @@ class SubProductoController extends Controller
         $marca = $request->input('marca');
         $codigo = $request->input('codigo');
 
-
         $marcas = MarcaProducto::select('id', 'name')->get();
         $categorias = Categoria::select('id', 'name')->get();
 
         $query = SubProducto::with([
             'producto' => function ($query) {
                 $query
+                    ->select('id', 'name', 'marca_id', 'categoria_id', 'aplicacion', 'anio', 'num_original', 'tonelaje', 'espigon', 'bujes')
                     ->with(['marca' => function ($q) {
                         $q->select('id', 'name');
                     }])
                     ->with(['categoria' => function ($q) {
                         $q->select('id', 'name');
+                    }])
+                    ->with(['imagenes' => function ($q) {
+                        $q->select('id', 'producto_id', 'image')
+                            ->orderBy('order', 'asc')
+                            ->orderBy('id', 'asc');
                     }]);
             }
         ])->orderBy('order', 'asc');
 
-        // Filtrar por código del subproducto
         if ($codigo) {
-            $query->where('code', 'like', "%{$codigo}%")->orWhere('description', 'like', "%{$codigo}%");
+            $query->where(function ($q) use ($codigo) {
+                $q->where('code', 'like', "%{$codigo}%")
+                    ->orWhere('description', 'like', "%{$codigo}%");
+            });
         }
 
-        // Filtrar por marca del producto
         if ($marca) {
             $query->whereHas('producto', function ($q) use ($marca) {
                 $q->where('marca_id', $marca);
             });
         }
 
-        // Filtrar por categoría del producto
         if ($categoria) {
             $query->whereHas('producto', function ($q) use ($categoria) {
                 $q->where('categoria_id', $categoria);
             });
         }
 
-        $subProductos = $query->paginate(perPage: $perPage);
+        $subProductos = $query->paginate($perPage)->withQueryString();
 
         return inertia('privada/productosPrivada', [
             'subProductos' => $subProductos,
             'categorias' => $categorias,
             'marcas' => $marcas,
+            'filters' => [
+                'categoria' => $categoria ?? '',
+                'marca' => $marca ?? '',
+                'codigo' => $codigo ?? '',
+            ],
         ]);
     }
 
@@ -133,6 +141,7 @@ class SubProductoController extends Controller
             'price_mayorista' => 'required|numeric',
             'price_minorista' => 'required|numeric',
             'price_dist' => 'required|numeric',
+            'price_lista_4' => 'required|numeric',
             'image' => 'nullable|sometimes|file',
         ]);
 
@@ -143,6 +152,8 @@ class SubProductoController extends Controller
         }
 
         SubProducto::create($data);
+
+        return redirect()->back()->with('success', 'Subproducto creado correctamente.');
     }
 
 
@@ -168,6 +179,7 @@ class SubProductoController extends Controller
             'price_mayorista' => 'required|numeric',
             'price_minorista' => 'required|numeric',
             'price_dist' => 'required|numeric',
+            'price_lista_4' => 'required|numeric',
             'image' => 'sometimes|nullable|file',
         ]);
 
@@ -249,234 +261,201 @@ class SubProductoController extends Controller
                     $productNameToIds[$key] = [];
                 }
 
-                $productNameToIds[$key][] = $producto->id;
+                $productNameToIds[$key][] = (int) $producto->id;
             }
 
-            $optionalTextFields = ['medida', 'componente', 'caracteristicas'];
-            $optionalPriceFields = ['price_mayorista', 'price_minorista', 'price_dist'];
-            $maxRow = count($rows);
+            $seenCodes = [];
 
-            for ($rowNumber = 2; $rowNumber <= $maxRow; $rowNumber++) {
-                $row = $rows[$rowNumber] ?? [];
-
-                if ($this->isSpreadsheetRowEmpty($row)) {
+            foreach ($rows as $index => $row) {
+                if ($index === 1) {
                     continue;
                 }
 
                 $summary['total_rows']++;
+                $rowNumber = $index;
+                $mappedRow = $this->mapSubproductosRow($row, $headerMapping);
 
-                $code = $this->getMappedValue($row, $headerMapping, 'code');
-                if ($code === '') {
+                if ($this->isSubproductosRowEmpty($mappedRow)) {
                     $summary['omitted']++;
+                    continue;
+                }
+
+                $normalizedCode = $this->normalizeSubproductoCode($mappedRow['code'] ?? null);
+                if ($normalizedCode === null) {
                     $summary['errors'][] = [
                         'fila' => $rowNumber,
                         'code' => null,
-                        'motivo' => 'Código vacío.',
+                        'motivo' => 'La fila no tiene código de subproducto.',
                     ];
+                    $summary['omitted']++;
                     continue;
                 }
 
-                $matchedSubproductos = SubProducto::where('code', $code)->get(['id']);
-                if ($matchedSubproductos->count() > 1) {
-                    $summary['omitted']++;
+                if (isset($seenCodes[$normalizedCode])) {
                     $summary['errors'][] = [
                         'fila' => $rowNumber,
-                        'code' => $code,
-                        'motivo' => 'Hay más de un subproducto en la base con ese código.',
+                        'code' => $normalizedCode,
+                        'motivo' => 'Código repetido dentro del mismo archivo.',
                     ];
+                    $summary['omitted']++;
+                    continue;
+                }
+                $seenCodes[$normalizedCode] = true;
+
+                $resolvedProductoId = $this->resolveSubproductoProductoId($mappedRow['producto_id'] ?? null, $productNameToIds);
+                if ($resolvedProductoId === null) {
+                    $summary['errors'][] = [
+                        'fila' => $rowNumber,
+                        'code' => $normalizedCode,
+                        'motivo' => 'No se pudo resolver el producto asociado.',
+                    ];
+                    $summary['omitted']++;
                     continue;
                 }
 
-                $productoRaw = $this->getMappedValue($row, $headerMapping, 'producto_id');
-                $description = $this->getMappedValue($row, $headerMapping, 'description');
-
-                $productoId = null;
-                if ($productoRaw !== '') {
-                    $productoKey = $this->normalizeExcelText($productoRaw);
-                    $matchedIds = $productNameToIds[$productoKey] ?? null;
-
-                    if ($matchedIds === null) {
-                        $summary['omitted']++;
-                        $summary['errors'][] = [
-                            'fila' => $rowNumber,
-                            'code' => $code,
-                            'motivo' => 'Producto inexistente: ' . $productoRaw,
-                        ];
-                        continue;
-                    }
-
-                    if (count($matchedIds) > 1) {
-                        $summary['omitted']++;
-                        $summary['errors'][] = [
-                            'fila' => $rowNumber,
-                            'code' => $code,
-                            'motivo' => 'Nombre de producto ambiguo (coincide con más de un producto): ' . $productoRaw,
-                        ];
-                        continue;
-                    }
-
-                    $productoId = $matchedIds[0];
+                $description = $this->normalizeExcelText($mappedRow['description'] ?? null);
+                if ($description === '') {
+                    $summary['errors'][] = [
+                        'fila' => $rowNumber,
+                        'code' => $normalizedCode,
+                        'motivo' => 'La fila no tiene descripción.',
+                    ];
+                    $summary['omitted']++;
+                    continue;
                 }
 
-                if ($matchedSubproductos->isEmpty()) {
-                    if ($productoRaw === '' || $description === '') {
+                $payload = [
+                    'producto_id' => $resolvedProductoId,
+                    'code' => $normalizedCode,
+                    'description' => $description,
+                    'medida' => $this->nullableNormalizedExcelText($mappedRow['medida'] ?? null),
+                    'componente' => $this->nullableNormalizedExcelText($mappedRow['componente'] ?? null),
+                    'caracteristicas' => $this->nullableNormalizedExcelText($mappedRow['caracteristicas'] ?? null),
+                    'price_mayorista' => $this->normalizeOptionalNumeric($mappedRow['price_mayorista'] ?? null),
+                    'price_minorista' => $this->normalizeOptionalNumeric($mappedRow['price_minorista'] ?? null),
+                    'price_dist' => $this->normalizeOptionalNumeric($mappedRow['price_dist'] ?? null),
+                    'price_lista_4' => $this->normalizeOptionalNumeric($mappedRow['price_lista_4'] ?? null) ?? 0,
+                    'order' => $this->normalizeOptionalNumeric($mappedRow['order'] ?? null),
+                ];
+
+                $subProducto = SubProducto::where('code', $normalizedCode)->first();
+
+                if ($subProducto) {
+                    $subProducto->fill($payload);
+                    if ($subProducto->isDirty()) {
+                        $subProducto->save();
+                        $summary['updated']++;
+                    } else {
                         $summary['omitted']++;
-                        $summary['errors'][] = [
-                            'fila' => $rowNumber,
-                            'code' => $code,
-                            'motivo' => 'Para crear subproducto son obligatorios producto y descripción.',
-                        ];
-                        continue;
                     }
-
-                    $createData = [
-                        'code' => $code,
-                        'producto_id' => $productoId,
-                        'description' => $description,
-                    ];
-
-                    foreach ($optionalTextFields as $field) {
-                        if (!isset($headerMapping[$field])) {
-                            continue;
-                        }
-
-                        $value = $this->getMappedValue($row, $headerMapping, $field);
-                        $createData[$field] = $value !== '' ? $value : null;
-                    }
-
-                    foreach ($optionalPriceFields as $field) {
-                        if (!isset($headerMapping[$field])) {
-                            continue;
-                        }
-
-                        $rawValue = $this->getMappedValue($row, $headerMapping, $field);
-                        if ($rawValue === '') {
-                            continue;
-                        }
-
-                        $parsedValue = $this->parsePriceValue($rawValue);
-                        if ($parsedValue === null) {
-                            $summary['omitted']++;
-                            $summary['errors'][] = [
-                                'fila' => $rowNumber,
-                                'code' => $code,
-                                'motivo' => 'Valor inválido en ' . $this->humanSubproductosHeaderLabel($field) . ': ' . $rawValue,
-                            ];
-                            continue 2;
-                        }
-
-                        $createData[$field] = $parsedValue;
-                    }
-
-                    SubProducto::create($createData);
+                } else {
+                    SubProducto::create($payload);
                     $summary['created']++;
-                    continue;
                 }
-
-                $updateData = [];
-
-                if ($productoRaw !== '') {
-                    $updateData['producto_id'] = $productoId;
-                }
-
-                if ($description !== '') {
-                    $updateData['description'] = $description;
-                }
-
-                foreach ($optionalTextFields as $field) {
-                    if (!isset($headerMapping[$field])) {
-                        continue;
-                    }
-
-                    $value = $this->getMappedValue($row, $headerMapping, $field);
-                    if ($value !== '') {
-                        $updateData[$field] = $value;
-                    }
-                }
-
-                foreach ($optionalPriceFields as $field) {
-                    if (!isset($headerMapping[$field])) {
-                        continue;
-                    }
-
-                    $rawValue = $this->getMappedValue($row, $headerMapping, $field);
-                    if ($rawValue === '') {
-                        continue;
-                    }
-
-                    $parsedValue = $this->parsePriceValue($rawValue);
-                    if ($parsedValue === null) {
-                        $summary['omitted']++;
-                        $summary['errors'][] = [
-                            'fila' => $rowNumber,
-                            'code' => $code,
-                            'motivo' => 'Valor inválido en ' . $this->humanSubproductosHeaderLabel($field) . ': ' . $rawValue,
-                        ];
-                        continue 2;
-                    }
-
-                    $updateData[$field] = $parsedValue;
-                }
-
-                if (empty($updateData)) {
-                    $summary['omitted']++;
-                    $summary['errors'][] = [
-                        'fila' => $rowNumber,
-                        'code' => $code,
-                        'motivo' => 'Fila sin datos válidos para actualizar.',
-                    ];
-                    continue;
-                }
-
-                $matchedSubproductos->first()->update($updateData);
-                $summary['updated']++;
             }
-        } catch (Throwable $exception) {
+        } catch (Throwable $e) {
             $summary['errors'][] = [
                 'fila' => null,
                 'code' => null,
-                'motivo' => 'Error al procesar el archivo: ' . $exception->getMessage(),
+                'motivo' => 'Error al procesar el archivo: ' . $e->getMessage(),
             ];
         }
 
         return redirect()->back()->with('mass_upload_subproductos_summary', $summary);
     }
 
-    private function resolveSubproductosHeaderMapping(array $headerRow): array
+    public function descargarPlantillaSubproductos()
     {
-        $aliasMap = [
-            'code' => ['code', 'codigo', 'cod'],
-            'producto_id' => ['producto', 'producto id', 'producto_id', 'nombre producto', 'producto nombre'],
-            'description' => ['descripcion', 'descripción', 'description', 'detalle'],
-            'medida' => ['medida'],
-            'componente' => ['componente', 'largo total', 'largo_total', 'largo'],
-            'caracteristicas' => ['caracteristicas', 'características', 'caracteristica', 'característica'],
-            'price_mayorista' => ['price_mayorista', 'precio mayorista', 'precio mayorista lista 1', 'precio lista 1', 'mayorista', 'precio mayorista (lista 1)'],
-            'price_minorista' => ['price_minorista', 'precio minorista', 'precio minorista lista 2', 'precio lista 2', 'minorista', 'precio minorista (lista 2)'],
-            'price_dist' => ['price_dist', 'precio distribuidor', 'precio distribucion', 'precio distribución', 'precio dist', 'distribuidor', 'precio distribuidor (lista 3)', 'precio lista 3'],
+        $headers = [
+            'CODIGO SUBPRODUCTO',
+            'NOMBRE PRODUCTO',
+            'DESCRIPCION',
+            'MEDIDA',
+            'COMPONENTE',
+            'CARACTERISTICAS',
+            'LISTA 1',
+            'LISTA 2',
+            'LISTA 3',
+            'LISTA 4',
+            'ORDEN',
         ];
 
-        $normalizedAliasMap = [];
-        foreach ($aliasMap as $field => $aliases) {
-            $normalizedAliasMap[$field] = array_map(fn(string $alias) => $this->normalizeExcelText($alias), $aliases);
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Subproductos');
+
+        foreach ($headers as $index => $header) {
+            $column = Coordinate::stringFromColumnIndex($index + 1);
+            $sheet->setCellValue($column . '1', $header);
+            $sheet->getColumnDimension($column)->setAutoSize(true);
         }
+
+        $headerRange = 'A1:' . Coordinate::stringFromColumnIndex(count($headers)) . '1';
+        $sheet->getStyle($headerRange)->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'color' => ['rgb' => 'F97316'],
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => 'D1D5DB'],
+                ],
+            ],
+        ]);
+
+        $sheet->freezePane('A2');
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'plantilla_subproductos.xlsx';
+
+        return new StreamedResponse(function () use ($writer) {
+            $writer->save('php://output');
+        }, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control' => 'max-age=0',
+        ]);
+    }
+
+    private function resolveSubproductosHeaderMapping(array $headerRow): array
+    {
+        $knownHeaders = [
+            'code' => ['codigo subproducto', 'codigo', 'cod subproducto', 'cod'],
+            'producto_id' => ['nombre producto', 'producto', 'nombre', 'producto id'],
+            'description' => ['descripcion', 'descripción'],
+            'medida' => ['medida'],
+            'componente' => ['componente'],
+            'caracteristicas' => ['caracteristicas', 'características'],
+            'price_mayorista' => ['lista 1', 'precio mayorista', 'mayorista'],
+            'price_minorista' => ['lista 2', 'precio minorista', 'minorista'],
+            'price_dist' => ['lista 3', 'precio distribuidor', 'precio distribucion', 'distribuidor', 'distribucion'],
+            'price_lista_4' => ['lista 4', 'precio lista 4'],
+            'order' => ['orden', 'order'],
+        ];
 
         $mapping = [];
 
-        foreach ($headerRow as $column => $rawHeader) {
-            $normalizedHeader = $this->normalizeExcelText($this->cellToString($rawHeader));
+        foreach ($headerRow as $column => $header) {
+            $normalizedHeader = $this->normalizeExcelText((string) $header);
             if ($normalizedHeader === '') {
                 continue;
             }
 
-            foreach ($normalizedAliasMap as $field => $aliases) {
-                if (isset($mapping[$field])) {
-                    continue;
-                }
-
-                if (in_array($normalizedHeader, $aliases, true)) {
-                    $mapping[$field] = $column;
-                    break;
+            foreach ($knownHeaders as $field => $aliases) {
+                foreach ($aliases as $alias) {
+                    if ($normalizedHeader === $this->normalizeExcelText($alias)) {
+                        $mapping[$field] = $column;
+                        break 2;
+                    }
                 }
             }
         }
@@ -484,21 +463,38 @@ class SubProductoController extends Controller
         return $mapping;
     }
 
-    private function getMappedValue(array $row, array $headerMapping, string $field): string
+    private function humanSubproductosHeaderLabel(string $field): string
     {
-        if (!isset($headerMapping[$field])) {
-            return '';
-        }
-
-        $column = $headerMapping[$field];
-
-        return $this->cellToString($row[$column] ?? null);
+        return match ($field) {
+            'code' => 'CODIGO SUBPRODUCTO',
+            'producto_id' => 'NOMBRE PRODUCTO',
+            'description' => 'DESCRIPCION',
+            'medida' => 'MEDIDA',
+            'componente' => 'COMPONENTE',
+            'caracteristicas' => 'CARACTERISTICAS',
+            'price_mayorista' => 'LISTA 1',
+            'price_minorista' => 'LISTA 2',
+            'price_dist' => 'LISTA 3',
+            'price_lista_4' => 'LISTA 4',
+            'order' => 'ORDEN',
+            default => strtoupper($field),
+        };
     }
 
-    private function isSpreadsheetRowEmpty(array $row): bool
+    private function mapSubproductosRow(array $row, array $mapping): array
+    {
+        $mapped = [];
+        foreach ($mapping as $field => $column) {
+            $mapped[$field] = $row[$column] ?? null;
+        }
+
+        return $mapped;
+    }
+
+    private function isSubproductosRowEmpty(array $row): bool
     {
         foreach ($row as $value) {
-            if ($this->cellToString($value) !== '') {
+            if ($this->normalizeExcelText($value) !== '') {
                 return false;
             }
         }
@@ -506,87 +502,73 @@ class SubProductoController extends Controller
         return true;
     }
 
-    private function cellToString(mixed $value): string
+    private function normalizeSubproductoCode($value): ?string
+    {
+        $code = $this->normalizeExcelText($value);
+        return $code === '' ? null : $code;
+    }
+
+    private function resolveSubproductoProductoId($value, array $productNameToIds): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            $productId = (int) $value;
+            return Producto::whereKey($productId)->exists() ? $productId : null;
+        }
+
+        $normalizedName = $this->normalizeExcelText((string) $value);
+        if ($normalizedName === '') {
+            return null;
+        }
+
+        $ids = $productNameToIds[$normalizedName] ?? null;
+        if (!$ids || count($ids) !== 1) {
+            return null;
+        }
+
+        return $ids[0];
+    }
+
+    private function normalizeExcelText($value): string
     {
         if ($value === null) {
             return '';
         }
 
+        $text = trim((string) $value);
+        if ($text === '') {
+            return '';
+        }
+
+        $ascii = Str::of($text)->ascii()->lower()->toString();
+        $ascii = preg_replace('/\s+/', ' ', $ascii) ?? $ascii;
+
+        return trim($ascii);
+    }
+
+    private function nullableNormalizedExcelText($value): ?string
+    {
+        $text = trim((string) ($value ?? ''));
+        return $text === '' ? null : $text;
+    }
+
+    private function normalizeOptionalNumeric($value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
         if (is_string($value)) {
-            return trim($value);
-        }
-
-        if (is_bool($value)) {
-            return $value ? '1' : '0';
-        }
-
-        if (is_int($value)) {
-            return (string) $value;
-        }
-
-        if (is_float($value)) {
-            if ((float) (int) $value === $value) {
-                return (string) (int) $value;
+            $normalized = str_replace(['.', ','], ['', '.'], $value);
+            if (is_numeric($normalized)) {
+                return (float) $normalized;
             }
-
-            return rtrim(rtrim(sprintf('%.12F', $value), '0'), '.');
         }
 
-        return trim((string) $value);
-    }
-
-    private function normalizeExcelText(string $value): string
-    {
-        return (string) Str::of($value)
-            ->replace(['_', '-'], ' ')
-            ->squish()
-            ->lower()
-            ->ascii();
-    }
-
-    private function parsePriceValue(string $rawValue): ?float
-    {
-        $normalized = str_replace(['$', ' '], '', trim($rawValue));
-        if ($normalized === '') {
-            return null;
-        }
-
-        if (str_contains($normalized, ',') && str_contains($normalized, '.')) {
-            $lastComma = strrpos($normalized, ',');
-            $lastDot = strrpos($normalized, '.');
-
-            if ($lastComma !== false && $lastDot !== false && $lastComma > $lastDot) {
-                $normalized = str_replace('.', '', $normalized);
-                $normalized = str_replace(',', '.', $normalized);
-            } else {
-                $normalized = str_replace(',', '', $normalized);
-            }
-        } elseif (str_contains($normalized, ',')) {
-            $normalized = str_replace(',', '.', $normalized);
-        }
-
-        if (!is_numeric($normalized)) {
-            return null;
-        }
-
-        return (float) $normalized;
-    }
-
-    private function humanSubproductosHeaderLabel(string $field): string
-    {
-        $labels = [
-            'code' => 'Código',
-            'producto_id' => 'Producto',
-            'description' => 'Descripción',
-            'medida' => 'Medida',
-            'componente' => 'Componente',
-            'caracteristicas' => 'Características',
-            'price_mayorista' => 'Precio mayorista',
-            'price_minorista' => 'Precio minorista',
-            'price_dist' => 'Precio distribuidor',
-        ];
-
-        return $labels[$field] ?? $field;
+        return is_numeric($value) ? (float) $value : null;
     }
 
     public function exportarExcel(): StreamedResponse
@@ -605,9 +587,10 @@ class SubProductoController extends Controller
             'medida' => 'Medida',
             'componente' => 'Componente',
             'caracteristicas' => 'Caracteristicas',
-            'price_mayorista' => 'Precio mayorista',
-            'price_minorista' => 'Precio minorista',
-            'price_dist' => 'Precio distribuidor',
+            'price_mayorista' => 'Lista 1',
+            'price_minorista' => 'Lista 2',
+            'price_dist' => 'Lista 3',
+            'price_lista_4' => 'Lista 4',
         ];
 
         $subProductos = SubProducto::query()

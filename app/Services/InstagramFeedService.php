@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Storage;
 
 class InstagramFeedService
 {
+    private const MAX_SYNCED_POSTS = 12;
+
     public function getLatestPosts(int $limit = 8): Collection
     {
         $username = (string) config('services.instagram.public_username', 'sr.repuestos');
@@ -51,9 +53,22 @@ class InstagramFeedService
             $this->persistSyncedPost($post);
         }
 
-        $this->pruneOldSyncedPosts($limit);
+        $this->pruneStaleSyncedPosts(
+            $posts->pluck('external_id')->filter()->values(),
+            $limit
+        );
 
         return $this->getStoredPosts(min($limit, 8));
+    }
+
+    public function clearLatestPostsCache(?int $maxLimit = null): void
+    {
+        $username = (string) config('services.instagram.public_username', 'sr.repuestos');
+        $maxLimit = max($maxLimit ?? self::MAX_SYNCED_POSTS, 1);
+
+        for ($limit = 1; $limit <= $maxLimit; $limit++) {
+            Cache::store('database')->forget("instagram.feed.latest.{$username}.{$limit}");
+        }
     }
 
     private function fetchFromPublicEndpoint(string $username, int $limit): Collection
@@ -243,7 +258,7 @@ class InstagramFeedService
                 'published_at' => $publishedAt ?? $existing->published_at,
             ]);
 
-            if (!$existing->image || str_starts_with((string) $existing->image, 'http://') || str_starts_with((string) $existing->image, 'https://')) {
+            if ($this->shouldRefreshStoredImage($existing->image)) {
                 $existing->image = $this->downloadImageToStorage($post['image_url'], $post['external_id']);
             }
 
@@ -302,9 +317,27 @@ class InstagramFeedService
         return "instagram/{$externalId}.jpg";
     }
 
-    private function pruneOldSyncedPosts(int $keepCount): void
+    private function shouldRefreshStoredImage(?string $imagePath): bool
     {
+        if (!$imagePath) {
+            return true;
+        }
+
+        if (str_starts_with($imagePath, "http://") || str_starts_with($imagePath, "https://")) {
+            return true;
+        }
+
+        return !Storage::disk('public')->exists($imagePath);
+    }
+
+    private function pruneStaleSyncedPosts(Collection $externalIds, int $keepCount): void
+    {
+        Instagram::where('source', 'instagram_public')
+            ->when($externalIds->isNotEmpty(), fn ($query) => $query->whereNotIn('external_id', $externalIds->all()))
+            ->delete();
+
         $syncedIds = Instagram::where('source', 'instagram_public')
+            ->when($externalIds->isNotEmpty(), fn ($query) => $query->whereIn('external_id', $externalIds->all()))
             ->orderByDesc('published_at')
             ->pluck('id');
 

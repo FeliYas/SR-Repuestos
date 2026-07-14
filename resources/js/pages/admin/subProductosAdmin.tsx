@@ -18,6 +18,7 @@ export default function SubProductosAdmin() {
         price_mayorista: '',
         price_minorista: '',
         price_dist: '',
+        price_lista_4: '',
     });
 
     const excelForm = useForm();
@@ -26,8 +27,23 @@ export default function SubProductosAdmin() {
     const [createView, setCreateView] = useState(false);
     const [importar, setImportar] = useState(false);
 
+    const getValidationErrorMessage = (errors: Record<string, string | string[]> | undefined) => {
+        const messages = Object.values(errors ?? {})
+            .flat()
+            .filter(Boolean);
+
+        if (messages.length > 0) {
+            return messages[0];
+        }
+
+        return 'No se pudo crear el subproducto. Revisá los datos e intentá de nuevo.';
+    };
+
     const selectedProducto = productos?.find((prod) => String(prod.id) === String(data.producto_id));
-    const isRepuestosFrenos = String(selectedProducto?.categoria?.name ?? '').trim().toLowerCase() === 'repuestos y frenos';
+    const isRepuestosFrenos =
+        String(selectedProducto?.categoria?.name ?? '')
+            .trim()
+            .toLowerCase() === 'repuestos y frenos';
 
     useEffect(() => {
         if (isRepuestosFrenos && data.componente) {
@@ -41,12 +57,12 @@ export default function SubProductosAdmin() {
         post(route('admin.subproductos.store'), {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success('Marca creada correctamente');
+                toast.success('Subproducto creado correctamente');
                 reset();
                 setCreateView(false);
             },
-            onError: (errors) => {
-                toast.error('Error al crear marca');
+            onError: (errors: Record<string, string | string[]>) => {
+                toast.error(getValidationErrorMessage(errors));
                 console.log(errors);
             },
         });
@@ -188,7 +204,7 @@ export default function SubProductosAdmin() {
                                             onChange={(e) => setData('caracteristicas', e.target.value)}
                                         />
 
-                                        <label htmlFor="mayo">Precio mayorista {'(Lista 1)'}</label>
+                                        <label htmlFor="mayo">Lista 1</label>
                                         <input
                                             className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
                                             type="number"
@@ -197,7 +213,7 @@ export default function SubProductosAdmin() {
                                             onChange={(e) => setData('price_mayorista', e.target.value)}
                                         />
 
-                                        <label htmlFor="min">Precio minorista {'(Lista 2)'}</label>
+                                        <label htmlFor="min">Lista 2</label>
                                         <input
                                             className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
                                             type="number"
@@ -206,13 +222,22 @@ export default function SubProductosAdmin() {
                                             onChange={(e) => setData('price_minorista', e.target.value)}
                                         />
 
-                                        <label htmlFor="dist">Precio distribuidor {'(Lista 3)'}</label>
+                                        <label htmlFor="dist">Lista 3</label>
                                         <input
                                             className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
                                             type="number"
                                             name="dist"
                                             id="dist"
                                             onChange={(e) => setData('price_dist', e.target.value)}
+                                        />
+
+                                        <label htmlFor="lista4">Lista 4</label>
+                                        <input
+                                            className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
+                                            type="number"
+                                            name="lista4"
+                                            id="lista4"
+                                            onChange={(e) => setData('price_lista_4', e.target.value)}
                                         />
 
                                         <label htmlFor="imagenn">Imagen</label>
@@ -352,9 +377,10 @@ export default function SubProductosAdmin() {
                                     <td className="text-center">PRODUCTO</td>
                                     <td className="text-center">DESCRIPCION</td>
 
-                                    <td className="text-center">PRECIO MAYORISTA</td>
-                                    <td className="text-center">PRECIO MINORISTA</td>
-                                    <td className="text-center">PRECIO DISTRIBUIDOR</td>
+                                    <td className="text-center">LISTA 1</td>
+                                    <td className="text-center">LISTA 2</td>
+                                    <td className="text-center">LISTA 3</td>
+                                    <td className="text-center">LISTA 4</td>
                                     <td className="py-2 text-center">IMAGEN</td>
                                     <td className="text-center">EDITAR</td>
                                 </tr>

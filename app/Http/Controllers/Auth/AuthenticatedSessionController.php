@@ -47,7 +47,7 @@ class AuthenticatedSessionController extends Controller
                 ])->save();
             }
 
-            return redirect()->intended('/privada/productos');
+            return redirect()->intended('/privada/novedades');
         }
 
         return back()->withErrors([

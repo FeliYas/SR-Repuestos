@@ -61,15 +61,16 @@ class ActualizarPreciosJob implements ShouldQueue
             $precio_lista1  = $row[5] ?? null;
             $precio_lista2  = $row[6] ?? null;
             $precio_lista3  = $row[7] ?? null;
-            $marca          = trim((string)($row[8]  ?? ''));
-            $componente     = trim((string)($row[9]  ?? ''));
-            $caracteristicas = trim((string)($row[10] ?? ''));
-            $aplicacion     = trim((string)($row[11] ?? ''));
-            $anio           = trim((string)($row[12] ?? ''));
-            $num_original   = trim((string)($row[13] ?? ''));
-            $tonelaje       = trim((string)($row[14] ?? ''));
-            $espigon        = trim((string)($row[15] ?? ''));
-            $buje           = trim((string)($row[16] ?? ''));
+            $precio_lista4  = $row[8] ?? null;
+            $marca          = trim((string)($row[9]  ?? ''));
+            $componente     = trim((string)($row[10] ?? ''));
+            $caracteristicas = trim((string)($row[11] ?? ''));
+            $aplicacion     = trim((string)($row[12] ?? ''));
+            $anio           = trim((string)($row[13] ?? ''));
+            $num_original   = trim((string)($row[14] ?? ''));
+            $tonelaje       = trim((string)($row[15] ?? ''));
+            $espigon        = trim((string)($row[16] ?? ''));
+            $buje           = trim((string)($row[17] ?? ''));
 
             if ($super_codigo === '') {
                 // Sin código maestro, no podemos identificar el producto
@@ -120,6 +121,7 @@ class ActualizarPreciosJob implements ShouldQueue
             if (($v = $this->parsePrice($precio_lista1)) !== null) $subUpdates['price_mayorista'] = $v;
             if (($v = $this->parsePrice($precio_lista2)) !== null) $subUpdates['price_minorista'] = $v;
             if (($v = $this->parsePrice($precio_lista3)) !== null) $subUpdates['price_dist']      = $v;
+            if (($v = $this->parsePrice($precio_lista4)) !== null) $subUpdates['price_lista_4']   = $v;
 
             if (($v = $this->cleanOrNull($descripcion,    $this->placeholders['descripcion']))    !== null) $subUpdates['description']     = $v;
             if (($v = $this->cleanOrNull($componente,     $this->placeholders['componente']))     !== null) $subUpdates['componente']      = $v;
@@ -130,6 +132,7 @@ class ActualizarPreciosJob implements ShouldQueue
             if (is_numeric($precio_lista1)) $subUpdates['price_mayorista'] = (float)$precio_lista1;
             if (is_numeric($precio_lista2)) $subUpdates['price_minorista'] = (float)$precio_lista2;
             if (is_numeric($precio_lista3)) $subUpdates['price_dist']      = (float)$precio_lista3;
+            if (is_numeric($precio_lista4)) $subUpdates['price_lista_4']   = (float)$precio_lista4;
 
             if (!empty($subUpdates)) {
                 $subProducto->fill($subUpdates)->save();
