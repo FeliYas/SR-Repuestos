@@ -23,6 +23,7 @@ use Throwable;
 
 class SubProductoController extends Controller
 {
+    private const MAX_SUBPRODUCT_PRICE = 99999999.99;
     /**
      * Display a listing of the resource.
      */
@@ -335,7 +336,7 @@ class SubProductoController extends Controller
                     'price_minorista' => $this->normalizeOptionalNumeric($mappedRow['price_minorista'] ?? null),
                     'price_dist' => $this->normalizeOptionalNumeric($mappedRow['price_dist'] ?? null),
                     'price_lista_4' => $this->normalizeOptionalNumeric($mappedRow['price_lista_4'] ?? null) ?? 0,
-                    'order' => $this->normalizeOptionalNumeric($mappedRow['order'] ?? null),
+                    'order' => 'zzz',
                 ];
 
                 $subProducto = SubProducto::where('code', $normalizedCode)->first();
@@ -377,7 +378,6 @@ class SubProductoController extends Controller
             'LISTA 2',
             'LISTA 3',
             'LISTA 4',
-            'ORDEN',
         ];
 
         $spreadsheet = new Spreadsheet();
@@ -439,7 +439,6 @@ class SubProductoController extends Controller
             'price_minorista' => ['lista 2', 'precio minorista', 'minorista'],
             'price_dist' => ['lista 3', 'precio distribuidor', 'precio distribucion', 'distribuidor', 'distribucion'],
             'price_lista_4' => ['lista 4', 'precio lista 4'],
-            'order' => ['orden', 'order'],
         ];
 
         $mapping = [];
@@ -476,7 +475,6 @@ class SubProductoController extends Controller
             'price_minorista' => 'LISTA 2',
             'price_dist' => 'LISTA 3',
             'price_lista_4' => 'LISTA 4',
-            'order' => 'ORDEN',
             default => strtoupper($field),
         };
     }
@@ -563,12 +561,20 @@ class SubProductoController extends Controller
 
         if (is_string($value)) {
             $normalized = str_replace(['.', ','], ['', '.'], $value);
-            if (is_numeric($normalized)) {
-                return (float) $normalized;
-            }
+            $value = is_numeric($normalized) ? (float) $normalized : null;
         }
 
-        return is_numeric($value) ? (float) $value : null;
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        $number = (float) $value;
+
+        if (abs($number) > self::MAX_SUBPRODUCT_PRICE && abs($number / 100) <= self::MAX_SUBPRODUCT_PRICE) {
+            return $number / 100;
+        }
+
+        return $number;
     }
 
     public function exportarExcel(): StreamedResponse

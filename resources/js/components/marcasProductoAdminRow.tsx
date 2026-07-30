@@ -5,6 +5,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+
+const firstError = (errors: Record<string, string>) => Object.values(errors)[0] || 'Error al actualizar marca';
+
 export default function MarcasProductoAdminRow({ marca }) {
     const [edit, setEdit] = useState(false);
 
@@ -20,7 +24,8 @@ export default function MarcasProductoAdminRow({ marca }) {
 
         updateForm.transform((data) => {
             if (!data.image) {
-                const { image, ...rest } = data;
+                const rest = { ...data };
+                delete rest.image;
                 return rest;
             }
 
@@ -30,25 +35,25 @@ export default function MarcasProductoAdminRow({ marca }) {
         updateForm.post(route('admin.marcasProducto.update'), {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success('Categoria actualizada correctamente');
+                toast.success('Marca actualizada correctamente');
                 setEdit(false);
             },
             onError: (errors) => {
-                toast.error('Error al actualizar categoria');
+                toast.error(firstError(errors));
                 console.log(errors);
             },
         });
     };
 
     const deleteMarca = () => {
-        if (confirm('¿Estas seguro de eliminar esta categoria?')) {
+        if (confirm('¿Estás seguro de eliminar esta marca?')) {
             updateForm.delete(route('admin.marcasProducto.destroy'), {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Categoria eliminada correctamente');
+                    toast.success('Marca eliminada correctamente');
                 },
                 onError: (errors) => {
-                    toast.error('Error al eliminar categoria');
+                    toast.error('Error al eliminar marca');
                     console.log(errors);
                 },
             });
@@ -116,7 +121,19 @@ export default function MarcasProductoAdminRow({ marca }) {
                                             type="file"
                                             name="imagen"
                                             id={`imagen-${marca?.id}`}
-                                            onChange={(e) => updateForm.setData('image', e.target.files?.[0] || null)}
+                                            accept=".jpg,.jpeg,.png,.webp,.svg"
+                                            onChange={(e) => {
+                                                const image = e.target.files?.[0] || null;
+
+                                                if (image && image.size > MAX_IMAGE_SIZE) {
+                                                    toast.error('La imagen no puede superar los 2 MB.');
+                                                    e.target.value = '';
+                                                    updateForm.setData('image', null);
+                                                    return;
+                                                }
+
+                                                updateForm.setData('image', image);
+                                            }}
                                             className="hidden"
                                         />
                                         <label

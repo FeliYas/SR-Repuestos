@@ -57,7 +57,7 @@ export default function CargaMasivaSubproductos() {
                     <ul className="list-disc space-y-1 pl-6 text-sm text-gray-700">
                         <li>La primera fila debe ser de encabezados.</li>
                         <li>Columnas obligatorias: Código, Producto y Descripción.</li>
-                        <li>Columnas opcionales: Medida, Componente, Características, Lista 1, Lista 2, Lista 3, Lista 4 y Orden.</li>
+                        <li>Columnas opcionales: Medida, Componente, Características, Lista 1, Lista 2, Lista 3 y Lista 4. El orden se asigna automáticamente como zzz.</li>
                         <li>El orden de columnas no importa: se reconocen por nombre normalizado (trim, minúsculas y sin acentos).</li>
                         <li>Producto debe existir previamente en la base de datos (se busca por nombre exacto normalizado).</li>
                         <li>Si el código ya existe, se actualiza solo con los campos que traen valor en el Excel.</li>

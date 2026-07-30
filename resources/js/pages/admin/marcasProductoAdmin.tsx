@@ -5,6 +5,10 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import Dashboard from './dashboard';
 
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+
+const firstError = (errors: Record<string, string>) => Object.values(errors)[0] || 'Error al crear marca';
+
 export default function MarcasProductoAdmin() {
     const { marcas } = usePage().props;
 
@@ -27,7 +31,7 @@ export default function MarcasProductoAdmin() {
                 setCreateView(false);
             },
             onError: (errors) => {
-                toast.error('Error al crear marca');
+                toast.error(firstError(errors));
                 console.log(errors);
             },
         });
@@ -68,13 +72,25 @@ export default function MarcasProductoAdmin() {
                                         />
 
                                         <label htmlFor="imagenn">Imagen</label>
-                                        <span className="text-base font-normal">Resolucion recomendada: 501x181px</span>
+                                        <span className="text-base font-normal">Resolución recomendada: 501x181px. Máximo 2 MB.</span>
                                         <div className="flex flex-row">
                                             <input
                                                 type="file"
                                                 name="imagen"
                                                 id="imagenn"
-                                                onChange={(e) => setData('image', e.target.files?.[0] || null)}
+                                                accept=".jpg,.jpeg,.png,.webp,.svg"
+                                                onChange={(e) => {
+                                                    const image = e.target.files?.[0] || null;
+
+                                                    if (image && image.size > MAX_IMAGE_SIZE) {
+                                                        toast.error('La imagen no puede superar los 2 MB.');
+                                                        e.target.value = '';
+                                                        setData('image', null);
+                                                        return;
+                                                    }
+
+                                                    setData('image', image);
+                                                }}
                                                 className="hidden"
                                             />
                                             <label
