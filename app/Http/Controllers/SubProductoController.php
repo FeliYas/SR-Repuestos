@@ -281,7 +281,8 @@ class SubProductoController extends Controller
                     continue;
                 }
 
-                $normalizedCode = $this->normalizeSubproductoCode($mappedRow['code'] ?? null);
+                $code = $this->formatSubproductoCode($mappedRow['code'] ?? null);
+                $normalizedCode = $code === null ? null : $this->normalizeExcelText($code);
                 if ($normalizedCode === null) {
                     $summary['errors'][] = [
                         'fila' => $rowNumber,
@@ -295,7 +296,7 @@ class SubProductoController extends Controller
                 if (isset($seenCodes[$normalizedCode])) {
                     $summary['errors'][] = [
                         'fila' => $rowNumber,
-                        'code' => $normalizedCode,
+                        'code' => $code,
                         'motivo' => 'Código repetido dentro del mismo archivo.',
                     ];
                     $summary['omitted']++;
@@ -307,7 +308,7 @@ class SubProductoController extends Controller
                 if ($resolvedProductoId === null) {
                     $summary['errors'][] = [
                         'fila' => $rowNumber,
-                        'code' => $normalizedCode,
+                        'code' => $code,
                         'motivo' => 'No se pudo resolver el producto asociado.',
                     ];
                     $summary['omitted']++;
@@ -318,7 +319,7 @@ class SubProductoController extends Controller
                 if ($description === '') {
                     $summary['errors'][] = [
                         'fila' => $rowNumber,
-                        'code' => $normalizedCode,
+                        'code' => $code,
                         'motivo' => 'La fila no tiene descripción.',
                     ];
                     $summary['omitted']++;
@@ -327,7 +328,7 @@ class SubProductoController extends Controller
 
                 $payload = [
                     'producto_id' => $resolvedProductoId,
-                    'code' => $normalizedCode,
+                    'code' => $code,
                     'description' => $description,
                     'medida' => $this->nullableNormalizedExcelText($mappedRow['medida'] ?? null),
                     'componente' => $this->nullableNormalizedExcelText($mappedRow['componente'] ?? null),
@@ -339,7 +340,7 @@ class SubProductoController extends Controller
                     'order' => 'zzz',
                 ];
 
-                $subProducto = SubProducto::where('code', $normalizedCode)->first();
+                $subProducto = SubProducto::whereRaw('LOWER(code) = ?', [$normalizedCode])->first();
 
                 if ($subProducto) {
                     $subProducto->fill($payload);
@@ -500,10 +501,11 @@ class SubProductoController extends Controller
         return true;
     }
 
-    private function normalizeSubproductoCode($value): ?string
+    private function formatSubproductoCode($value): ?string
     {
-        $code = $this->normalizeExcelText($value);
-        return $code === '' ? null : $code;
+        $code = trim((string) ($value ?? ''));
+
+        return $code === '' ? null : Str::upper($code);
     }
 
     private function resolveSubproductoProductoId($value, array $productNameToIds): ?int
@@ -560,8 +562,31 @@ class SubProductoController extends Controller
         }
 
         if (is_string($value)) {
-            $normalized = str_replace(['.', ','], ['', '.'], $value);
-            $value = is_numeric($normalized) ? (float) $normalized : null;
+            $number = preg_replace('/[^0-9,.\-]/', '', trim($value));
+            if ($number === null || $number === '' || $number === '-') {
+                return null;
+            }
+
+            $lastDot = strrpos($number, '.');
+            $lastComma = strrpos($number, ',');
+
+            if ($lastDot !== false && $lastComma !== false) {
+                if ($lastDot > $lastComma) {
+                    $number = str_replace(',', '', $number);
+                } else {
+                    $number = str_replace(['.', ','], ['', '.'], $number);
+                }
+            } elseif ($lastDot !== false || $lastComma !== false) {
+                $separator = $lastDot !== false ? '.' : ',';
+                $lastSeparator = $lastDot !== false ? $lastDot : $lastComma;
+                $decimalDigits = strlen($number) - $lastSeparator - 1;
+
+                $number = $decimalDigits <= 2
+                    ? str_replace($separator, '.', $number)
+                    : str_replace($separator, '', $number);
+            }
+
+            $value = $number;
         }
 
         if (! is_numeric($value)) {
@@ -570,11 +595,9 @@ class SubProductoController extends Controller
 
         $number = (float) $value;
 
-        if (abs($number) > self::MAX_SUBPRODUCT_PRICE && abs($number / 100) <= self::MAX_SUBPRODUCT_PRICE) {
-            return $number / 100;
-        }
-
-        return $number;
+        return abs($number) > self::MAX_SUBPRODUCT_PRICE && abs($number / 100) <= self::MAX_SUBPRODUCT_PRICE
+            ? $number / 100
+            : $number;
     }
 
     public function exportarExcel(): StreamedResponse

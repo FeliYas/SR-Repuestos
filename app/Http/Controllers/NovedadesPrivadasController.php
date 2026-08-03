@@ -69,7 +69,7 @@ class NovedadesPrivadasController extends Controller
 
         $data = $request->validate([
             'order' => 'sometimes|string|max:255',
-            'image' => 'sometimes|file',
+            'image' => 'nullable|file',
             'title' => 'sometimes|string|max:255',
             'type' => 'sometimes|string|max:255',
             'text' => 'sometimes|string',
