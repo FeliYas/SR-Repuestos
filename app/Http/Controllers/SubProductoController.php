@@ -315,7 +315,7 @@ class SubProductoController extends Controller
                     continue;
                 }
 
-                $description = $this->normalizeExcelText($mappedRow['description'] ?? null);
+                $description = $this->uppercaseSubproductoDescription($mappedRow['description'] ?? null);
                 if ($description === '') {
                     $summary['errors'][] = [
                         'fila' => $rowNumber,
@@ -553,6 +553,14 @@ class SubProductoController extends Controller
     {
         $text = trim((string) ($value ?? ''));
         return $text === '' ? null : $text;
+    }
+
+    private function uppercaseSubproductoDescription($value): string
+    {
+        $description = trim((string) ($value ?? ''));
+        $description = preg_replace('/\s+/', ' ', $description) ?? $description;
+
+        return Str::upper($description);
     }
 
     private function normalizeOptionalNumeric($value): ?float

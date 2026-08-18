@@ -10,6 +10,8 @@ class NovedadPrivada extends Model
 
     protected $guarded = [];
 
+    protected $hidden = ['order'];
+
     public function getImageAttribute($value)
     {
         return $value ? url('storage/' . $value) : null;

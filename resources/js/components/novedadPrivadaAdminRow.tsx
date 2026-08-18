@@ -14,7 +14,6 @@ export default function NovedadPrivadaAdminRow({ novedadPrivada }) {
         title: novedadPrivada?.title,
         type: novedadPrivada?.type,
         text: novedadPrivada?.text,
-        order: novedadPrivada?.order,
         id: novedadPrivada?.id,
         image: null,
     });
@@ -55,7 +54,6 @@ export default function NovedadPrivadaAdminRow({ novedadPrivada }) {
 
     return (
         <tr className="border text-black odd:bg-gray-100 even:bg-white">
-            <td className="align-middle">{novedadPrivada?.order}</td>
             <td className="align-middle">{novedadPrivada?.type}</td>
             <td className="align-middle">{novedadPrivada?.title}</td>
             <td className="align-middle">
@@ -94,15 +92,6 @@ export default function NovedadPrivadaAdminRow({ novedadPrivada }) {
                             <div className="w-[500px] rounded-md bg-white p-4">
                                 <h2 className="mb-4 text-2xl font-semibold">Actualizar Novedad Privada</h2>
                                 <div className="flex flex-col gap-4">
-                                    <label htmlFor="ordennn">Orden</label>
-                                    <input
-                                        className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
-                                        type="text"
-                                        name="ordennn"
-                                        id="ordennn"
-                                        defaultValue={novedadPrivada?.order}
-                                        onChange={(e) => updateForm.setData('order', e.target.value)}
-                                    />
                                     <label htmlFor="type">
                                         Tipo <span className="text-red-500">*</span>
                                     </label>

@@ -12,7 +12,9 @@ class NovedadesPrivadasController extends Controller
     {
         $perPage = $request->input('per_page', 10);
 
-        $query = NovedadPrivada::query()->orderBy('order', 'asc');
+        $query = NovedadPrivada::query()
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
 
         if ($request->has('search') && !empty($request->search)) {
             $searchTerm = $request->search;
@@ -28,7 +30,10 @@ class NovedadesPrivadasController extends Controller
 
     public function indexPrivada()
     {
-        $novedadesPrivadas = NovedadPrivada::orderBy('order', 'asc')->get();
+        $novedadesPrivadas = NovedadPrivada::query()
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get();
 
         return inertia('privada/novedades', [
             'novedadesPrivadas' => $novedadesPrivadas,
@@ -47,7 +52,6 @@ class NovedadesPrivadasController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'order' => 'sometimes|string|max:255',
             'image' => 'required|file',
             'title' => 'required|string|max:255',
             'type' => 'required|string|max:255',
@@ -68,7 +72,6 @@ class NovedadesPrivadasController extends Controller
         $novedadPrivada = NovedadPrivada::findOrFail($request->id);
 
         $data = $request->validate([
-            'order' => 'sometimes|string|max:255',
             'image' => 'nullable|file',
             'title' => 'sometimes|string|max:255',
             'type' => 'sometimes|string|max:255',
