@@ -10,7 +10,6 @@ export default function CategoriasAdminRow({ categoria }) {
 
     const updateForm = useForm({
         name: categoria?.name,
-        order: categoria?.order,
         id: categoria?.id,
     });
 
@@ -46,7 +45,6 @@ export default function CategoriasAdminRow({ categoria }) {
 
     return (
         <tr className={`border text-black odd:bg-gray-100 even:bg-white`}>
-            <td className="align-middle">{categoria?.order}</td>
             <td className="align-middle">{categoria?.name}</td>
 
             <td className="h-[90px] w-[90px] px-8">
@@ -75,15 +73,6 @@ export default function CategoriasAdminRow({ categoria }) {
                             <div className="w-[500px] rounded-md bg-white p-4">
                                 <h2 className="mb-4 text-2xl font-semibold">Actualizar Categoria</h2>
                                 <div className="flex flex-col gap-4">
-                                    <label htmlFor="ordennn">Orden</label>
-                                    <input
-                                        className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
-                                        type="text"
-                                        name="ordennn"
-                                        id="ordennn"
-                                        value={updateForm?.data?.order}
-                                        onChange={(e) => updateForm.setData('order', e.target.value)}
-                                    />
                                     <label htmlFor="nombree">
                                         Nombre <span className="text-red-500">*</span>
                                     </label>

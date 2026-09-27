@@ -24,7 +24,7 @@ export default function ProductosPrivada() {
                         <p>Marca</p>
                         <p>Modelo</p>
                         <p>Descripción</p>
-                        <p className="pl-4">Precio</p>
+                        <p className="pl-4">Medida</p>
                         <p className="text-center">Cantidad</p>
                         <p></p>
                     </div>

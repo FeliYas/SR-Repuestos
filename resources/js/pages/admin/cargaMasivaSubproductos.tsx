@@ -5,6 +5,8 @@ import Dashboard from './dashboard';
 type MassUploadError = {
     fila: number | null;
     code: string | null;
+    producto: string | null;
+    descripcion: string | null;
     motivo: string;
 };
 
@@ -12,8 +14,11 @@ type MassUploadSummary = {
     total_rows: number;
     created: number;
     updated: number;
-    omitted: number;
+    unchanged: number;
+    rejected: number;
     errors: MassUploadError[];
+    error_counts: Record<string, number>;
+    error_report_token: string | null;
 };
 
 export default function CargaMasivaSubproductos() {
@@ -57,9 +62,15 @@ export default function CargaMasivaSubproductos() {
                     <ul className="list-disc space-y-1 pl-6 text-sm text-gray-700">
                         <li>La primera fila debe ser de encabezados.</li>
                         <li>Columnas obligatorias: Código, Producto y Descripción.</li>
-                        <li>Columnas opcionales: Medida, Componente, Características, Lista 1, Lista 2, Lista 3 y Lista 4. El orden se asigna automáticamente como zzz.</li>
+                        <li>
+                            Columnas opcionales: Medida, Componente, Características, Lista 1, Lista 2, Lista 3 y Lista 4. El orden se asigna
+                            automáticamente como zzz.
+                        </li>
                         <li>El orden de columnas no importa: se reconocen por nombre normalizado (trim, minúsculas y sin acentos).</li>
-                        <li>Producto debe existir previamente en la base de datos (se busca por nombre exacto normalizado).</li>
+                        <li>
+                            Producto debe existir previamente en la base de datos (se busca por nombre exacto normalizado). Si hay nombres repetidos,
+                            usá el ID numérico del producto o corregí el catálogo.
+                        </li>
                         <li>Si el código ya existe, se actualiza solo con los campos que traen valor en el Excel.</li>
                     </ul>
                 </div>
@@ -89,45 +100,75 @@ export default function CargaMasivaSubproductos() {
                     <div className="rounded-md border border-gray-300 bg-white p-4">
                         <h3 className="mb-3 text-lg font-semibold">Resumen de importación</h3>
 
-                        <div className="grid gap-3 md:grid-cols-4">
+                        <div className="grid gap-3 md:grid-cols-5">
                             <div className="rounded border p-3 text-center">
-                                <p className="text-xs uppercase text-gray-500">Filas leídas</p>
+                                <p className="text-xs text-gray-500 uppercase">Filas leídas</p>
                                 <p className="text-xl font-bold">{summary.total_rows}</p>
                             </div>
                             <div className="rounded border p-3 text-center">
-                                <p className="text-xs uppercase text-gray-500">Creados</p>
+                                <p className="text-xs text-gray-500 uppercase">Creados</p>
                                 <p className="text-xl font-bold text-green-600">{summary.created}</p>
                             </div>
                             <div className="rounded border p-3 text-center">
-                                <p className="text-xs uppercase text-gray-500">Actualizados</p>
+                                <p className="text-xs text-gray-500 uppercase">Actualizados</p>
                                 <p className="text-xl font-bold text-blue-600">{summary.updated}</p>
                             </div>
                             <div className="rounded border p-3 text-center">
-                                <p className="text-xs uppercase text-gray-500">Omitidos</p>
-                                <p className="text-xl font-bold text-red-600">{summary.omitted}</p>
+                                <p className="text-xs text-gray-500 uppercase">Sin cambios</p>
+                                <p className="text-xl font-bold text-gray-600">{summary.unchanged}</p>
+                            </div>
+                            <div className="rounded border p-3 text-center">
+                                <p className="text-xs text-gray-500 uppercase">Rechazados</p>
+                                <p className="text-xl font-bold text-red-600">{summary.rejected}</p>
                             </div>
                         </div>
 
-                        {summary.errors.length > 0 && (
-                            <div className="mt-4 overflow-x-auto">
-                                <table className="w-full border text-left text-sm text-gray-700">
-                                    <thead className="bg-gray-100">
-                                        <tr>
-                                            <th className="border px-3 py-2">Fila</th>
-                                            <th className="border px-3 py-2">Código</th>
-                                            <th className="border px-3 py-2">Motivo</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {summary.errors.map((error, index) => (
-                                            <tr key={index}>
-                                                <td className="border px-3 py-2">{error.fila ?? '-'}</td>
-                                                <td className="border px-3 py-2">{error.code ?? '-'}</td>
-                                                <td className="border px-3 py-2">{error.motivo}</td>
-                                            </tr>
+                        {summary.rejected > 0 && (
+                            <div className="mt-4 space-y-4">
+                                <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-gray-700">
+                                    <p className="font-semibold">Motivos de rechazo</p>
+                                    <ul className="mt-1 list-disc space-y-1 pl-5">
+                                        {Object.entries(summary.error_counts).map(([reason, count]) => (
+                                            <li key={reason}>
+                                                {count}: {reason}
+                                            </li>
                                         ))}
-                                    </tbody>
-                                </table>
+                                    </ul>
+                                    {summary.error_report_token && (
+                                        <a
+                                            href={route('admin.cargamasiva.subproductos.errors.download', summary.error_report_token)}
+                                            className="bg-primary-orange mt-3 inline-block rounded px-3 py-2 font-bold text-white"
+                                        >
+                                            Descargar errores (CSV)
+                                        </a>
+                                    )}
+                                </div>
+
+                                {summary.errors.length > 0 && (
+                                    <div className="overflow-x-auto">
+                                        <p className="mb-2 text-sm font-semibold">Primeros {summary.errors.length} rechazos</p>
+                                        <table className="w-full border text-left text-sm text-gray-700">
+                                            <thead className="bg-gray-100">
+                                                <tr>
+                                                    <th className="border px-3 py-2">Fila</th>
+                                                    <th className="border px-3 py-2">Código</th>
+                                                    <th className="border px-3 py-2">Producto</th>
+                                                    <th className="border px-3 py-2">Motivo</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {summary.errors.map((error, index) => (
+                                                    <tr key={index}>
+                                                        <td className="border px-3 py-2">{error.fila ?? '-'}</td>
+                                                        <td className="border px-3 py-2">{error.code ?? '-'}</td>
+                                                        <td className="border px-3 py-2">{error.producto ?? '-'}</td>
+                                                        <td className="border px-3 py-2">{error.motivo}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

@@ -2,11 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Producto extends Model
 {
     protected $guarded = [];
+
+    public function scopeAlphabetical(Builder $query): Builder
+    {
+        return $query->orderBy('name')->orderBy('code')->orderBy('id');
+    }
 
     public function categoria()
     {

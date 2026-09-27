@@ -94,6 +94,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('admin/subproductos/exportar', [SubProductoController::class, 'exportarExcel'])->name('admin.subproductos.export');
     Route::get('admin/cargamasivasubproductos', [SubProductoController::class, 'cargaMasivaSubproductos'])->name('admin.cargamasiva.subproductos');
     Route::post('admin/cargamasivasubproductos/importar', [SubProductoController::class, 'importarMasivoSubproductos'])->name('admin.cargamasiva.subproductos.import');
+    Route::get('admin/cargamasivasubproductos/errores/{reportToken}', [SubProductoController::class, 'descargarErroresImportacionSubproductos'])->name('admin.cargamasiva.subproductos.errors.download');
     Route::get('admin/cargamasivaimagenes', [ImagenProductoController::class, 'cargaMasivaImagenes'])->name('admin.cargamasiva.imagenes');
     Route::post('admin/cargamasivaimagenes/importar', [ImagenProductoController::class, 'importarMasivoImagenes'])->name('admin.cargamasiva.imagenes.import');
 

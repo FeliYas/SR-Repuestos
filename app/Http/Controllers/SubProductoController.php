@@ -6,9 +6,11 @@ use App\Models\Categoria;
 use App\Models\Producto;
 use App\Models\MarcaProducto;
 use App\Models\SubProducto;
+use App\Services\ProductSearchService;
 use DragonCode\Support\Facades\Filesystem\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -24,16 +26,23 @@ use Throwable;
 class SubProductoController extends Controller
 {
     private const MAX_SUBPRODUCT_PRICE = 99999999.99;
+    private const SUBPRODUCT_IMPORT_REPORT_DIRECTORY = 'import-reports/subproductos';
+    private const SUBPRODUCT_IMPORT_REPORT_TTL_HOURS = 24;
+    private const SUBPRODUCT_IMPORT_ERROR_PREVIEW_LIMIT = 50;
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, ProductSearchService $searchService)
     {
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:120'],
+        ]);
 
         $productos = Producto::select('id', 'name', 'categoria_id')
             ->with(['categoria' => function ($query) {
                 $query->select('id', 'name');
             }])
+            ->alphabetical()
             ->get();
 
         $perPage = $request->input('per_page', 10);
@@ -45,12 +54,9 @@ class SubProductoController extends Controller
                         $q->select('id', 'name');
                     }]);
             }
-        ])->orderBy('order', 'asc');
+        ])->alphabetical();
 
-        if ($request->has('search') && !empty($request->search)) {
-            $searchTerm = $request->search;
-            $query->where('code', 'LIKE', '%' . $searchTerm . '%');
-        }
+        $searchService->applyToSubproducts($query, $filters['search'] ?? null);
 
         $subProductos = $query->paginate($perPage);
 
@@ -60,15 +66,21 @@ class SubProductoController extends Controller
         ]);
     }
 
-    public function indexPrivada(Request $request)
+    public function indexPrivada(Request $request, ProductSearchService $searchService)
     {
-        $perPage = $request->input('per_page', 10);
-        $categoria = $request->input('categoria');
-        $marca = $request->input('marca');
-        $codigo = $request->input('codigo');
+        $filters = $request->validate([
+            'per_page' => ['nullable', 'integer', 'between:1,100'],
+            'categoria' => ['nullable', 'integer', 'exists:categorias,id'],
+            'marca' => ['nullable', 'integer', 'exists:marca_productos,id'],
+            'codigo' => ['nullable', 'string', 'max:120'],
+        ]);
+        $perPage = $filters['per_page'] ?? 10;
+        $categoria = $filters['categoria'] ?? null;
+        $marca = $filters['marca'] ?? null;
+        $codigo = trim((string) ($filters['codigo'] ?? ''));
 
-        $marcas = MarcaProducto::select('id', 'name')->get();
-        $categorias = Categoria::select('id', 'name')->get();
+        $marcas = MarcaProducto::select('id', 'name')->alphabetical()->get();
+        $categorias = Categoria::select('id', 'name')->alphabetical()->get();
 
         $query = SubProducto::with([
             'producto' => function ($query) {
@@ -86,14 +98,9 @@ class SubProductoController extends Controller
                             ->orderBy('id', 'asc');
                     }]);
             }
-        ])->orderBy('order', 'asc');
+        ])->alphabetical();
 
-        if ($codigo) {
-            $query->where(function ($q) use ($codigo) {
-                $q->where('code', 'like', "%{$codigo}%")
-                    ->orWhere('description', 'like', "%{$codigo}%");
-            });
-        }
+        $searchService->applyToSubproducts($query, $codigo);
 
         if ($marca) {
             $query->whereHas('producto', function ($q) use ($marca) {
@@ -132,7 +139,6 @@ class SubProductoController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'order' => 'nullable|string|max:255',
             'code' => 'required|string|max:255',
             'producto_id' => 'required|exists:productos,id',
             'description' => 'nullable|sometimes|string|max:255',
@@ -170,7 +176,6 @@ class SubProductoController extends Controller
         }
 
         $data = $request->validate([
-            'order' => 'nullable|string|max:255',
             'code' => 'required|string|max:255',
             'producto_id' => 'required|exists:productos,id',
             'description' => 'nullable|sometimes|string|max:255',
@@ -226,9 +231,13 @@ class SubProductoController extends Controller
             'total_rows' => 0,
             'created' => 0,
             'updated' => 0,
-            'omitted' => 0,
+            'unchanged' => 0,
+            'rejected' => 0,
             'errors' => [],
+            'error_counts' => [],
+            'error_report_token' => null,
         ];
+        $reportErrors = [];
 
         try {
             $spreadsheet = IOFactory::load($request->file('archivo')->getRealPath());
@@ -242,12 +251,15 @@ class SubProductoController extends Controller
             $missingFields = array_values(array_diff($requiredFields, array_keys($headerMapping)));
 
             if (!empty($missingFields)) {
-                $summary['errors'][] = [
+                $this->recordSubproductoImportError($summary, $reportErrors, [
                     'fila' => 1,
                     'code' => null,
+                    'producto' => null,
+                    'descripcion' => null,
                     'motivo' => 'Faltan columnas obligatorias: ' . implode(', ', array_map(fn(string $field) => $this->humanSubproductosHeaderLabel($field), $missingFields)),
-                ];
+                ]);
 
+                $this->attachSubproductoImportErrorReport($request, $summary, $reportErrors);
                 return redirect()->back()->with('mass_upload_subproductos_summary', $summary);
             }
 
@@ -277,78 +289,71 @@ class SubProductoController extends Controller
                 $mappedRow = $this->mapSubproductosRow($row, $headerMapping);
 
                 if ($this->isSubproductosRowEmpty($mappedRow)) {
-                    $summary['omitted']++;
+                    $this->recordSubproductoImportError($summary, $reportErrors, $this->subproductoImportError($rowNumber, null, $mappedRow, 'La fila está vacía.'));
                     continue;
                 }
 
                 $code = $this->formatSubproductoCode($mappedRow['code'] ?? null);
                 $normalizedCode = $code === null ? null : $this->normalizeExcelText($code);
                 if ($normalizedCode === null) {
-                    $summary['errors'][] = [
-                        'fila' => $rowNumber,
-                        'code' => null,
-                        'motivo' => 'La fila no tiene código de subproducto.',
-                    ];
-                    $summary['omitted']++;
+                    $this->recordSubproductoImportError($summary, $reportErrors, $this->subproductoImportError($rowNumber, null, $mappedRow, 'La fila no tiene código de subproducto.'));
                     continue;
                 }
 
                 if (isset($seenCodes[$normalizedCode])) {
-                    $summary['errors'][] = [
-                        'fila' => $rowNumber,
-                        'code' => $code,
-                        'motivo' => 'Código repetido dentro del mismo archivo.',
-                    ];
-                    $summary['omitted']++;
+                    $this->recordSubproductoImportError($summary, $reportErrors, $this->subproductoImportError($rowNumber, $code, $mappedRow, 'Código repetido dentro del mismo archivo.'));
                     continue;
                 }
                 $seenCodes[$normalizedCode] = true;
 
-                $resolvedProductoId = $this->resolveSubproductoProductoId($mappedRow['producto_id'] ?? null, $productNameToIds);
-                if ($resolvedProductoId === null) {
-                    $summary['errors'][] = [
-                        'fila' => $rowNumber,
-                        'code' => $code,
-                        'motivo' => 'No se pudo resolver el producto asociado.',
-                    ];
-                    $summary['omitted']++;
+                $productoResolution = $this->resolveSubproductoProductoId($mappedRow['producto_id'] ?? null, $productNameToIds);
+                if ($productoResolution['status'] !== 'resolved') {
+                    $productName = trim((string) ($mappedRow['producto_id'] ?? ''));
+                    $reason = $productoResolution['status'] === 'ambiguous'
+                        ? sprintf('Se encontraron %d productos con el nombre "%s" (IDs: %s).', count($productoResolution['ids']), $productName, implode(', ', $productoResolution['ids']))
+                        : sprintf('No existe un producto con el nombre o ID "%s".', $productName);
+
+                    $this->recordSubproductoImportError($summary, $reportErrors, $this->subproductoImportError($rowNumber, $code, $mappedRow, $reason));
                     continue;
                 }
 
                 $description = $this->uppercaseSubproductoDescription($mappedRow['description'] ?? null);
                 if ($description === '') {
-                    $summary['errors'][] = [
-                        'fila' => $rowNumber,
-                        'code' => $code,
-                        'motivo' => 'La fila no tiene descripción.',
-                    ];
-                    $summary['omitted']++;
+                    $this->recordSubproductoImportError($summary, $reportErrors, $this->subproductoImportError($rowNumber, $code, $mappedRow, 'La fila no tiene descripción.'));
                     continue;
                 }
 
                 $payload = [
-                    'producto_id' => $resolvedProductoId,
+                    'producto_id' => $productoResolution['id'],
                     'code' => $code,
                     'description' => $description,
+                ];
+
+                $optionalPayload = [
                     'medida' => $this->nullableNormalizedExcelText($mappedRow['medida'] ?? null),
                     'componente' => $this->nullableNormalizedExcelText($mappedRow['componente'] ?? null),
                     'caracteristicas' => $this->nullableNormalizedExcelText($mappedRow['caracteristicas'] ?? null),
-                    'price_mayorista' => $this->normalizeOptionalNumeric($mappedRow['price_mayorista'] ?? null),
-                    'price_minorista' => $this->normalizeOptionalNumeric($mappedRow['price_minorista'] ?? null),
-                    'price_dist' => $this->normalizeOptionalNumeric($mappedRow['price_dist'] ?? null),
-                    'price_lista_4' => $this->normalizeOptionalNumeric($mappedRow['price_lista_4'] ?? null) ?? 0,
-                    'order' => 'zzz',
+                    'price_mayorista' => $this->formatOptionalPriceForStorage($mappedRow['price_mayorista'] ?? null),
+                    'price_minorista' => $this->formatOptionalPriceForStorage($mappedRow['price_minorista'] ?? null),
+                    'price_dist' => $this->formatOptionalPriceForStorage($mappedRow['price_dist'] ?? null),
+                    'price_lista_4' => $this->formatOptionalPriceForStorage($mappedRow['price_lista_4'] ?? null),
                 ];
+
+                foreach ($optionalPayload as $field => $value) {
+                    if ($value !== null) {
+                        $payload[$field] = $value;
+                    }
+                }
 
                 $subProducto = SubProducto::whereRaw('LOWER(code) = ?', [$normalizedCode])->first();
 
                 if ($subProducto) {
                     $subProducto->fill($payload);
-                    if ($subProducto->isDirty()) {
+                    if ($this->subproductoHasMeaningfulChanges($subProducto)) {
                         $subProducto->save();
                         $summary['updated']++;
                     } else {
-                        $summary['omitted']++;
+                        $summary['unchanged']++;
                     }
                 } else {
                     SubProducto::create($payload);
@@ -356,14 +361,37 @@ class SubProductoController extends Controller
                 }
             }
         } catch (Throwable $e) {
-            $summary['errors'][] = [
+            $this->recordSubproductoImportError($summary, $reportErrors, [
                 'fila' => null,
                 'code' => null,
+                'producto' => null,
+                'descripcion' => null,
                 'motivo' => 'Error al procesar el archivo: ' . $e->getMessage(),
-            ];
+            ]);
         }
 
+        $this->attachSubproductoImportErrorReport($request, $summary, $reportErrors);
         return redirect()->back()->with('mass_upload_subproductos_summary', $summary);
+    }
+
+    public function descargarErroresImportacionSubproductos(Request $request, string $reportToken): StreamedResponse
+    {
+        $report = $request->session()->get('subproducto_import_reports.' . $reportToken);
+        $admin = $request->user('admin');
+
+        abort_unless(
+            is_array($report)
+                && ($report['admin_id'] ?? null) === $admin?->id
+                && ($report['expires_at'] ?? 0) >= now()->timestamp
+                && Storage::disk('local')->exists($report['path'] ?? ''),
+            404,
+        );
+
+        return response()->streamDownload(
+            fn () => print(Storage::disk('local')->get($report['path'])),
+            'errores_importacion_subproductos.csv',
+            ['Content-Type' => 'text/csv; charset=UTF-8'],
+        );
     }
 
     public function descargarPlantillaSubproductos()
@@ -508,28 +536,101 @@ class SubProductoController extends Controller
         return $code === '' ? null : Str::upper($code);
     }
 
-    private function resolveSubproductoProductoId($value, array $productNameToIds): ?int
+    private function resolveSubproductoProductoId($value, array $productNameToIds): array
     {
         if ($value === null || $value === '') {
-            return null;
+            return ['status' => 'missing', 'id' => null, 'ids' => []];
         }
 
         if (is_numeric($value)) {
             $productId = (int) $value;
-            return Producto::whereKey($productId)->exists() ? $productId : null;
+            return Producto::whereKey($productId)->exists()
+                ? ['status' => 'resolved', 'id' => $productId, 'ids' => [$productId]]
+                : ['status' => 'missing', 'id' => null, 'ids' => []];
         }
 
         $normalizedName = $this->normalizeExcelText((string) $value);
         if ($normalizedName === '') {
-            return null;
+            return ['status' => 'missing', 'id' => null, 'ids' => []];
         }
 
         $ids = $productNameToIds[$normalizedName] ?? null;
-        if (!$ids || count($ids) !== 1) {
-            return null;
+        if (!$ids) {
+            return ['status' => 'missing', 'id' => null, 'ids' => []];
         }
 
-        return $ids[0];
+        if (count($ids) !== 1) {
+            return ['status' => 'ambiguous', 'id' => null, 'ids' => $ids];
+        }
+
+        return ['status' => 'resolved', 'id' => $ids[0], 'ids' => $ids];
+    }
+
+    private function subproductoImportError(int|null $rowNumber, ?string $code, array $row, string $reason): array
+    {
+        return [
+            'fila' => $rowNumber,
+            'code' => $code,
+            'producto' => trim((string) ($row['producto_id'] ?? '')) ?: null,
+            'descripcion' => trim((string) ($row['description'] ?? '')) ?: null,
+            'motivo' => $reason,
+        ];
+    }
+
+    private function recordSubproductoImportError(array &$summary, array &$reportErrors, array $error): void
+    {
+        $summary['rejected']++;
+        $summary['error_counts'][$error['motivo']] = ($summary['error_counts'][$error['motivo']] ?? 0) + 1;
+        $reportErrors[] = $error;
+
+        if (count($summary['errors']) < self::SUBPRODUCT_IMPORT_ERROR_PREVIEW_LIMIT) {
+            $summary['errors'][] = $error;
+        }
+    }
+
+    private function attachSubproductoImportErrorReport(Request $request, array &$summary, array $reportErrors): void
+    {
+        if ($reportErrors === []) {
+            return;
+        }
+
+        $disk = Storage::disk('local');
+        $directory = self::SUBPRODUCT_IMPORT_REPORT_DIRECTORY;
+        $expiration = now()->subHours(self::SUBPRODUCT_IMPORT_REPORT_TTL_HOURS)->timestamp;
+
+        foreach ($disk->allFiles($directory) as $path) {
+            if ($disk->lastModified($path) < $expiration) {
+                $disk->delete($path);
+            }
+        }
+
+        $admin = $request->user('admin');
+        $token = (string) Str::uuid();
+        $path = sprintf('%s/%d/%s.csv', $directory, $admin->id, $token);
+        $stream = fopen('php://temp', 'r+');
+        fwrite($stream, "\xEF\xBB\xBF");
+        fputcsv($stream, ['Fila', 'Código', 'Producto', 'Descripción', 'Motivo']);
+
+        foreach ($reportErrors as $error) {
+            fputcsv($stream, [
+                $error['fila'] ?? '',
+                $error['code'] ?? '',
+                $error['producto'] ?? '',
+                $error['descripcion'] ?? '',
+                $error['motivo'],
+            ]);
+        }
+
+        rewind($stream);
+        $disk->put($path, stream_get_contents($stream));
+        fclose($stream);
+
+        $request->session()->put('subproducto_import_reports.' . $token, [
+            'admin_id' => $admin->id,
+            'path' => $path,
+            'expires_at' => now()->addHours(self::SUBPRODUCT_IMPORT_REPORT_TTL_HOURS)->timestamp,
+        ]);
+        $summary['error_report_token'] = $token;
     }
 
     private function normalizeExcelText($value): string
@@ -608,6 +709,33 @@ class SubProductoController extends Controller
             : $number;
     }
 
+    private function formatOptionalPriceForStorage($value): ?string
+    {
+        $price = $this->normalizeOptionalNumeric($value);
+
+        return $price === null ? null : number_format($price, 2, '.', '');
+    }
+
+    private function subproductoHasMeaningfulChanges(SubProducto $subProducto): bool
+    {
+        $dirty = $subProducto->getDirty();
+
+        foreach (['price_mayorista', 'price_minorista', 'price_dist', 'price_lista_4'] as $field) {
+            if (!array_key_exists($field, $dirty)) {
+                continue;
+            }
+
+            $original = $subProducto->getRawOriginal($field);
+            $current = $subProducto->getAttribute($field);
+
+            if ($original !== null && $current !== null && number_format((float) $original, 2, '.', '') === number_format((float) $current, 2, '.', '')) {
+                unset($dirty[$field]);
+            }
+        }
+
+        return $dirty !== [];
+    }
+
     public function exportarExcel(): StreamedResponse
     {
         $excludedColumns = ['id', 'order', 'image', 'created_at', 'updated_at'];
@@ -633,7 +761,7 @@ class SubProductoController extends Controller
         $subProductos = SubProducto::query()
             ->with('producto:id,name')
             ->select($columns)
-            ->orderBy('order', 'asc')
+            ->alphabetical()
             ->get();
 
         $spreadsheet = new Spreadsheet();

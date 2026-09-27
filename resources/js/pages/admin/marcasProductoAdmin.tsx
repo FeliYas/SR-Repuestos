@@ -14,7 +14,6 @@ export default function MarcasProductoAdmin() {
 
     const { data, setData, post, reset } = useForm({
         name: '',
-        order: '',
         image: null,
     });
 
@@ -52,14 +51,6 @@ export default function MarcasProductoAdmin() {
                                 <div className="w-[500px] rounded-md bg-white p-4">
                                     <h2 className="mb-4 text-2xl font-semibold">Crear Marca</h2>
                                     <div className="flex flex-col gap-4">
-                                        <label htmlFor="ordennn">Orden</label>
-                                        <input
-                                            className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
-                                            type="text"
-                                            name="ordennn"
-                                            id="ordennn"
-                                            onChange={(e) => setData('order', e.target.value)}
-                                        />
                                         <label htmlFor="nombree">
                                             Nombre <span className="text-red-500">*</span>
                                         </label>
@@ -138,7 +129,6 @@ export default function MarcasProductoAdmin() {
                         <table className="w-full border text-left text-sm text-gray-500 rtl:text-right dark:text-gray-400">
                             <thead className="bg-gray-300 text-sm font-medium text-black uppercase">
                                 <tr>
-                                    <td className="text-center">ORDEN</td>
                                     <td className="px-3 py-2 text-center">NOMBRE</td>
                                     <td className="w-[260px] px-3 py-2 text-center">IMAGEN</td>
                                     <td className="text-center">EDITAR</td>

@@ -162,7 +162,7 @@ export default function SubproductosPrivadaRow({ subProducto }) {
             <p className="">{subProducto?.producto?.marca?.name}</p>
             <p className="">{subProducto?.producto?.name}</p>
             <p className="">{subProducto?.description}</p>
-            <p className="pl-4">$ {(handlePrice() * cantidad)?.toLocaleString('es-AR', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</p>
+            <p className="pl-4">{subProducto?.medida}</p>
             <p className="flex justify-center">
                 <div className="flex h-[38px] w-[99px] flex-row items-center border border-[#EEEEEE] px-2">
                     <input value={cantidad} type="text" className="h-full w-full focus:outline-none" />

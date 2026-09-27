@@ -9,12 +9,29 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('instagrams', function (Blueprint $table) {
-            $table->string('source')->default('manual')->index()->after('order');
-            $table->string('external_id')->nullable()->index()->after('source');
-            $table->text('caption')->nullable()->after('link');
-            $table->timestamp('published_at')->nullable()->index()->after('caption');
-        });
+        if (!Schema::hasColumn('instagrams', 'source')) {
+            Schema::table('instagrams', function (Blueprint $table) {
+                $table->string('source')->default('manual')->index()->after('order');
+            });
+        }
+
+        if (!Schema::hasColumn('instagrams', 'external_id')) {
+            Schema::table('instagrams', function (Blueprint $table) {
+                $table->string('external_id')->nullable()->index()->after('source');
+            });
+        }
+
+        if (!Schema::hasColumn('instagrams', 'caption')) {
+            Schema::table('instagrams', function (Blueprint $table) {
+                $table->text('caption')->nullable()->after('link');
+            });
+        }
+
+        if (!Schema::hasColumn('instagrams', 'published_at')) {
+            Schema::table('instagrams', function (Blueprint $table) {
+                $table->timestamp('published_at')->nullable()->index()->after('caption');
+            });
+        }
 
         DB::table('instagrams')
             ->whereNull('source')

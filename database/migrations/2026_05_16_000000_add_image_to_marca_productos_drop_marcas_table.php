@@ -29,8 +29,14 @@ return new class extends Migration
                     ->update(['marca_id' => null]);
             }
 
-            Schema::table('productos', function (Blueprint $table) {
-                $table->dropForeign(['marca_id']);
+            $hasMarcaForeignKey = collect(Schema::getForeignKeys('productos'))
+                ->contains(fn (array $foreignKey) => $foreignKey['columns'] === ['marca_id']);
+
+            Schema::table('productos', function (Blueprint $table) use ($hasMarcaForeignKey) {
+                if ($hasMarcaForeignKey) {
+                    $table->dropForeign(['marca_id']);
+                }
+
                 $table->foreign('marca_id')
                     ->references('id')
                     ->on('marca_productos')

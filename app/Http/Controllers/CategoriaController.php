@@ -16,7 +16,7 @@ class CategoriaController extends Controller
 
         $perPage = $request->input('per_page', 10);
 
-        $query = Categoria::query()->orderBy('order', 'asc');
+        $query = Categoria::query()->alphabetical();
 
         if ($request->has('search') && !empty($request->search)) {
             $searchTerm = $request->search;
@@ -40,13 +40,11 @@ class CategoriaController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'order' => 'required|string',
             'name' => 'required|string|max:255',
             'image' => 'nullable|file',
         ], [
             'image.file' => 'La imagen debe ser un archivo válido.',
             'name.required' => 'El nombre es obligatorio.',
-            'order.required' => 'El orden es obligatorio.',
         ]);
 
         // Store the image
@@ -74,7 +72,6 @@ class CategoriaController extends Controller
         }
 
         $data = $request->validate([
-            'order' => 'sometimes|string',
             'name' => 'sometimes|string|max:255',
             'image' => 'sometimes|file',
         ]);

@@ -29,7 +29,6 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
     const updateForm = useForm({
         name: producto?.name,
         code: producto?.code,
-        order: producto?.order,
         categoria_id: producto?.categoria_id,
         marca_id: producto?.marca_id,
         id: producto?.id,
@@ -111,7 +110,6 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
 
     return (
         <tr className={`border text-black odd:bg-gray-100 even:bg-white`}>
-            <td className="align-middle">{producto?.order}</td>
             <td className="align-middle">{producto?.name}</td>
             <td className="align-middle">{producto?.code}</td>
             <td className="align-middle">{producto?.categoria?.name}</td>
@@ -255,15 +253,6 @@ export default function ProductosAdminRow({ producto, marcas, categorias }) {
                             <div className="w-[500px] rounded-md bg-white p-4">
                                 <h2 className="mb-4 text-2xl font-semibold">Actualizar Producto</h2>
                                 <div className="flex flex-col gap-4">
-                                    <label htmlFor="ordennn">Orden</label>
-                                    <input
-                                        className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
-                                        type="text"
-                                        name="ordennn"
-                                        id="ordennn"
-                                        value={updateForm.data.order}
-                                        onChange={(e) => updateForm.setData('order', e.target.value)}
-                                    />
                                     <label htmlFor="nombree">
                                         Nombre <span className="text-red-500">*</span>
                                     </label>

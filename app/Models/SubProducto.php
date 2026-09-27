@@ -2,12 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class SubProducto extends Model
 {
     protected $guarded = [];
     protected $appends = ['display_image'];
+
+    public function scopeAlphabetical(Builder $query): Builder
+    {
+        return $query->orderBy('description')->orderBy('code')->orderBy('id');
+    }
 
     public function producto()
     {

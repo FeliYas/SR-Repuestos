@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('sub_productos', 'price_lista_4')) {
+            return;
+        }
+
         Schema::table('sub_productos', function (Blueprint $table) {
             $table->decimal('price_lista_4', 10, 2)->default(0)->after('price_dist');
         });

@@ -15,7 +15,6 @@ export default function NovedadAdminRow({ novedad }) {
         title: novedad?.title,
         type: novedad?.type,
         text: novedad?.text,
-        order: novedad?.order,
         id: novedad?.id,
     });
 
@@ -55,7 +54,6 @@ export default function NovedadAdminRow({ novedad }) {
 
     return (
         <tr className={`border text-black odd:bg-gray-100 even:bg-white`}>
-            <td className="align-middle">{novedad?.order}</td>
             <td className="align-middle">{novedad?.type}</td>
             <td className="align-middle">{novedad?.title}</td>
             <td className="align-middle">
@@ -88,14 +86,6 @@ export default function NovedadAdminRow({ novedad }) {
                             <div className="w-[500px] rounded-md bg-white p-4">
                                 <h2 className="mb-4 text-2xl font-semibold">Actualizar Novedad</h2>
                                 <div className="flex flex-col gap-4">
-                                    <label htmlFor="ordennn">Orden</label>
-                                    <input
-                                        className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
-                                        type="text"
-                                        name="ordennn"
-                                        id="ordennn"
-                                        onChange={(e) => updateForm.setData('order', e.target.value)}
-                                    />
                                     <label htmlFor="type">
                                         Tipo <span className="text-red-500">*</span>
                                     </label>

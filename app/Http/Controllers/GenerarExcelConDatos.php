@@ -45,7 +45,7 @@ class GenerarExcelConDatos extends Controller
         }
 
         // Agregar los productos del nuevo pedido
-        $subproductos = SubProducto::with('producto.marca')->get();
+        $subproductos = SubProducto::with('producto.marca')->alphabetical()->get();
 
         foreach ($subproductos as $subproducto) {
             $this->agregarFilaPedido($sheet, $siguienteFila, $subproducto);

@@ -136,14 +136,6 @@ export default function SubProductosAdmin() {
                                 <div className="w-[500px] rounded-md bg-white p-4">
                                     <h2 className="mb-4 text-2xl font-semibold">Crear Sub-producto</h2>
                                     <div className="flex flex-col gap-4">
-                                        <label htmlFor="ordennn">Orden</label>
-                                        <input
-                                            className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
-                                            type="text"
-                                            name="ordennn"
-                                            id="ordennn"
-                                            onChange={(e) => setData('order', e.target.value)}
-                                        />
                                         <label htmlFor="code">Codigo</label>
                                         <input
                                             className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
@@ -372,7 +364,6 @@ export default function SubProductosAdmin() {
                         <table className="w-full border text-left text-sm text-gray-500 rtl:text-right dark:text-gray-400">
                             <thead className="bg-gray-300 text-sm font-medium text-black uppercase">
                                 <tr>
-                                    <td className="text-center">ORDEN</td>
                                     <td className="text-center">CODIGO</td>
                                     <td className="text-center">PRODUCTO</td>
                                     <td className="text-center">DESCRIPCION</td>

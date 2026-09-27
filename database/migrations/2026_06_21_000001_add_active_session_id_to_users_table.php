@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasColumn('users', 'active_session_id')) {
+            return;
+        }
+
         Schema::table('users', function (Blueprint $table) {
             $table->string('active_session_id')->nullable()->after('remember_token');
         });

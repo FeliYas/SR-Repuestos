@@ -14,7 +14,6 @@ export default function MarcasProductoAdminRow({ marca }) {
 
     const updateForm = useForm({
         name: marca?.name,
-        order: marca?.order,
         id: marca?.id,
         image: null,
     });
@@ -62,7 +61,6 @@ export default function MarcasProductoAdminRow({ marca }) {
 
     return (
         <tr className={`border text-black odd:bg-gray-100 even:bg-white`}>
-            <td className="align-middle">{marca?.order}</td>
             <td className="h-[90px] align-middle">{marca?.name}</td>
             <td className="h-[90px] align-middle">
                 {marca?.image ? (
@@ -94,15 +92,6 @@ export default function MarcasProductoAdminRow({ marca }) {
                             <div className="w-[500px] rounded-md bg-white p-4">
                                 <h2 className="mb-4 text-2xl font-semibold">Actualizar Marca</h2>
                                 <div className="flex flex-col gap-4">
-                                    <label htmlFor="ordennn">Orden</label>
-                                    <input
-                                        className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
-                                        type="text"
-                                        name="ordennn"
-                                        id="ordennn"
-                                        value={updateForm?.data?.order}
-                                        onChange={(e) => updateForm.setData('order', e.target.value)}
-                                    />
                                     <label htmlFor="nombree">
                                         Nombre <span className="text-red-500">*</span>
                                     </label>

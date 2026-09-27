@@ -15,11 +15,11 @@ class NovedadesController extends Controller
 
         $perPage = $request->input('per_page', 10);
 
-        $query = Novedades::query()->orderBy('order', 'asc');
+        $query = Novedades::query()->newestFirst();
 
         if ($request->has('search') && !empty($request->search)) {
             $searchTerm = $request->search;
-            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+            $query->where('title', 'LIKE', '%' . $searchTerm . '%');
         }
 
         $novedades = $query->paginate($perPage);
@@ -37,7 +37,6 @@ class NovedadesController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'order' => 'sometimes|string|max:255',
             'image' => 'required|file',
             'title' => 'required|string|max:255',
             'type' => 'required|string|max:255',
@@ -69,7 +68,6 @@ class NovedadesController extends Controller
         }
 
         $data = $request->validate([
-            'order' => 'sometimes|string|max:255',
             'image' => 'sometimes|file',
             'title' => 'sometimes|string|max:255',
             'type' => 'sometimes|string|max:255',

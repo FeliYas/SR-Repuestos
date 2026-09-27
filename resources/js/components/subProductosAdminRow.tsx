@@ -11,7 +11,6 @@ export default function SubProdcutosAdminRow({ subprod, productos }) {
     const updateForm = useForm({
         code: subprod?.code,
         producto_id: subprod?.producto_id,
-        order: subprod?.order,
         description: subprod?.description,
         medida: subprod?.medida,
         componente: subprod?.componente,
@@ -24,7 +23,10 @@ export default function SubProdcutosAdminRow({ subprod, productos }) {
     });
 
     const selectedProducto = productos?.find((prod) => String(prod.id) === String(updateForm.data?.producto_id));
-    const isRepuestosFrenos = String(selectedProducto?.categoria?.name ?? '').trim().toLowerCase() === 'repuestos y frenos';
+    const isRepuestosFrenos =
+        String(selectedProducto?.categoria?.name ?? '')
+            .trim()
+            .toLowerCase() === 'repuestos y frenos';
 
     useEffect(() => {
         if (isRepuestosFrenos && updateForm.data?.componente) {
@@ -64,7 +66,6 @@ export default function SubProdcutosAdminRow({ subprod, productos }) {
 
     return (
         <tr className={`border text-black odd:bg-gray-100 even:bg-white`}>
-            <td className="align-middle">{subprod?.order}</td>
             <td className="align-middle">{subprod?.code}</td>
             <td className="align-middle">{subprod?.producto?.name}</td>
             <td className="align-middle">{subprod?.description}</td>
@@ -120,15 +121,6 @@ export default function SubProdcutosAdminRow({ subprod, productos }) {
                             <div className="w-[500px] rounded-md bg-white p-4">
                                 <h2 className="mb-4 text-2xl font-semibold">Actualizar Sub-producto</h2>
                                 <div className="flex flex-col gap-4">
-                                    <label htmlFor="ordennn">Orden</label>
-                                    <input
-                                        className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"
-                                        type="text"
-                                        name="ordennn"
-                                        id="ordennn"
-                                        defaultValue={subprod?.order}
-                                        onChange={(e) => updateForm.setData('order', e.target.value)}
-                                    />
                                     <label htmlFor="code">Codigo</label>
                                     <input
                                         className="focus:outline-primary-orange rounded-md p-2 outline outline-gray-300 focus:outline"

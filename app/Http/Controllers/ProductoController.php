@@ -9,6 +9,7 @@ use App\Models\MarcaProducto;
 use App\Models\Metadatos;
 use App\Models\Producto;
 use App\Models\SubProducto;
+use App\Services\ProductSearchService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -29,20 +30,20 @@ class ProductoController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, ProductSearchService $searchService)
     {
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:120'],
+        ]);
 
-        $categorias = Categoria::select('id', 'name')->get();
-        $marcas = MarcaProducto::select('id', 'name')->get();
+        $categorias = Categoria::select('id', 'name')->alphabetical()->get();
+        $marcas = MarcaProducto::select('id', 'name')->alphabetical()->get();
 
         $perPage = $request->input('per_page', default: 10);
 
-        $query = Producto::query()->orderBy('order', 'asc')->with(['categoria:id,name', 'marca:id,name', 'imagenes']);
+        $query = Producto::query()->alphabetical()->with(['categoria:id,name', 'marca:id,name', 'imagenes']);
 
-        if ($request->has('search') && !empty($request->search)) {
-            $searchTerm = $request->search;
-            $query->where('name', 'LIKE', '%' . $searchTerm . '%')->orWhere('code', 'LIKE', '%' . $searchTerm . '%');
-        }
+        $searchService->apply($query, $filters['search'] ?? null);
 
         $productos = $query->paginate($perPage);
 
@@ -57,10 +58,10 @@ class ProductoController extends Controller
 
     public function indexVistaPrevia()
     {
-        $productos = Producto::select('id', 'code')->get();
-        $categorias = Categoria::whereNotNull('image')->orderBy('order', 'asc')->get();
-        $allcategorias = Categoria::orderBy('order', 'asc')->get();
-        $marcas = MarcaProducto::select('id', 'name')->get();
+        $productos = Producto::select('id', 'name', 'code')->alphabetical()->get();
+        $categorias = Categoria::whereNotNull('image')->alphabetical()->get();
+        $allcategorias = Categoria::alphabetical()->get();
+        $marcas = MarcaProducto::select('id', 'name')->alphabetical()->get();
 
 
         return Inertia::render('productosVistaPrevia', [
@@ -87,18 +88,17 @@ class ProductoController extends Controller
 
     public function indexInicio(Request $request, $id)
     {
-        $marcas = MarcaProducto::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
+        $marcas = MarcaProducto::select('id', 'name')->alphabetical()->get();
 
-        $categorias = Categoria::select('id', 'name', 'order')
-            ->orderBy('order', 'asc')
+        $categorias = Categoria::select('id', 'name')
+            ->alphabetical()
             ->get();
 
         $metadatos = Metadatos::where('title', 'Productos')->first();
 
         $query = Producto::where('categoria_id', $id)
             ->with('marca', 'imagenes')
-            ->orderBy('order', 'asc')
-            ->orderBy('id', 'asc');
+            ->alphabetical();
 
         if ($request->filled('marca')) {
             $query->where('marca_id', $request->marca);
@@ -109,7 +109,7 @@ class ProductoController extends Controller
         // Opcional: solo subproductos de productos actuales (más eficiente)
         $productoIds = $productos->pluck('id');
         $subproductos = SubProducto::whereIn('producto_id', $productoIds)
-            ->orderBy('order', 'asc')
+            ->alphabetical()
             ->get();
 
         return Inertia::render('productos', [
@@ -203,9 +203,9 @@ class ProductoController extends Controller
     public function show($id, $producto_id)
     {
 
-        $subproductos = SubProducto::where('producto_id', $producto_id)->orderBy('order', 'asc')->get();
+        $subproductos = SubProducto::where('producto_id', $producto_id)->alphabetical()->get();
         $producto = Producto::with(['categoria:id,name', 'marca:id,name', 'imagenes'])->findOrFail($producto_id);
-        $categorias = Categoria::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
+        $categorias = Categoria::select('id', 'name')->alphabetical()->get();
         $productosRelacionados = $this->getProductosRelacionados($producto);
 
 
@@ -243,13 +243,15 @@ class ProductoController extends Controller
             return collect();
         }
 
-        return Producto::with(['imagenes', 'marca:id,name', 'categoria:id,name'])
+        $relacionados = Producto::with(['imagenes', 'marca:id,name', 'categoria:id,name'])
             ->where('id', '!=', $producto->id)
             ->whereRaw('UPPER(code) LIKE ?', [$prefijo . '%'])
             ->orderByRaw('CHAR_LENGTH(code) ASC')
             ->orderBy('id', 'asc')
             ->limit($limit)
             ->get();
+
+        return $this->ordenarProductosAlfabeticamente($relacionados);
     }
 
     private function getProductosRelacionadosPorTitulo(Producto $producto, int $limit = 3)
@@ -270,7 +272,7 @@ class ProductoController extends Controller
 
         $candidatos = $query->get();
 
-        return $candidatos
+        $relacionados = $candidatos
             ->map(function (Producto $candidato) use ($tokens) {
                 $score = $this->puntuarSimilitudTitulo((string) $candidato->name, $tokens);
 
@@ -284,6 +286,8 @@ class ProductoController extends Controller
             ->take($limit)
             ->pluck('producto')
             ->values();
+
+        return $this->ordenarProductosAlfabeticamente($relacionados);
     }
 
     private function getProductosRelacionadosPorCategoriaOMarca(Producto $producto, int $limit = 3)
@@ -298,13 +302,23 @@ class ProductoController extends Controller
                 }
             });
 
-        return $query
+        $relacionados = $query
             ->orderByRaw('CASE WHEN categoria_id = ? THEN 0 ELSE 1 END', [$producto->categoria_id])
             ->orderByRaw('CASE WHEN marca_id = ? THEN 0 ELSE 1 END', [$producto->marca_id])
-            ->orderBy('order', 'asc')
             ->orderBy('id', 'asc')
             ->limit($limit)
             ->get();
+
+        return $this->ordenarProductosAlfabeticamente($relacionados);
+    }
+
+    private function ordenarProductosAlfabeticamente($productos)
+    {
+        return $productos->sortBy(function (Producto $producto) {
+            return mb_strtolower((string) $producto->name) . "\0"
+                . mb_strtolower((string) $producto->code) . "\0"
+                . str_pad((string) $producto->id, 20, '0', STR_PAD_LEFT);
+        })->values();
     }
 
     private function extraerPrefijoCodigo(?string $code): string
@@ -390,45 +404,44 @@ class ProductoController extends Controller
     }
 
 
-    public function SearchProducts(Request $request)
+    public function SearchProducts(Request $request, ProductSearchService $searchService)
     {
+        $filters = $request->validate([
+            'categoria' => ['nullable', 'integer', 'exists:categorias,id'],
+            'marca' => ['nullable', 'integer', 'exists:marca_productos,id'],
+            'codigo' => ['nullable', 'string', 'max:120'],
+        ]);
+
         $query = Producto::query();
 
         // Aplicar filtros solo si existen
         if ($request->filled('categoria')) {
-            $query->where('categoria_id', $request->categoria);
+            $query->where('categoria_id', $filters['categoria']);
         }
 
         if ($request->filled('marca')) {
-            $query->where('marca_id', $request->marca);
+            $query->where('marca_id', $filters['marca']);
         }
 
-        if ($request->filled('codigo')) {
-            $searchTerm = $request->codigo;
-
-            $query->where(function ($searchQuery) use ($searchTerm) {
-                $searchQuery->where('code', 'LIKE', '%' . $searchTerm . '%')
-                    ->orWhere('name', 'LIKE', '%' . $searchTerm . '%')
-                    ->orWhereHas('marca', function ($marcaQuery) use ($searchTerm) {
-                        $marcaQuery->where('name', 'LIKE', '%' . $searchTerm . '%');
-                    })
-                    ->orWhereHas('subproductos', function ($subproductoQuery) use ($searchTerm) {
-                        $subproductoQuery->where('code', 'LIKE', '%' . $searchTerm . '%')
-                            ->orWhere('medida', 'LIKE', '%' . $searchTerm . '%');
-                    });
-            });
-        }
+        $searchService->apply($query, $filters['codigo'] ?? null);
 
         $productos = $query->with(['categoria:id,name', 'marca:id,name', 'imagenes'])
-            ->get();
+            ->alphabetical()
+            ->paginate(12)
+            ->withQueryString();
 
-        $categorias = Categoria::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
-        $marcas = MarcaProducto::select('id', 'name', 'order')->orderBy('order', 'asc')->get();
+        $categorias = Categoria::select('id', 'name')->alphabetical()->get();
+        $marcas = MarcaProducto::select('id', 'name')->alphabetical()->get();
 
         return Inertia::render('productos/productoSearch', [
-            'productos' => $productos, // Cambié 'producto' a 'productos' (plural)
+            'productos' => $productos,
             'categorias' => $categorias,
             'marcas' => $marcas,
+            'filters' => [
+                'categoria' => (string) ($filters['categoria'] ?? ''),
+                'marca' => (string) ($filters['marca'] ?? ''),
+                'codigo' => trim((string) ($filters['codigo'] ?? '')),
+            ],
         ]);
     }
 
@@ -441,7 +454,6 @@ class ProductoController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'order' => 'sometimes|string|max:255',
             'code' => 'required|string|max:255',
             'categoria_id' => 'required|exists:categorias,id',
             'marca_id' => 'nullable|sometimes|exists:marca_productos,id',
@@ -481,7 +493,6 @@ class ProductoController extends Controller
 
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'order' => 'sometimes|string|max:255',
             'code' => 'sometimes|string|max:255',
             'categoria_id' => 'sometimes|exists:categorias,id',
             'marca_id' => 'sometimes|nullable|exists:marca_productos,id',
@@ -881,7 +892,7 @@ class ProductoController extends Controller
         $productos = Producto::query()
             ->with(['categoria:id,name', 'marca:id,name'])
             ->select($queryColumns)
-            ->orderBy('order', 'asc')
+            ->alphabetical()
             ->get();
 
         $spreadsheet = new Spreadsheet();

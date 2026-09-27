@@ -13,7 +13,7 @@ class MarcaProductoController extends Controller
      */
     public function index()
     {
-        $marcas = MarcaProducto::orderBy('order', 'asc')->get();
+        $marcas = MarcaProducto::alphabetical()->get();
 
         return inertia('admin/marcasProductoAdmin', ['marcas' => $marcas]);
     }
@@ -26,7 +26,6 @@ class MarcaProductoController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'order' => 'sometimes|string|max:255',
             'name' => 'required|string|max:255',
             'image' => 'required|file|mimes:jpg,jpeg,png,webp,svg|max:2048',
         ], [
@@ -65,7 +64,6 @@ class MarcaProductoController extends Controller
 
         // Validate the request data
         $data = $request->validate([
-            'order' => 'sometimes|string|max:255',
             'name' => 'required|string|max:255',
             'image' => 'sometimes|file|mimes:jpg,jpeg,png,webp,svg|max:2048',
         ], [

@@ -50,14 +50,14 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
 
     Route::get('/', function () {
 
-        $categorias = Categoria::whereNotNull('image')->orderBy('order', 'asc')
+        $categorias = Categoria::whereNotNull('image')->alphabetical()
         ->limit(3)
         ->get();
-        $allcategorias = Categoria::orderBy('order', 'asc')->get();
-        $marcas = MarcaProducto::orderBy('order', 'asc')->get();
+        $allcategorias = Categoria::alphabetical()->get();
+        $marcas = MarcaProducto::alphabetical()->get();
         $instagram = app(InstagramFeedService::class)->getLatestPosts(8);
         $bannerPortada = BannerPortada::first();
-        $novedades = Novedades::latest()->take(3)->get();
+        $novedades = Novedades::newestFirst()->take(3)->get();
         $metadatos = Metadatos::where('title', 'Inicio')->first();
 
         return Inertia::render('home', [
@@ -101,7 +101,7 @@ Route::middleware(['shareDefaultLayoutData'])->group(function () {
 
     Route::get('/novedades', function () {
         $bannerNovedades = BannerNovedades::first();
-        $novedades = Novedades::orderBy('order', 'asc')->get();
+        $novedades = Novedades::newestFirst()->get();
         $metadatos = Metadatos::where('title', 'Novedades')->first();
 
         return Inertia::render('novedades', [
