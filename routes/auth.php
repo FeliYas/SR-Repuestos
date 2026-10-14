@@ -13,8 +13,8 @@ use App\Http\Controllers\NovedadesPrivadasController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\PedidoProductoController;
 use App\Http\Controllers\PrivadaController;
+use App\Http\Controllers\PrivateCatalogController;
 use App\Http\Controllers\SendPedidoController;
-use App\Http\Controllers\SubProductoController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -62,7 +62,15 @@ Route::middleware(['auth', 'single.user.session'])->group(function () {
         ->name('logout');
 
     Route::middleware('privada')->group(function () {
-        Route::get('privada/productos', [SubProductoController::class, 'indexPrivada'])->name('index.privada.subproductos');
+        Route::middleware('verified')->group(function () {
+            Route::get('privada/productos', [PrivateCatalogController::class, 'index'])->name('index.privada.subproductos');
+            Route::get('privada/productos/categoria/{categoria}', [PrivateCatalogController::class, 'category'])->name('privada.productos.categoria');
+            Route::get('privada/productos/categoria/{categoria}/{producto}', [PrivateCatalogController::class, 'show'])->name('privada.productos.show');
+            Route::get('privada/busqueda', [PrivateCatalogController::class, 'search'])->name('privada.productos.buscar');
+            Route::get('privada/contacto', fn (\Illuminate\Http\Request $request) => inertia('contacto', [
+                'producto' => $request->query('producto'),
+            ]))->name('privada.productos.contacto');
+        });
         Route::get('privada/carrito', [PrivadaController::class, 'carrito']);
 
         Route::get('privada/mispedidos', [PedidoController::class, 'misPedidos']);
@@ -70,8 +78,6 @@ Route::middleware(['auth', 'single.user.session'])->group(function () {
         Route::get('privada/novedades', [NovedadesPrivadasController::class, 'indexPrivada'])->name('privada.novedades');
         Route::get('privada/novedades/{id}', [NovedadesPrivadasController::class, 'showPrivada'])->name('privada.novedades.show');
     });
-
-
 
     Route::post('sendPedido', [SendPedidoController::class, 'sendReactEmail'])
         ->name('sendPedido');

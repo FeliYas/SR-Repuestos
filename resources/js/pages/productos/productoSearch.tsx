@@ -1,7 +1,8 @@
 import CatalogSidebarSection from '@/components/catalogSidebarSection';
-import { Link, router, usePage } from '@inertiajs/react';
+import ProductCard from '@/components/productCard';
+import SearchBarPrivate from '@/components/searchBarPrivate';
+import { router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import defaultPhoto from '../../../images/logos/logobetter.png';
 import DefaultLayout from '../defaultLayout';
 
 interface CatalogItem {
@@ -34,10 +35,13 @@ interface SearchPageProps {
     categorias: CatalogItem[];
     marcas: CatalogItem[];
     filters: SearchFilters;
+    privateCatalog?: boolean;
 }
 
 export default function ProductoSearch() {
-    const { productos, categorias, marcas, filters } = usePage<SearchPageProps>().props;
+    const page = usePage<SearchPageProps>();
+    const { productos, categorias, marcas, filters, privateCatalog } = page.props;
+    const searchBase = privateCatalog ? '/privada/busqueda' : '/busqueda';
     const [categoriasDropdown, setCategoriasDropdown] = useState(true);
     const [marcasDropdown, setMarcasDropdown] = useState(true);
 
@@ -51,11 +55,18 @@ export default function ProductoSearch() {
             }
         });
 
-        return `/busqueda?${params.toString()}`;
+        return `${searchBase}?${params.toString()}`;
+    };
+
+    const productHref = (producto: Product) => {
+        const categoryId = producto.categoria?.id;
+        const href = privateCatalog ? `/privada/productos/categoria/${categoryId}/${producto.id}` : `/productos/${categoryId}/${producto.id}`;
+        return privateCatalog ? `${href}?${new URLSearchParams({ back: page.url })}` : href;
     };
 
     return (
         <DefaultLayout>
+            {privateCatalog && <SearchBarPrivate />}
             <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 md:flex-row md:gap-10 md:px-6 md:py-20">
                 <aside className="flex w-full flex-col gap-6 md:w-1/4 md:gap-10">
                     <CatalogSidebarSection
@@ -89,28 +100,9 @@ export default function ProductoSearch() {
                     </div>
 
                     {productos.data.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-4 py-8 sm:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid min-w-0 grid-cols-1 gap-4 py-8 sm:grid-cols-2 lg:grid-cols-3">
                             {productos.data.map((producto) => (
-                                <Link
-                                    href={`/productos/${producto.categoria?.id}/${producto.id}`}
-                                    key={producto.id}
-                                    className="flex min-h-[360px] w-full flex-col border border-gray-200"
-                                >
-                                    <div className="h-[250px] w-full border-b border-gray-200">
-                                        <img
-                                            className="h-full w-full object-contain object-center"
-                                            src={producto.imagenes?.[0]?.image || defaultPhoto}
-                                            alt={producto.name || 'Producto'}
-                                        />
-                                    </div>
-                                    <div className="flex w-full flex-col gap-2 p-4">
-                                        <p className="text-primary-orange">
-                                            <span className="font-bold">{producto.code}</span>
-                                            {producto.marca?.name ? ` | ${producto.marca.name}` : ''}
-                                        </p>
-                                        <h2 className="font-bold text-[#74716A]">{producto.name}</h2>
-                                    </div>
-                                </Link>
+                                <ProductCard key={producto.id} producto={producto} href={productHref(producto)} />
                             ))}
                         </div>
                     ) : (

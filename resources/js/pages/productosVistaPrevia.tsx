@@ -1,10 +1,17 @@
 import SearchBar from '@/components/searchBar';
+import SearchBarPrivate from '@/components/searchBarPrivate';
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import DefaultLayout from './defaultLayout';
 
+interface Category {
+    id: number;
+    name: string;
+    image?: string;
+}
+
 export default function ProductosVistaPrevia() {
-    const { categorias } = usePage().props;
+    const { categorias, privateCatalog } = usePage<{ categorias: Category[]; privateCatalog?: boolean }>().props;
     const [isMobile, setIsMobile] = useState(false);
     const [isTablet, setIsTablet] = useState(false);
 
@@ -40,14 +47,14 @@ export default function ProductosVistaPrevia() {
                 <h2 className="absolute z-10 text-3xl font-bold text-white sm:text-4xl">Productos</h2>
             </div>
 
-            <SearchBar />
+            {privateCatalog ? <SearchBarPrivate /> : <SearchBar />}
 
             <div className="w-full bg-white py-10 sm:py-16 md:py-20">
                 <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-4 sm:gap-8 md:gap-10">
                     <div className={`flex w-full ${isMobile ? 'flex-col' : 'flex-row flex-wrap'} gap-4`}>
                         {categorias.map((categoria) => (
                             <Link
-                                href={`/productos/${categoria?.id}`}
+                                href={privateCatalog ? `/privada/productos/categoria/${categoria?.id}` : `/productos/${categoria?.id}`}
                                 key={categoria?.id}
                                 style={{ backgroundImage: `url(${categoria?.image})` }}
                                 className={`flex items-end justify-center bg-cover bg-center bg-no-repeat py-6 md:py-8 ${

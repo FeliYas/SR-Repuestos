@@ -11,11 +11,12 @@ export default function NovedadAdminRow({ novedad }) {
 
     const [text, setText] = useState(novedad?.text || '');
 
-    const updateForm = useForm({
+    const updateForm = useForm<{ title: string; type: string; text: string; id: number; image: File | null }>({
         title: novedad?.title,
         type: novedad?.type,
         text: novedad?.text,
         id: novedad?.id,
+        image: null,
     });
 
     useEffect(() => {
@@ -31,8 +32,7 @@ export default function NovedadAdminRow({ novedad }) {
                 setEdit(false);
             },
             onError: (errors) => {
-                toast.error('Error al actualizar novedad');
-                console.log(errors);
+                toast.error(Object.values(errors)[0] || 'Error al actualizar novedad');
             },
         });
     };
@@ -85,6 +85,13 @@ export default function NovedadAdminRow({ novedad }) {
                         <form onSubmit={handleUpdate} method="POST" className="text-black">
                             <div className="w-[500px] rounded-md bg-white p-4">
                                 <h2 className="mb-4 text-2xl font-semibold">Actualizar Novedad</h2>
+                                {Object.keys(updateForm.errors).length > 0 && (
+                                    <div role="alert" className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
+                                        {Object.values(updateForm.errors).map((error, index) => (
+                                            <p key={index}>{error}</p>
+                                        ))}
+                                    </div>
+                                )}
                                 <div className="flex flex-col gap-4">
                                     <label htmlFor="type">
                                         Tipo <span className="text-red-500">*</span>
@@ -94,6 +101,7 @@ export default function NovedadAdminRow({ novedad }) {
                                         type="text"
                                         name="type"
                                         id="type"
+                                        value={updateForm.data.type || ''}
                                         onChange={(e) => updateForm.setData('type', e.target.value)}
                                     />
                                     <label htmlFor="nombree">
@@ -104,6 +112,7 @@ export default function NovedadAdminRow({ novedad }) {
                                         type="text"
                                         name="nombree"
                                         id="nombree"
+                                        value={updateForm.data.title || ''}
                                         onChange={(e) => updateForm.setData('title', e.target.value)}
                                     />
                                     <label htmlFor="text">
@@ -116,9 +125,10 @@ export default function NovedadAdminRow({ novedad }) {
                                     <div className="flex flex-row">
                                         <input
                                             type="file"
+                                            accept="image/*"
                                             name="imagen"
                                             id="imagenn"
-                                            onChange={(e) => updateForm.setData('image', e.target.files[0])}
+                                            onChange={(e) => updateForm.setData('image', e.target.files?.[0] ?? null)}
                                             className="hidden"
                                         />
                                         <label

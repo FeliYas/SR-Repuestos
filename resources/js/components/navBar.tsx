@@ -8,6 +8,7 @@ export default function NavBar() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const { ziggy, auth, provincias, logos, flash } = usePage().props;
+    const isNewsDetail = ziggy.location.includes('novedades/');
     const [signupView, setSignupView] = useState(false);
     const [loginView, setLoginView] = useState(false);
 
@@ -135,11 +136,15 @@ export default function NavBar() {
     return (
         <div
             className={`fixed top-0 z-50 h-[70px] w-full transition-all duration-300 md:h-[100px] ${
-                ziggy.location.includes('productos/') || ziggy.location.includes('busqueda') || ziggy.location.includes('privada')
+                ziggy.location.includes('productos/') || ziggy.location.includes('busqueda') || ziggy.location.includes('privada') || isNewsDetail
                     ? 'sticky shadow-md'
                     : 'fixed'
             } ${
-                scrolled || ziggy.location.includes('productos/') || ziggy.location.includes('busqueda') || ziggy.location.includes('privada')
+                scrolled ||
+                ziggy.location.includes('productos/') ||
+                ziggy.location.includes('busqueda') ||
+                ziggy.location.includes('privada') ||
+                isNewsDetail
                     ? 'bg-white shadow-md'
                     : 'bg-transparent'
             }`}
@@ -161,7 +166,8 @@ export default function NavBar() {
                                           scrolled ||
                                           ziggy.location.includes('productos/') ||
                                           ziggy.location.includes('privada') ||
-                                          ziggy.location.includes('busqueda')
+                                          ziggy.location.includes('busqueda') ||
+                                          isNewsDetail
                                               ? 'text-black hover:text-[#F2C94C]'
                                               : 'text-white hover:text-[#F2C94C]'
                                       }`}
@@ -177,7 +183,8 @@ export default function NavBar() {
                                           scrolled ||
                                           ziggy.location.includes('productos/') ||
                                           ziggy.location.includes('privada') ||
-                                          ziggy.location.includes('busqueda')
+                                          ziggy.location.includes('busqueda') ||
+                                          isNewsDetail
                                               ? 'text-black hover:text-[#F2C94C]'
                                               : 'text-white hover:text-[#F2C94C]'
                                       }`}
@@ -195,7 +202,8 @@ export default function NavBar() {
                                 scrolled ||
                                 ziggy.location.includes('productos/') ||
                                 ziggy.location.includes('privada') ||
-                                ziggy.location.includes('busqueda')
+                                ziggy.location.includes('busqueda') ||
+                                isNewsDetail
                                     ? 'border border-black text-black hover:bg-black hover:text-white'
                                     : 'border border-white text-white hover:bg-white hover:text-black'
                             } transition-colors ${auth.user ? 'bg-primary-orange text-white' : ''}`}
@@ -456,7 +464,8 @@ export default function NavBar() {
                             scrolled ||
                             ziggy.location.includes('productos/') ||
                             ziggy.location.includes('privada') ||
-                            ziggy.location.includes('busqueda')
+                            ziggy.location.includes('busqueda') ||
+                            isNewsDetail
                                 ? 'text-black'
                                 : 'text-white'
                         }`}

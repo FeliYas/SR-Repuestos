@@ -4,40 +4,32 @@ import toast from 'react-hot-toast';
 import { useCart } from 'react-use-cart';
 import MiPedidoTemplate from './miPedidoTemplate';
 
-export default function MispedidosRow({ pedido }) {
+interface PedidoResumen {
+    id: number;
+    created_at?: string;
+    entregado?: number | boolean;
+    total?: number | string;
+    productos: Array<{ subproducto_id: number; cantidad: number }>;
+}
+
+export default function MispedidosRow({ pedido }: { pedido: PedidoResumen }) {
     const { addItem } = useCart();
-    const { subproductos, auth } = usePage().props;
+    const { subproductos } = usePage<{ subproductos: Array<{ id: number; price: number | null; [key: string]: unknown }> }>().props;
     const [pedidoView, setPedidoView] = useState(false);
 
-    const { user } = auth;
-
-    const handlePrice = (subProducto) => {
-        let price = 0;
-        if (user.lista == '1') {
-            price = subProducto?.price_mayorista;
-        }
-        if (user.lista == '2') {
-            price = subProducto?.price_minorista;
-        }
-        if (user.lista == '3') {
-            price = subProducto?.price_dist;
-        }
-        if (user.lista == '4') {
-            price = subProducto?.price_lista_4;
-        }
-
-        return Number(price);
-    };
-
     const addMultipleItems = () => {
+        let added = 0;
         pedido?.productos.forEach((producto) => {
-            addItem({
-                ...subproductos?.find((sub) => sub.id == producto.subproducto_id),
-                quantity: producto?.cantidad,
-                price: handlePrice(subproductos?.find((sub) => sub.id == producto.subproducto_id)),
-            });
+            const subproducto = subproductos?.find((sub) => sub.id == producto.subproducto_id);
+            if (!subproducto?.price || Number(subproducto.price) <= 0) return;
+            addItem(
+                { ...subproducto, id: subproducto.id as unknown as string, price: Number(subproducto.price) },
+                Math.max(1, Number(producto?.cantidad) || 1),
+            );
+            added++;
         });
-        toast.success('Productos agregados al carrito');
+        if (added) toast.success('Productos agregados al carrito');
+        else toast.error('Los productos de este pedido no tienen un precio disponible.');
     };
 
     return (

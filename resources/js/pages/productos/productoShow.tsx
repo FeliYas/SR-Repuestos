@@ -1,4 +1,6 @@
 import CatalogSidebarSection from '@/components/catalogSidebarSection';
+import PrivateSubproductActions from '@/components/privateSubproductActions';
+import ProductCard from '@/components/productCard';
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import defaultPhoto from '../../../images/defaultPhoto.png';
@@ -10,12 +12,15 @@ interface CatalogItem {
 }
 
 interface SubproductoItem {
+    id: number;
     image?: string;
     code?: string;
     description?: string;
     medida?: string;
     componente?: string;
     caracteristicas?: string;
+    price?: number | null;
+    producto?: { name?: string; marca?: { name?: string } };
 }
 
 interface RelatedProduct {
@@ -46,11 +51,14 @@ interface ProductoShowPageProps {
     categorias?: CatalogItem[];
     subproductos?: SubproductoItem[];
     productosRelacionados?: RelatedProduct[];
+    privateCatalog?: boolean;
+    backUrl?: string;
 }
 
 export default function ProductoShow() {
-    const { producto, categorias, subproductos, productosRelacionados } = usePage<ProductoShowPageProps>().props;
-
+    const { producto, categorias, subproductos, productosRelacionados, privateCatalog, backUrl } = usePage<ProductoShowPageProps>().props;
+    const catalogBase = privateCatalog ? '/privada/productos' : '/productos';
+    const categoryHref = privateCatalog ? `/privada/productos/categoria/${producto?.categoria?.id}` : `/productos/${producto?.categoria?.id}`;
 
     const [categoriasDropdown, setCategoriasDropdown] = useState(false);
     const [currentImage, setCurrentImage] = useState<string>(producto?.imagenes?.[0]?.image ?? defaultPhoto);
@@ -59,7 +67,18 @@ export default function ProductoShow() {
     const modalRef = useRef<HTMLDivElement | null>(null);
 
     const hasValue = (value: unknown) => value !== null && value !== undefined && String(value).trim() !== '';
-    const isRepuestosFrenos = String(producto?.categoria?.name ?? '').trim().toLowerCase() === 'repuestos y frenos';
+    const isRepuestosFrenos =
+        String(producto?.categoria?.name ?? '')
+            .trim()
+            .toLowerCase() === 'repuestos y frenos';
+    const privateGridColumns = isRepuestosFrenos
+        ? 'lg:grid-cols-[64px_60px_minmax(90px,1fr)_68px_minmax(85px,1fr)_122px_156px]'
+        : 'lg:grid-cols-[64px_60px_minmax(90px,1fr)_68px_60px_minmax(85px,1fr)_122px_156px]';
+    const fieldLabelVisibility = privateCatalog ? 'lg:hidden' : 'md:hidden';
+
+    useEffect(() => {
+        setCurrentImage(producto?.imagenes?.[0]?.image ?? defaultPhoto);
+    }, [producto?.id]);
 
     useEffect(() => {
         if (selectedSubproductoImage) {
@@ -68,19 +87,19 @@ export default function ProductoShow() {
                     setSelectedSubproductoImage(null);
                 }
             };
-            
+
             const handleEscKey = (event: KeyboardEvent) => {
                 if (event.key === 'Escape') {
                     setSelectedSubproductoImage(null);
                 }
             };
-            
+
             document.addEventListener('mousedown', handleClickOutside);
             document.addEventListener('keydown', handleEscKey);
-            
+
             // Prevenir scroll del body cuando el modal está abierto
             document.body.style.overflow = 'hidden';
-            
+
             return () => {
                 document.removeEventListener('mousedown', handleClickOutside);
                 document.removeEventListener('keydown', handleEscKey);
@@ -97,21 +116,22 @@ export default function ProductoShow() {
     return (
         <DefaultLayout>
             <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 md:flex-row md:gap-10 md:px-6 md:py-30">
-                {/* breadcrumbs - responsive */}
-                <div className="z-40 mb-4 w-[1200px] text-[12px] text-[#74716A] md:absolute md:top-32 md:mb-0">
-                    <Link className="font-bold" href={'/'}>
-                        Inicio
-                    </Link>{' '}
-                    /{' '}
-                    <Link className="font-bold" href={'/productos'}>
-                        Productos
-                    </Link>{' '}
-                    /{' '}
-                    <Link className="font-bold" href={`/productos/${producto?.categoria?.id}`}>
-                        {categorias?.find((cat) => cat.id == producto?.categoria?.id)?.name}
-                    </Link>{' '}
-                    / <Link href={`/productos/${producto?.categoria?.id}/${producto?.id}`}>{producto?.name}</Link>
-                </div>
+                {!privateCatalog && (
+                    <div className="z-40 mb-4 w-full text-[12px] text-[#74716A] md:absolute md:top-32 md:mb-0 md:w-auto">
+                        <Link className="font-bold" href="/">
+                            Inicio
+                        </Link>{' '}
+                        /{' '}
+                        <Link className="font-bold" href={catalogBase}>
+                            Productos
+                        </Link>{' '}
+                        /{' '}
+                        <Link className="font-bold" href={categoryHref}>
+                            {categorias?.find((cat) => cat.id == producto?.categoria?.id)?.name}
+                        </Link>{' '}
+                        / <span>{producto?.name}</span>
+                    </div>
+                )}
 
                 {/* sidebar - responsive */}
                 <div className="mb-6 flex w-full flex-col gap-6 md:mb-0 md:w-1/4 md:gap-10">
@@ -123,7 +143,7 @@ export default function ProductoShow() {
                         onToggle={() => setCategoriasDropdown(!categoriasDropdown)}
                         searchPlaceholder="Buscar categoría"
                         emptyMessage="Sin categorías coincidentes."
-                        getHref={(categoria) => `/productos/${categoria.id}`}
+                        getHref={(categoria) => (privateCatalog ? `/privada/productos/categoria/${categoria.id}` : `/productos/${categoria.id}`)}
                     />
                 </div>
 
@@ -208,7 +228,7 @@ export default function ProductoShow() {
                             </div>
                             <div className="flex flex-col gap-2">
                                 <Link
-                                    href={'/contacto'}
+                                    href={privateCatalog ? '/privada/contacto' : '/contacto'}
                                     method="get"
                                     data={{ producto: producto?.name }}
                                     className="bg-primary-orange flex h-[41px] w-full items-center justify-center font-bold text-white"
@@ -222,9 +242,7 @@ export default function ProductoShow() {
                     {/* subproducts table */}
                     <div className="mt-16 flex flex-col md:mt-30">
                         <div
-                            className={`hidden h-[52px] items-center bg-[#F5F5F5] px-4 md:grid ${
-                                isRepuestosFrenos ? 'grid-cols-5' : 'grid-cols-6'
-                            }`}
+                            className={`hidden min-h-[52px] items-center gap-2 bg-[#F5F5F5] px-4 text-sm ${privateCatalog ? `lg:grid lg:gap-1 lg:px-2 xl:gap-2 xl:px-4 ${privateGridColumns}` : `md:grid ${isRepuestosFrenos ? 'md:grid-cols-5' : 'md:grid-cols-6'}`}`}
                         >
                             <p></p>
                             <p>Código</p>
@@ -232,17 +250,17 @@ export default function ProductoShow() {
                             <p>Medida</p>
                             {!isRepuestosFrenos && <p>Largo total</p>}
                             <p>Características</p>
+                            {privateCatalog && <p>Precio</p>}
+                            {privateCatalog && <p>Compra</p>}
                         </div>
                         {subproductos?.map((subproducto, index) => (
                             <div
-                                key={index}
-                                className={`flex flex-col border-b border-[#E0E0E0] py-3 text-[#74716A] md:grid md:min-h-[52px] md:items-center md:px-4 md:py-0 ${
-                                    isRepuestosFrenos ? 'md:grid-cols-5' : 'md:grid-cols-6'
-                                }`}
+                                key={subproducto.id ?? index}
+                                className={`flex min-w-0 flex-col gap-2 border-b border-[#E0E0E0] py-3 text-sm text-[#74716A] ${privateCatalog ? `lg:grid lg:min-h-[72px] lg:items-center lg:gap-1 lg:px-2 xl:gap-2 xl:px-4 ${privateGridColumns}` : `md:grid md:min-h-[52px] md:items-center md:gap-2 md:px-4 ${isRepuestosFrenos ? 'md:grid-cols-5' : 'md:grid-cols-6'}`}`}
                             >
-                                <button 
-                                    onClick={() => openImageModal(subproducto)} 
-                                    className="my-2 h-[80px] w-[80px] rounded-sm border transition-all hover:border-primary-orange hover:shadow-md"
+                                <button
+                                    onClick={() => openImageModal(subproducto)}
+                                    className={`hover:border-primary-orange my-2 rounded-sm border transition-all hover:shadow-md ${privateCatalog ? 'h-16 w-16' : 'h-[80px] w-[80px]'}`}
                                 >
                                     <img
                                         className="h-full w-full rounded-sm object-contain"
@@ -253,28 +271,43 @@ export default function ProductoShow() {
                                         alt={`${subproducto?.description || 'Subproducto'}`}
                                     />
                                 </button>
-                                <div className="flex justify-between md:block">
-                                    <p className="font-semibold md:hidden md:font-normal">Código:</p>
+                                <div className="flex min-w-0 justify-between gap-2 break-words lg:block">
+                                    <p className={`font-semibold ${fieldLabelVisibility}`}>Código:</p>
                                     <p>{subproducto?.code}</p>
                                 </div>
-                                <div className="flex justify-between md:block">
-                                    <p className="font-semibold md:hidden md:font-normal">Descripcion:</p>
+                                <div className="flex min-w-0 justify-between gap-2 break-words lg:block">
+                                    <p className={`font-semibold ${fieldLabelVisibility}`}>Descripcion:</p>
                                     <p>{subproducto?.description}</p>
                                 </div>
-                                <div className="flex justify-between md:block">
-                                    <p className="font-semibold md:hidden md:font-normal">Medida:</p>
+                                <div className="flex min-w-0 justify-between gap-2 break-words lg:block">
+                                    <p className={`font-semibold ${fieldLabelVisibility}`}>Medida:</p>
                                     <p>{subproducto?.medida}</p>
                                 </div>
                                 {!isRepuestosFrenos && (
-                                    <div className="flex justify-between md:block">
-                                        <p className="font-semibold md:hidden md:font-normal">Largo total:</p>
+                                    <div className="flex min-w-0 justify-between gap-2 break-words lg:block">
+                                        <p className={`font-semibold ${fieldLabelVisibility}`}>Largo total:</p>
                                         <p>{subproducto?.componente}</p>
                                     </div>
                                 )}
-                                <div className="flex justify-between md:block">
-                                    <p className="font-semibold md:hidden md:font-normal">Características:</p>
+                                <div className="flex min-w-0 justify-between gap-2 break-words lg:block">
+                                    <p className={`font-semibold ${fieldLabelVisibility}`}>Características:</p>
                                     <p>{subproducto?.caracteristicas}</p>
                                 </div>
+                                {privateCatalog && (
+                                    <div className="flex min-w-0 justify-between gap-2 lg:block">
+                                        <p className="font-semibold lg:hidden">Precio:</p>
+                                        <p className="font-semibold whitespace-nowrap text-[#202020]">
+                                            {subproducto.price != null && subproducto.price > 0
+                                                ? `$ ${Number(subproducto.price).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                : '—'}
+                                        </p>
+                                    </div>
+                                )}
+                                {privateCatalog && (
+                                    <div className="flex justify-end lg:justify-start">
+                                        <PrivateSubproductActions subproducto={subproducto} />
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -291,30 +324,15 @@ export default function ProductoShow() {
                                         : `/productos/${relacionado?.id}`;
 
                                     return (
-                                        <Link
-                                            href={relatedHref}
+                                        <ProductCard
                                             key={relacionado.id}
-                                            className="flex h-auto w-full flex-col border border-gray-200 sm:h-[400px]"
-                                        >
-                                            <div className="h-[200px] w-full border-b border-gray-200 sm:h-[287px]">
-                                                <img
-                                                    className="h-full w-full object-cover object-center"
-                                                    src={relacionado?.imagenes?.[0]?.image || defaultPhoto}
-                                                    alt={relacionado?.name}
-                                                    onError={(e) => {
-                                                        e.currentTarget.src = defaultPhoto;
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className="flex w-full flex-col gap-2 p-4">
-                                                <p className="text-primary-orange">
-                                                    {" "}
-                                                    <span className="font-bold">{relacionado?.code}</span> | {" "}
-                                                    {relacionado?.marca?.name?.toUpperCase()} {" "}
-                                                </p>
-                                                <h2 className="text-[18px] font-bold text-[#202020] md:text-[20px]">{relacionado?.name}</h2>
-                                            </div>
-                                        </Link>
+                                            producto={relacionado}
+                                            href={
+                                                privateCatalog
+                                                    ? `/privada/productos/categoria/${relatedCategoryId}/${relacionado.id}?${new URLSearchParams({ back: backUrl || categoryHref })}`
+                                                    : relatedHref
+                                            }
+                                        />
                                     );
                                 })}
                             </div>
@@ -330,21 +348,18 @@ export default function ProductoShow() {
             {/* Modal de imagen mejorado */}
             {selectedSubproductoImage && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-                    <div 
-                        ref={modalRef} 
-                        className="relative flex h-[90vh] w-[90vw] max-w-[1200px] items-center justify-center p-4"
-                    >
+                    <div ref={modalRef} className="relative flex h-[90vh] w-[90vw] max-w-[1200px] items-center justify-center p-4">
                         {/* Botón de cerrar */}
                         <button
                             onClick={() => setSelectedSubproductoImage(null)}
-                            className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-black shadow-lg transition-all hover:bg-white hover:scale-110"
+                            className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-black shadow-lg transition-all hover:scale-110 hover:bg-white"
                             aria-label="Cerrar imagen"
                         >
                             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
-                        
+
                         {/* Contenedor de imagen con aspect ratio mantenido */}
                         <div className="flex h-full w-full items-center justify-center">
                             <img
@@ -356,7 +371,7 @@ export default function ProductoShow() {
                                 }}
                             />
                         </div>
-                        
+
                         {/* Texto informativo */}
                         <p className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-4 py-2 text-sm text-gray-700">
                             Presiona ESC o haz clic fuera para cerrar

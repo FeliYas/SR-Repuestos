@@ -10,7 +10,7 @@ export default function NovedadPrivadaAdminRow({ novedadPrivada }) {
     const [edit, setEdit] = useState(false);
     const [text, setText] = useState(novedadPrivada?.text || '');
 
-    const updateForm = useForm({
+    const updateForm = useForm<{ title: string; type: string; text: string; id: number; image: File | null }>({
         title: novedadPrivada?.title,
         type: novedadPrivada?.type,
         text: novedadPrivada?.text,
@@ -31,8 +31,7 @@ export default function NovedadPrivadaAdminRow({ novedadPrivada }) {
                 setEdit(false);
             },
             onError: (errors) => {
-                toast.error('Error al actualizar novedad privada');
-                console.log(errors);
+                toast.error(Object.values(errors)[0] || 'Error al actualizar novedad privada');
             },
         });
     };
@@ -66,16 +65,10 @@ export default function NovedadPrivadaAdminRow({ novedadPrivada }) {
 
             <td className="w-[140px] text-center">
                 <div className="flex flex-row justify-center gap-3">
-                    <button
-                        onClick={() => setEdit(true)}
-                        className="h-10 w-10 rounded-md border border-blue-500 px-2 py-1 text-white"
-                    >
+                    <button onClick={() => setEdit(true)} className="h-10 w-10 rounded-md border border-blue-500 px-2 py-1 text-white">
                         <FontAwesomeIcon icon={faPen} size="lg" color="#3b82f6" />
                     </button>
-                    <button
-                        onClick={deleteNovedadPrivada}
-                        className="h-10 w-10 rounded-md border border-red-500 px-2 py-1 text-white"
-                    >
+                    <button onClick={deleteNovedadPrivada} className="h-10 w-10 rounded-md border border-red-500 px-2 py-1 text-white">
                         <FontAwesomeIcon icon={faTrash} size="lg" color="#fb2c36" />
                     </button>
                 </div>
@@ -124,9 +117,10 @@ export default function NovedadPrivadaAdminRow({ novedadPrivada }) {
                                     <div className="flex flex-row">
                                         <input
                                             type="file"
+                                            accept="image/*"
                                             name="imagen"
                                             id="imagenn"
-                                            onChange={(e) => updateForm.setData('image', e.target.files[0])}
+                                            onChange={(e) => updateForm.setData('image', e.target.files?.[0] ?? null)}
                                             className="hidden"
                                         />
                                         <label

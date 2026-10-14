@@ -1,23 +1,23 @@
-import PedidoTemplate from "@/components/pedidoTemplate";
-import SubproductosPrivadaRow from "@/components/subproductosPrivadaRow";
-import { Link, useForm, usePage } from "@inertiajs/react";
-import axios from "axios";
-import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import ReactDOMServer from "react-dom/server";
-import { useCart } from "react-use-cart";
-import DefaultLayout from "../defaultLayout";
+import PedidoTemplate from '@/components/pedidoTemplate';
+import SubproductosPrivadaRow from '@/components/subproductosPrivadaRow';
+import { Link, useForm, usePage } from '@inertiajs/react';
+import axios from 'axios';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import ReactDOMServer from 'react-dom/server';
+import { useCart } from 'react-use-cart';
+import DefaultLayout from '../defaultLayout';
 
 export default function Carrito() {
     const { informacion, auth } = usePage().props;
     const { user } = auth;
     const { items, emptyCart } = useCart();
 
-    const [selected, setSelected] = useState("retiro");
+    const [selected, setSelected] = useState('retiro');
     const [subtotal, setSubtotal] = useState();
     const [iva, setIva] = useState();
     const [totalFinal, setTotalFinal] = useState();
-    const [tipo_entrega, setTipo_entrega] = useState("retiro cliente");
+    const [tipo_entrega, setTipo_entrega] = useState('retiro cliente');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(false);
     const [succ, setSucc] = useState(false);
@@ -48,7 +48,7 @@ export default function Carrito() {
     });
 
     const emailForm = useForm({
-        html: "",
+        html: '',
     });
 
     const handleSubmit = async (e) => {
@@ -57,13 +57,13 @@ export default function Carrito() {
         setError(false);
 
         try {
-            pedidoForm.post(route("pedido.store"), {
+            pedidoForm.post(route('pedido.store'), {
                 preserveScroll: true,
                 onSuccess: async (response) => {
                     const pedidoId = response.props.flash.pedido_id;
 
                     const productPromises = items.map((prod) => {
-                        return axios.post(route("pedidoProducto.store"), {
+                        return axios.post(route('pedidoProducto.store'), {
                             pedido_id: Number(pedidoId),
                             subproducto_id: prod.id,
                             cantidad: prod.quantity,
@@ -77,10 +77,10 @@ export default function Carrito() {
                         <PedidoTemplate pedido={{ ...pedidoForm.data, id: pedidoId }} user={user} productos={items} />,
                     );
 
-                    emailForm.setData("html", htmlContent);
+                    emailForm.setData('html', htmlContent);
 
                     await axios
-                        .post(route("sendPedido"), {
+                        .post(route('sendPedido'), {
                             html: htmlContent,
                             attachments: pedidoForm.data.archivo,
                         })
@@ -116,7 +116,7 @@ export default function Carrito() {
 
     return (
         <DefaultLayout>
-            <div className="mx-auto grid w-[1200px] grid-cols-2 gap-10 py-20 max-sm:px-4">
+            <div className="mx-auto grid w-full max-w-[1200px] min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-10 px-4 py-20">
                 <AnimatePresence>
                     {error && (
                         <motion.div
@@ -151,9 +151,9 @@ export default function Carrito() {
                     )}
                 </AnimatePresence>
 
-                <div className="col-span-2 grid w-full items-start">
-                    <div className="w-full">
-                        <div className="grid h-[52px] grid-cols-8 items-center bg-[#F5F5F5]">
+                <div className="col-span-2 grid w-full min-w-0 items-start">
+                    <div className="w-full min-w-0 overflow-x-auto">
+                        <div className="grid h-[52px] min-w-[850px] grid-cols-8 items-center gap-3 bg-[#F5F5F5]">
                             <p></p>
                             <p>Código</p>
                             <p>Marca</p>
@@ -197,17 +197,17 @@ export default function Carrito() {
                         <div
                             className="flex cursor-pointer items-center justify-between rounded-lg pl-3"
                             onClick={() => {
-                                setSelected("retiro");
-                                setTipo_entrega("retiro cliente");
+                                setSelected('retiro');
+                                setTipo_entrega('retiro cliente');
                             }}
                         >
                             <div className="flex items-center gap-3">
                                 <div
                                     className={`h-5 w-5 rounded-full border-2 ${
-                                        selected === "retiro" ? "border-primary-orange flex items-center justify-center" : "border-gray-400"
+                                        selected === 'retiro' ? 'border-primary-orange flex items-center justify-center' : 'border-gray-400'
                                     }`}
                                 >
-                                    {selected === "retiro" && <div className="bg-primary-orange h-[10px] w-[10px] rounded-full"></div>}
+                                    {selected === 'retiro' && <div className="bg-primary-orange h-[10px] w-[10px] rounded-full"></div>}
                                 </div>
                                 <label className="cursor-pointer">Retiro cliente</label>
                             </div>
@@ -216,19 +216,19 @@ export default function Carrito() {
                         <div
                             className="flex cursor-pointer items-center justify-between rounded-lg pl-3"
                             onClick={() => {
-                                setSelected("reparto SR Repuestos");
-                                setTipo_entrega("reparto SR Repuestos");
+                                setSelected('reparto SR Repuestos');
+                                setTipo_entrega('reparto SR Repuestos');
                             }}
                         >
                             <div className="flex items-center gap-3">
                                 <div
                                     className={`h-5 w-5 rounded-full border-2 ${
-                                        selected === "reparto SR Repuestos"
-                                            ? "border-primary-orange flex items-center justify-center"
-                                            : "border-gray-400"
+                                        selected === 'reparto SR Repuestos'
+                                            ? 'border-primary-orange flex items-center justify-center'
+                                            : 'border-gray-400'
                                     }`}
                                 >
-                                    {selected === "reparto SR Repuestos" && <div className="bg-primary-orange h-[10px] w-[10px] rounded-full"></div>}
+                                    {selected === 'reparto SR Repuestos' && <div className="bg-primary-orange h-[10px] w-[10px] rounded-full"></div>}
                                 </div>
                                 <label className="cursor-pointer">Reparto SR Repuestos</label>
                             </div>
@@ -237,17 +237,17 @@ export default function Carrito() {
                         <div
                             className="flex cursor-pointer items-center rounded-lg pl-3"
                             onClick={() => {
-                                setSelected("acon");
-                                setTipo_entrega("A Convenir");
+                                setSelected('acon');
+                                setTipo_entrega('A Convenir');
                             }}
                         >
                             <div className="flex items-center gap-3">
                                 <div
                                     className={`h-5 w-5 rounded-full border-2 ${
-                                        selected === "acon" ? "border-primary-orange flex items-center justify-center" : "border-gray-400"
+                                        selected === 'acon' ? 'border-primary-orange flex items-center justify-center' : 'border-gray-400'
                                     }`}
                                 >
-                                    {selected === "acon" && <div className="bg-primary-orange h-[10px] w-[10px] rounded-full"></div>}
+                                    {selected === 'acon' && <div className="bg-primary-orange h-[10px] w-[10px] rounded-full"></div>}
                                 </div>
                                 <label className="cursor-pointer">A Convenir</label>
                             </div>
@@ -261,7 +261,7 @@ export default function Carrito() {
                     </div>
                     <textarea
                         onChange={(e) => {
-                            pedidoForm.setData("mensaje", e.target.value);
+                            pedidoForm.setData('mensaje', e.target.value);
                         }}
                         className="h-[222px] w-full border p-3"
                         rows={10}
@@ -278,8 +278,8 @@ export default function Carrito() {
                         <div className="flex w-full flex-row justify-between">
                             <p>Subtotal</p>
                             <p>
-                                ${" "}
-                                {Number(subtotal)?.toLocaleString("es-AR", {
+                                ${' '}
+                                {Number(subtotal)?.toLocaleString('es-AR', {
                                     minimumFractionDigits: 2,
                                 })}
                             </p>
@@ -288,8 +288,8 @@ export default function Carrito() {
                         <div className="flex w-full flex-row justify-between">
                             <p>IVA 21%</p>
                             <p>
-                                ${" "}
-                                {Number(iva)?.toLocaleString("es-AR", {
+                                ${' '}
+                                {Number(iva)?.toLocaleString('es-AR', {
                                     minimumFractionDigits: 2,
                                 })}
                             </p>
@@ -297,11 +297,11 @@ export default function Carrito() {
                     </div>
                     <div className="flex flex-row justify-between p-3 text-[#74716A]">
                         <p className="text-2xl font-medium">
-                            Total <span className="text-base">{"(IVA incluido)"}</span>
+                            Total <span className="text-base">{'(IVA incluido)'}</span>
                         </p>
                         <p className="text-2xl">
-                            ${" "}
-                            {Number(totalFinal)?.toLocaleString("es-AR", {
+                            ${' '}
+                            {Number(totalFinal)?.toLocaleString('es-AR', {
                                 minimumFractionDigits: 2,
                             })}
                         </p>
@@ -323,7 +323,7 @@ export default function Carrito() {
                             id="fileInput"
                             className="hidden"
                             onChange={(e) => {
-                                pedidoForm.setData("archivo", e.target.files[0]);
+                                pedidoForm.setData('archivo', e.target.files[0]);
                             }}
                         />
                     </div>
@@ -339,9 +339,9 @@ export default function Carrito() {
                     </Link>
                     <button
                         onClick={handleSubmit}
-                        className={`h-[47px] w-full text-white transition-transform hover:scale-95 ${isSubmitting ? "bg-gray-400" : "bg-primary-orange"}`}
+                        className={`h-[47px] w-full text-white transition-transform hover:scale-95 ${isSubmitting ? 'bg-gray-400' : 'bg-primary-orange'}`}
                     >
-                        {isSubmitting ? "Enviando pedido..." : "REALIZAR PEDIDO"}
+                        {isSubmitting ? 'Enviando pedido...' : 'REALIZAR PEDIDO'}
                     </button>
                 </div>
             </div>

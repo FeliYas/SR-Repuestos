@@ -1,8 +1,16 @@
 import { useForm, usePage } from '@inertiajs/react';
 import { useEffect } from 'react';
 
+interface PrivateSearchProps {
+    [key: string]: unknown;
+    categorias?: Array<{ id: number; name: string }>;
+    allcategorias?: Array<{ id: number; name: string }>;
+    marcas?: Array<{ id: number; name: string }>;
+    filters?: { categoria?: string; marca?: string; codigo?: string };
+}
+
 export default function SearchBarPrivate() {
-    const { categorias, marcas, filters } = usePage().props;
+    const { categorias, allcategorias, marcas, filters } = usePage<PrivateSearchProps>().props;
 
     const { data, setData, get, processing } = useForm({
         categoria: filters?.categoria ?? '',
@@ -18,21 +26,21 @@ export default function SearchBarPrivate() {
         });
     }, [filters?.categoria, filters?.marca, filters?.codigo]);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        get(route('index.privada.subproductos'), {
+        get(route('privada.productos.buscar'), {
             preserveState: true,
             preserveScroll: true,
         });
     };
 
     return (
-        <div className="bg-primary-orange h-[147px] w-full">
+        <div className="bg-primary-orange w-full p-4 md:py-10">
             <div className="mx-auto flex h-full max-w-[1200px] items-center justify-center">
-                <form onSubmit={handleSubmit} className="flex h-full w-full flex-row items-center gap-4">
+                <form onSubmit={handleSubmit} className="flex h-full w-full flex-col items-center gap-4 md:flex-row">
                     <select value={data.categoria} onChange={(e) => setData('categoria', e.target.value)} className="h-[55px] w-full bg-white pl-3">
                         <option value="">Todas las categorías</option>
-                        {categorias?.map((categoria) => (
+                        {(allcategorias ?? categorias)?.map((categoria) => (
                             <option key={categoria.id} value={categoria.id}>
                                 {categoria.name}
                             </option>
@@ -56,7 +64,11 @@ export default function SearchBarPrivate() {
                         placeholder="Código o nombre de producto"
                     />
 
-                    <button type="submit" disabled={processing} className="h-[55px] min-w-[184px] bg-black text-white disabled:opacity-50">
+                    <button
+                        type="submit"
+                        disabled={processing}
+                        className="h-[55px] w-full bg-black text-white disabled:opacity-50 md:w-auto md:min-w-[184px]"
+                    >
                         {processing ? 'Buscando...' : 'Buscar'}
                     </button>
                 </form>

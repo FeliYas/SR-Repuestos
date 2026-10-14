@@ -1,5 +1,4 @@
-import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import NewsCard from '@/components/newsCard';
 import { Head, Link, usePage } from '@inertiajs/react';
 import DefaultLayout from './defaultLayout';
 
@@ -33,28 +32,8 @@ export default function Novedades() {
                 <div className="mx-auto w-full max-w-[1200px] px-4 md:px-0">
                     {/* Cards grid - responsive layout */}
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {novedades.map((novedad, index) => (
-                            <Link key={index} href={`/novedades/${novedad?.id}`} className="flex h-fit w-full flex-col gap-2 border border-gray-300">
-                                <div className="h-[474px] w-full overflow-hidden">
-                                    <img className="h-full w-full object-cover" src={novedad?.image} alt="" />
-                                </div>
-                                <div className="flex h-full flex-col justify-between p-3">
-                                    <div className="flex flex-col gap-2">
-                                        <p className="text-primary-orange text-sm font-bold uppercase">{novedad?.type}</p>
-                                        <div>
-                                            <p className="text-xl font-bold line-clamp-2 sm:text-2xl">{novedad?.title}</p>
-                                            <div
-                                                className="line-clamp-2 overflow-hidden text-sm break-words sm:text-base"
-                                                dangerouslySetInnerHTML={{ __html: novedad?.text }}
-                                            />
-                                        </div>
-                                    </div>
-                                    <button type="button" className="mt-4 flex flex-row items-center justify-between">
-                                        <p className="font-bold">Leer más</p>
-                                        <FontAwesomeIcon icon={faArrowRight} size="lg" />
-                                    </button>
-                                </div>
-                            </Link>
+                        {novedades.map((novedad) => (
+                            <NewsCard key={novedad.id} novedad={novedad} href={`/novedades/${novedad.id}`} />
                         ))}
                     </div>
                 </div>

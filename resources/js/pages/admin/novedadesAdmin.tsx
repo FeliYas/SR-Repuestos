@@ -9,12 +9,13 @@ import Dashboard from './dashboard';
 export default function NovedadesAdmin() {
     const { novedades } = usePage().props;
 
-    const [text, setText] = useState();
+    const [text, setText] = useState('');
 
-    const { data, setData, post, reset } = useForm({
+    const { data, setData, post, reset, errors } = useForm<{ title: string; type: string; text: string; image: File | null }>({
         title: '',
         type: '',
         text: '',
+        image: null,
     });
 
     useEffect(() => {
@@ -32,11 +33,11 @@ export default function NovedadesAdmin() {
             onSuccess: () => {
                 toast.success('Novedad creada correctamente');
                 reset();
+                setText('');
                 setCreateView(false);
             },
             onError: (errors) => {
-                toast.error('Error al crear novedad');
-                console.log(errors);
+                toast.error(Object.values(errors)[0] || 'Error al crear novedad');
             },
         });
     };
@@ -85,6 +86,13 @@ export default function NovedadesAdmin() {
                             <form onSubmit={handleSubmit} method="POST" className="text-black">
                                 <div className="w-[500px] rounded-md bg-white p-4">
                                     <h2 className="mb-4 text-2xl font-semibold">Crear Novedad</h2>
+                                    {Object.keys(errors).length > 0 && (
+                                        <div role="alert" className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
+                                            {Object.values(errors).map((error, index) => (
+                                                <p key={index}>{error}</p>
+                                            ))}
+                                        </div>
+                                    )}
                                     <div className="flex flex-col gap-4">
                                         <label htmlFor="type">
                                             Tipo <span className="text-red-500">*</span>
@@ -94,6 +102,7 @@ export default function NovedadesAdmin() {
                                             type="text"
                                             name="type"
                                             id="type"
+                                            value={data.type}
                                             onChange={(e) => setData('type', e.target.value)}
                                         />
                                         <label htmlFor="nombree">
@@ -104,6 +113,7 @@ export default function NovedadesAdmin() {
                                             type="text"
                                             name="nombree"
                                             id="nombree"
+                                            value={data.title}
                                             onChange={(e) => setData('title', e.target.value)}
                                         />
                                         <label htmlFor="text">
@@ -116,9 +126,10 @@ export default function NovedadesAdmin() {
                                         <div className="flex flex-row">
                                             <input
                                                 type="file"
+                                                accept="image/*"
                                                 name="imagen"
                                                 id="imagenn"
-                                                onChange={(e) => setData('image', e.target.files[0])}
+                                                onChange={(e) => setData('image', e.target.files?.[0] ?? null)}
                                                 className="hidden"
                                             />
                                             <label
