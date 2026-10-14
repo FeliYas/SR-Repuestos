@@ -13,7 +13,6 @@ export interface NewsCardItem {
 
 export default function NewsCard({ novedad, href }: { novedad: NewsCardItem; href: string }) {
     const [imageError, setImageError] = useState(!novedad.image);
-
     return (
         <Link
             href={href}
@@ -24,7 +23,7 @@ export default function NewsCard({ novedad, href }: { novedad: NewsCardItem; hre
                     <div className="flex h-full items-center justify-center p-6 text-center text-sm text-gray-500">Imagen no disponible</div>
                 ) : (
                     <img
-                        className="h-full w-full object-cover"
+                        className="block h-full w-full object-fill"
                         src={novedad.image}
                         alt={novedad.title || 'Novedad'}
                         onError={() => setImageError(true)}

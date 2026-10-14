@@ -242,3 +242,75 @@ test('la creacion de novedades privadas no persiste el campo order enviado por c
 
     expect(NovedadPrivada::firstOrFail()->getRawOriginal('order'))->toBeNull();
 });
+
+test('la importacion borra solo datos descriptivos vacios cuando sus columnas estan presentes', function () {
+    actingAsAdmin();
+    $producto = Producto::create(['name' => 'Producto de prueba']);
+    $subproducto = SubProducto::create([
+        'producto_id' => $producto->id,
+        'code' => 'SP-BLANCO',
+        'description' => 'DESCRIPCIÓN',
+        'medida' => '700 X 750',
+        'componente' => 'Acero',
+        'caracteristicas' => 'Reforzado',
+        'price_mayorista' => 100,
+    ]);
+
+    $response = $this->post(route('admin.cargamasiva.subproductos.import'), [
+        'archivo' => subproductosSpreadsheetUpload(
+            [['SP-BLANCO', $producto->name, 'descripción', null, '  ', null, null]],
+            ['CODIGO SUBPRODUCTO', 'NOMBRE PRODUCTO', 'DESCRIPCION', 'MEDIDA', 'COMPONENTE', 'CARACTERISTICAS', 'LISTA 1'],
+        ),
+    ]);
+
+    $response->assertSessionHas('mass_upload_subproductos_summary', fn (array $summary) => $summary['updated'] === 1);
+    $subproducto->refresh();
+    expect($subproducto->medida)->toBeNull()
+        ->and($subproducto->componente)->toBeNull()
+        ->and($subproducto->caracteristicas)->toBeNull()
+        ->and((float) $subproducto->price_mayorista)->toBe(100.0);
+});
+
+test('la importacion conserva datos descriptivos cuando no se incluyen sus columnas', function () {
+    actingAsAdmin();
+    $producto = Producto::create(['name' => 'Producto de prueba']);
+    $subproducto = SubProducto::create([
+        'producto_id' => $producto->id,
+        'code' => 'SP-SIN-COLUMNA',
+        'description' => 'DESCRIPCIÓN',
+        'medida' => '700 X 750',
+        'componente' => 'Acero',
+        'caracteristicas' => 'Reforzado',
+    ]);
+
+    $this->post(route('admin.cargamasiva.subproductos.import'), [
+        'archivo' => subproductosSpreadsheetUpload([['SP-SIN-COLUMNA', $producto->name, 'nueva descripción']]),
+    ])->assertRedirect();
+
+    $subproducto->refresh();
+    expect($subproducto->description)->toBe('NUEVA DESCRIPCIÓN')
+        ->and($subproducto->medida)->toBe('700 X 750')
+        ->and($subproducto->componente)->toBe('Acero')
+        ->and($subproducto->caracteristicas)->toBe('Reforzado');
+});
+
+test('la importacion rechaza una descripcion obligatoria vacia sin borrar el subproducto', function () {
+    actingAsAdmin();
+    $producto = Producto::create(['name' => 'Producto de prueba']);
+    $subproducto = SubProducto::create([
+        'producto_id' => $producto->id,
+        'code' => 'SP-OBLIGATORIO',
+        'description' => 'DESCRIPCIÓN',
+        'medida' => '700 X 750',
+    ]);
+
+    $this->post(route('admin.cargamasiva.subproductos.import'), [
+        'archivo' => subproductosSpreadsheetUpload(
+            [['SP-OBLIGATORIO', $producto->name, null, null]],
+            ['CODIGO SUBPRODUCTO', 'NOMBRE PRODUCTO', 'DESCRIPCION', 'MEDIDA'],
+        ),
+    ])->assertSessionHas('mass_upload_subproductos_summary', fn (array $summary) => $summary['rejected'] === 1);
+
+    expect($subproducto->refresh()->description)->toBe('DESCRIPCIÓN')
+        ->and($subproducto->medida)->toBe('700 X 750');
+});

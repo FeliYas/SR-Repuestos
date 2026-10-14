@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
@@ -39,8 +38,6 @@ class RegisteredUserController extends Controller
             'provincia' => 'nullable|string|max:255',
             'localidad' => 'nullable|string|max:255',
             'telefono' => 'nullable|string|max:20',
-            'lista' => 'nullable|string|max:255',
-            'autorizado' => 'nullable|boolean'
         ]);
 
         $user = User::create([
@@ -51,11 +48,13 @@ class RegisteredUserController extends Controller
             'provincia' => $request->provincia,
             'localidad' => $request->localidad,
             'telefono' => $request->telefono,
-            'autorizado' => $request->autorizado,
-            'lista' => $request->lista,
+            'autorizado' => false,
+            'lista' => 3,
             'password' => Hash::make($request->password),
         ]);
 
         event(new Registered($user));
+
+        return redirect('/')->with('status', 'Tu solicitud de registro fue enviada. Esperá la autorización para ingresar.');
     }
 }

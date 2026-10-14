@@ -6,7 +6,7 @@ Este documento es la guía de trabajo para la segunda etapa. Debe actualizarse e
 
 - [x] 1. Catálogo de productos en la zona privada
 - [x] 2. Buscador unificado y flexible
-- [ ] 3. Actualización de Instagram
+- [x] 3. Actualización de Instagram
 - [x] 4. Tarjetas de producto responsive
 - [x] 5. Detalle de novedades público y privado
 - [x] 6. Sidebar en resultados de búsqueda pública
@@ -19,7 +19,7 @@ Esta división define el orden de ejecución. Las casillas de cada tarea en «Es
 
 - [x] **Grupo 1/3 — Base del catálogo (completo, 2026-09-27):** buscador unificado y flexible (tarea 2), sidebar de categorías y marcas en los resultados públicos (tarea 6) y orden alfabético y por fecha, incluido el retiro de «Orden» del administrador (tarea 7). Se trabajaron juntos porque afectan las mismas consultas, filtros y pantallas de resultados.
 - [x] **Grupo 2/3 — Experiencia visual y zona privada (completo, 2026-10-05):** catálogo de productos privado (tarea 1), tarjetas de producto responsive (tarea 4) y nuevo detalle de novedades públicas y privadas (tarea 5). Incluye el sidebar de búsqueda privada de la tarea 6.
-- [ ] **Grupo 3/3 — Integración y cierre:** actualización de Instagram (tarea 3) y pruebas integrales y revisión final (tarea 8).
+- [ ] **Grupo 3/3 — Integración y cierre (en curso):** integración de Instagram y correcciones adicionales implementadas; queda el saneamiento global de TypeScript y el recorrido manual de las cuatro listas privadas y los detalles de novedades.
 
 ### Registro de avance
 
@@ -36,6 +36,11 @@ Esta división define el orden de ejecución. Las casillas de cada tarea en «Es
 | 2026-10-05 | Grupo 2/3: tarjetas y novedades | Completa | Tarjetas compartidas y adaptables; detalle compartido de novedades con imagen independiente y texto enriquecido. Verificación visual en móvil y escritorio. |
 | 2026-10-05 | Ajustes visuales del grupo 2/3 | Completa | El detalle público de novedades usa navbar blanco desde el inicio; tarjetas de productos y novedades tienen alto uniforme y texto limitado; la tabla privada separa precio y compra, y «Agregar» confirma visualmente la acción. |
 | 2026-10-05 | Ajuste de navegación del grupo 2/3 | Completa | Se retiraron los breadcrumbs de los listados y detalles de productos privados para que no se superpongan con los filtros; se redujo el espacio superior del detalle público de novedades. |
+| 2026-10-13 | Grupo 2/3 en Git | Completa | Los cambios locales del grupo 2 quedaron registrados en el commit `2bdb1fc` antes de iniciar el grupo 3. |
+| 2026-10-13 | 3. Instagram | Implementada y verificada localmente | Los endpoints JSON anteriores responden 401. El perfil HTML público entrega el feed actual; la sincronización real guardó 12 publicaciones y sus imágenes locales. Actualización por primera visita luego de una hora, botón manual con estado y retención del feed ante fallos. |
+| 2026-10-13 | Ajustes adicionales solicitados | Implementados | Las tarjetas públicas y privadas estiran la imagen para ocupar toda el área disponible; los bordes que vengan dentro del archivo se muestran tal como fueron subidos; la importación de subproductos permite vaciar Medida, Componente y Características cuando la columna existe en el Excel. |
+| 2026-10-14 | Ajuste final de tarjetas de novedades | Completa | La imagen subida se estira hasta ocupar toda la zona de la tarjeta, sin recortes ni fondos agregados. Los bordes incorporados en el archivo se conservan. |
+| 2026-10-13 | 8. Verificación de cierre | Parcial | Suite PHP: 72 pruebas y 433 aserciones. Build Vite correcto en `/tmp` por permisos de `public/build`. Revisión visual de novedades públicas y privadas, sincronización real y botón de administración. Sin migraciones pendientes. Sigue pendiente `npm run types` por 466 errores heredados en 64 archivos y el recorrido manual de las cuatro listas privadas y los detalles de novedades. |
 
 ## Decisiones ya tomadas
 
@@ -44,7 +49,7 @@ Esta división define el orden de ejecución. Las casillas de cada tarea en «Es
 - Los precios iguales a cero no se mostrarán; el subproducto ofrecerá «Consultar» y no podrá agregarse al carrito desde el catálogo.
 - La búsqueda será tolerante con mayúsculas, minúsculas, acentos, separadores, singular/plural y coincidencias parciales. No se incluirá corrección de errores de tipeo.
 - Los subproductos se ordenarán por descripción y, en caso de empate, por código.
-- Instagram seguirá usando acceso público. La API oficial de Meta no forma parte del alcance.
+- Instagram seguirá usando acceso público. La API oficial de Meta no forma parte del alcance. El primer visitante tras una hora dispara el intento de sincronización; el administrador puede hacerlo antes con «Actualizar ahora».
 - En Novedades se rediseñará principalmente el detalle. La imagen dejará de ocupar el encabezado como banner.
 - Las tarjetas de productos se corregirán en todos los listados. Las tarjetas de categorías del inicio no forman parte de este cambio.
 - La columna `order` permanecerá físicamente en la base de datos, pero dejará de usarse para categorías, marcas, productos, subproductos y novedades.
@@ -136,9 +141,9 @@ Las interfaces se encuentran en:
 
 ## 3. Actualización de Instagram
 
-### Estado actual
+### Estado anterior
 
-`app/Services/InstagramFeedService.php` consulta endpoints públicos de Instagram, descarga imágenes y conserva registros locales. La sincronización ocurre al cargar el inicio después de vencer el caché. Si Instagram cambia o bloquea esos endpoints, se devuelve el contenido guardado y el feed queda desactualizado. No hay credenciales oficiales ni una ejecución programada independiente.
+`app/Services/InstagramFeedService.php` consultaba endpoints públicos de Instagram, descargaba imágenes y conservaba registros locales. La sincronización ocurría al cargar el inicio después de vencer el caché. Al bloquear Instagram esos endpoints, el contenido guardado quedaba desactualizado. No hay credenciales oficiales ni una ejecución programada independiente.
 
 Otros puntos relacionados:
 
@@ -149,15 +154,15 @@ Otros puntos relacionados:
 
 ### Implementación prevista
 
-- [ ] Registrar con claridad el endpoint, estado HTTP y motivo de los fallos sin guardar tokens ni información sensible.
-- [ ] Revisar la estructura real de la respuesta pública y adaptar el extractor a publicaciones, reels y carruseles.
-- [ ] Mantener más de un endpoint público como alternativa.
-- [ ] Descargar las imágenes válidas al almacenamiento local y comprobar que el archivo exista antes de publicarlo.
-- [ ] No eliminar publicaciones sincronizadas válidas si la respuesta llega vacía, incompleta o falla.
-- [ ] Actualizar y depurar registros solamente después de una respuesta válida y completa.
-- [ ] Invalidar el caché cuando una sincronización termine correctamente.
-- [ ] Incorporar en el administrador una acción “Actualizar ahora” y mostrar el resultado o la fecha del último intento.
-- [ ] Conservar las publicaciones manuales como respaldo cuando no haya contenido automático utilizable.
+- [x] Registrar con claridad el endpoint, estado HTTP y motivo de los fallos sin guardar tokens ni información sensible.
+- [x] Revisar la estructura real de la respuesta pública y adaptar el extractor a publicaciones, reels y carruseles.
+- [x] Mantener más de un endpoint público como alternativa.
+- [x] Descargar las imágenes válidas al almacenamiento local y comprobar que el archivo exista antes de publicarlo.
+- [x] No eliminar publicaciones sincronizadas válidas si la respuesta llega vacía, incompleta o falla.
+- [x] Actualizar y depurar registros solamente después de una respuesta válida y completa.
+- [x] Invalidar el caché cuando una sincronización termine correctamente.
+- [x] Incorporar en el administrador una acción “Actualizar ahora” y mostrar el resultado o la fecha del último intento.
+- [x] Conservar las publicaciones manuales como respaldo cuando no haya contenido automático utilizable.
 
 ### Restricción conocida
 
@@ -261,25 +266,31 @@ Referencias principales: `CategoriaController`, `MarcaProductoController`, `Prod
 - [x] Agregar pruebas de feature para los ordenamientos cubiertos en este bloque.
 - [x] Probar que las altas cubiertas funcionan sin persistir `order` legado.
 - [x] Probar búsqueda flexible y combinaciones de filtros.
-- [ ] Probar que la zona privada exige autenticación.
-- [ ] Probar cada lista de precio y confirmar que la respuesta no contiene las otras listas.
-- [ ] Probar que los precios cero no se presentan como disponibles.
-- [ ] Extender `InstagramFeedServiceTest` con respuestas válidas, vacías, incompletas y fallidas.
-- [ ] Probar que un fallo de Instagram conserva el contenido almacenado.
-- [x] Ejecutar las suites relacionadas con Pest dentro del contenedor (14 pruebas, 131 aserciones).
-- [ ] Sanear la suite global heredada: los tests genéricos de usuarios no completan el `cuit` obligatorio.
-- [x] Ejecutar `npm run build`.
-- [ ] Sanear el chequeo global `npm run types`: existen errores heredados en numerosos componentes no relacionados.
+- [x] Probar que la zona privada exige autenticación.
+- [x] Probar cada lista de precio y confirmar que la respuesta no contiene las otras listas.
+- [x] Probar que los precios cero no se presentan como disponibles.
+- [x] Extender `InstagramFeedServiceTest` con respuestas válidas, vacías, incompletas y fallidas.
+- [x] Probar que un fallo de Instagram conserva el contenido almacenado.
+- [x] Ejecutar la suite PHP completa dentro del contenedor (71 pruebas, 430 aserciones).
+- [x] Sanear la suite global heredada: los tests genéricos de usuarios no completaban el `cuit` obligatorio y el entorno no activaba `testing`.
+- [x] Ejecutar `npm run build -- --outDir /tmp/srrepuestos-stage3-build` (el directorio normal tiene permisos ajenos).
+- [ ] Sanear el chequeo global `npm run types`: quedan 466 errores heredados en 64 archivos. Los archivos modificados para Instagram, tarjetas e importación no agregan errores de tipos.
 
 ### Revisión manual
 
-- [ ] Recorrer catálogo y búsqueda pública.
+- [x] Recorrer catálogo y búsqueda pública en escritorio y 360, 390 y 768 px.
 - [ ] Recorrer catálogo, búsqueda, detalle y carrito con usuarios de las cuatro listas.
-- [ ] Verificar 360, 390, 768 y 1200 px.
-- [ ] Confirmar que no haya scroll horizontal ni textos superpuestos.
+- [x] Verificar las tarjetas de novedades en 360, 390, 768 y 1200 px.
+- [x] Confirmar que las novedades públicas y privadas no tengan scroll horizontal ni textos superpuestos en los anchos revisados.
 - [ ] Revisar el detalle de una novedad corta y otra con texto largo en ambas zonas.
-- [ ] Forzar una actualización de Instagram desde el administrador y revisar el fallback ante un fallo.
-- [ ] Confirmar que `php artisan migrate --pretend --force` indique que no hay migraciones nuevas para este alcance.
+- [x] Forzar una actualización real de Instagram desde el administrador; fallback y retención comprobados con respuestas fallidas en tests.
+- [x] Confirmar que `php artisan migrate --pretend --force` indique que no hay migraciones nuevas para este alcance.
+
+## Ajustes adicionales del grupo 3
+
+- [x] Tarjetas de novedades públicas y privadas: una sola imagen con `object-fill` ocupa toda el área de la tarjeta, aunque cambie su proporción. Los bordes incluidos en el archivo original se conservan.
+- [x] Carga masiva de subproductos: un campo vacío en una columna presente de Medida, Componente o Características borra el valor anterior; una columna ausente lo conserva. Código, producto y descripción siguen siendo obligatorios; un precio vacío conserva el precio existente.
+- [x] Registro público: se guarda pendiente de autorización y con lista predeterminada, sin aceptar que el visitante se autorice o cambie la lista.
 
 ## Notas para las próximas sesiones
 

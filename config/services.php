@@ -41,7 +41,7 @@ return [
         'api_version' => env('INSTAGRAM_API_VERSION', 'v22.0'),
         'user_id' => env('INSTAGRAM_USER_ID'),
         'access_token' => env('INSTAGRAM_ACCESS_TOKEN'),
-        'cache_minutes' => env('INSTAGRAM_CACHE_MINUTES', 30),
+        'cache_minutes' => env('INSTAGRAM_CACHE_MINUTES', 60),
     ],
 
 ];

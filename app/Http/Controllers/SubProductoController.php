@@ -329,17 +329,16 @@ class SubProductoController extends Controller
                     'description' => $description,
                 ];
 
-                $optionalPayload = [
-                    'medida' => $this->nullableNormalizedExcelText($mappedRow['medida'] ?? null),
-                    'componente' => $this->nullableNormalizedExcelText($mappedRow['componente'] ?? null),
-                    'caracteristicas' => $this->nullableNormalizedExcelText($mappedRow['caracteristicas'] ?? null),
-                    'price_mayorista' => $this->formatOptionalPriceForStorage($mappedRow['price_mayorista'] ?? null),
-                    'price_minorista' => $this->formatOptionalPriceForStorage($mappedRow['price_minorista'] ?? null),
-                    'price_dist' => $this->formatOptionalPriceForStorage($mappedRow['price_dist'] ?? null),
-                    'price_lista_4' => $this->formatOptionalPriceForStorage($mappedRow['price_lista_4'] ?? null),
-                ];
+                // An included descriptive column is authoritative, even when its cell is blank.
+                foreach (['medida', 'componente', 'caracteristicas'] as $field) {
+                    if (array_key_exists($field, $headerMapping)) {
+                        $payload[$field] = $this->nullableNormalizedExcelText($mappedRow[$field] ?? null);
+                    }
+                }
 
-                foreach ($optionalPayload as $field => $value) {
+                // Blank prices retain the stored price; on new rows the database default applies.
+                foreach (['price_mayorista', 'price_minorista', 'price_dist', 'price_lista_4'] as $field) {
+                    $value = $this->formatOptionalPriceForStorage($mappedRow[$field] ?? null);
                     if ($value !== null) {
                         $payload[$field] = $value;
                     }

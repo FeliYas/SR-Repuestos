@@ -1,17 +1,30 @@
-import InstagramAdminRow from '@/components/instagramAdminRow';
+import InstagramAdminRow, { type InstagramPublication } from '@/components/instagramAdminRow';
 import { useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import Dashboard from './dashboard';
 
-export default function MarcasAdmin() {
-    const { publicaciones } = usePage().props;
+type SyncStatus = {
+    last_attempt_at: string | null;
+    last_success_at: string | null;
+    result: 'success' | 'failed' | null;
+    message: string | null;
+    count: number;
+};
 
-    console.log(publicaciones);
+export default function InstagramAdmin() {
+    const { publicaciones, syncStatus } = usePage<{
+        publicaciones: InstagramPublication[];
+        syncStatus: SyncStatus;
+    }>().props;
 
-    const { data, setData, post, reset } = useForm({
+    const { post: syncNow, processing: syncing } = useForm({});
+
+    const { data, setData, post, reset } = useForm<{ link: string; order: string; image: File | null }>({
         link: '',
+        order: '',
+        image: null,
     });
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -75,7 +88,7 @@ export default function MarcasAdmin() {
                                                 type="file"
                                                 name="imagen"
                                                 id="imagenn"
-                                                onChange={(e) => setData('image', e.target.files[0])}
+                                                onChange={(e) => setData('image', e.target.files?.[0] ?? null)}
                                                 className="hidden"
                                             />
                                             <label
@@ -110,6 +123,25 @@ export default function MarcasAdmin() {
                 </AnimatePresence>
                 <div className="mx-auto flex w-full flex-col gap-3">
                     <h2 className="border-primary-orange text-primary-orange text-bold w-full border-b-2 text-2xl">Publicaciones</h2>
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-gray-300 bg-white p-4">
+                        <div className="text-sm text-gray-700" role="status">
+                            <p>Último intento: {syncStatus?.last_attempt_at ? new Date(syncStatus.last_attempt_at).toLocaleString('es-AR') : 'Nunca'}</p>
+                            <p>Última actualización: {syncStatus?.last_success_at ? new Date(syncStatus.last_success_at).toLocaleString('es-AR') : 'Nunca'}</p>
+                            {syncStatus?.message && (
+                                <p className={syncStatus.result === 'success' ? 'text-green-700' : 'text-red-700'}>
+                                    {syncStatus.message} {syncStatus.result === 'success' ? `(${syncStatus.count} publicaciones)` : ''}
+                                </p>
+                            )}
+                        </div>
+                        <button
+                            type="button"
+                            disabled={syncing}
+                            onClick={() => syncNow(route('admin.instagram.sync'), { preserveScroll: true })}
+                            className="bg-primary-orange rounded px-4 py-2 font-bold text-white disabled:opacity-60"
+                        >
+                            {syncing ? 'Actualizando...' : 'Actualizar ahora'}
+                        </button>
+                    </div>
                     <div className="flex h-fit w-full flex-row gap-5">
                         <input
                             type="text"

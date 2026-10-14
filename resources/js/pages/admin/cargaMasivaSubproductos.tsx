@@ -71,7 +71,7 @@ export default function CargaMasivaSubproductos() {
                             Producto debe existir previamente en la base de datos (se busca por nombre exacto normalizado). Si hay nombres repetidos,
                             usá el ID numérico del producto o corregí el catálogo.
                         </li>
-                        <li>Si el código ya existe, se actualiza solo con los campos que traen valor en el Excel.</li>
+                        <li>Si el código ya existe, las celdas vacías de Medida, Componente y Características borran esos datos. Las columnas omitidas y los precios vacíos conservan su valor.</li>
                     </ul>
                 </div>
 

@@ -86,6 +86,8 @@ export default function NavBar() {
         signupForm.post(route('register'), {
             onSuccess: () => {
                 setSignupView(false);
+                signupForm.reset();
+                toast.success('Tu solicitud fue enviada. Esperá la autorización para ingresar.');
             },
         });
     };

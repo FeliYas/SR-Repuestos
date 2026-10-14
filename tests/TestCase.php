@@ -8,6 +8,8 @@ abstract class TestCase extends BaseTestCase
 {
     public function createApplication()
     {
+        putenv('APP_ENV=testing');
+        $_ENV['APP_ENV'] = $_SERVER['APP_ENV'] = 'testing';
         putenv('DB_CONNECTION=sqlite');
         putenv('DB_DATABASE=:memory:');
         $_ENV['DB_CONNECTION'] = $_SERVER['DB_CONNECTION'] = 'sqlite';

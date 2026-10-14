@@ -5,13 +5,21 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-export default function InstagramAdminRow({ publicacion }) {
+export interface InstagramPublication {
+    id: number;
+    order: string;
+    link: string;
+    image: string;
+}
+
+export default function InstagramAdminRow({ publicacion }: { publicacion: InstagramPublication }) {
     const [edit, setEdit] = useState(false);
 
-    const updateForm = useForm({
+    const updateForm = useForm<{ link: string; order: string; id: number; image: File | null }>({
         link: publicacion?.link,
         order: publicacion?.order,
-        id: publicacion?.id,
+        id: publicacion.id,
+        image: null,
     });
 
     const handleUpdate = (e: React.FormEvent<HTMLFormElement>) => {
@@ -107,7 +115,7 @@ export default function InstagramAdminRow({ publicacion }) {
                                             type="file"
                                             name="imagen"
                                             id="imagenn"
-                                            onChange={(e) => updateForm.setData('image', e.target.files[0])}
+                                            onChange={(e) => updateForm.setData('image', e.target.files?.[0] ?? null)}
                                             className="hidden"
                                         />
                                         <label

@@ -74,11 +74,29 @@ class InstagramController extends Controller
      */
     public function index()
     {
-        $instagrams = Instagram::orderBy('order', 'asc')->get();
+        $instagrams = Instagram::all()
+            ->sortBy(fn (Instagram $post) => $post->source === 'instagram_public'
+                ? '0-'.str_pad((string) (int) $post->order, 10, '0', STR_PAD_LEFT)
+                : '1-'.$post->order)
+            ->values();
 
-        return Inertia::render('admin/instagramAdmin', ['publicaciones' => $instagrams]);
+        return Inertia::render('admin/instagramAdmin', [
+            'publicaciones' => $instagrams,
+            'syncStatus' => app(InstagramFeedService::class)->getSyncStatus(),
+        ]);
     }
 
+    public function sync(InstagramFeedService $feed): \Illuminate\Http\RedirectResponse
+    {
+        $username = (string) config('services.instagram.public_username', 'sr.repuestos');
+        $feed->syncLatestPosts($username);
+        $status = $feed->getSyncStatus();
+
+        return redirect()->back()->with(
+            $status['result'] === 'success' ? 'success' : 'error',
+            $status['message'] ?? 'No se pudo actualizar Instagram.'
+        );
+    }
 
     /**
      * Store a newly created resource in storage.
