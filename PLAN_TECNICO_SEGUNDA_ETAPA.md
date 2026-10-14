@@ -40,6 +40,7 @@ Esta división define el orden de ejecución. Las casillas de cada tarea en «Es
 | 2026-10-13 | 3. Instagram | Implementada y verificada localmente | Los endpoints JSON anteriores responden 401. El perfil HTML público entrega el feed actual; la sincronización real guardó 12 publicaciones y sus imágenes locales. Actualización por primera visita luego de una hora, botón manual con estado y retención del feed ante fallos. |
 | 2026-10-13 | Ajustes adicionales solicitados | Implementados | Las tarjetas públicas y privadas estiran la imagen para ocupar toda el área disponible; los bordes que vengan dentro del archivo se muestran tal como fueron subidos; la importación de subproductos permite vaciar Medida, Componente y Características cuando la columna existe en el Excel. |
 | 2026-10-14 | Ajuste final de tarjetas de novedades | Completa | La imagen subida se estira hasta ocupar toda la zona de la tarjeta, sin recortes ni fondos agregados. Los bordes incorporados en el archivo se conservan. |
+| 2026-10-14 | Incidencia de Instagram en producción | En diagnóstico | El inicio público conserva publicaciones antiguas pese a una publicación nueva. Se corrigieron localmente la lectura de publicaciones colaborativas y de respuestas parciales, sin eliminar el contenido guardado; el panel distingue conexión fallida de una consulta sin novedades. Falta confirmar el motivo concreto en producción y verificar allí la publicación nueva. |
 | 2026-10-13 | 8. Verificación de cierre | Parcial | Suite PHP: 72 pruebas y 433 aserciones. Build Vite correcto en `/tmp` por permisos de `public/build`. Revisión visual de novedades públicas y privadas, sincronización real y botón de administración. Sin migraciones pendientes. Sigue pendiente `npm run types` por 466 errores heredados en 64 archivos y el recorrido manual de las cuatro listas privadas y los detalles de novedades. |
 
 ## Decisiones ya tomadas
@@ -160,6 +161,7 @@ Otros puntos relacionados:
 - [x] Descargar las imágenes válidas al almacenamiento local y comprobar que el archivo exista antes de publicarlo.
 - [x] No eliminar publicaciones sincronizadas válidas si la respuesta llega vacía, incompleta o falla.
 - [x] Actualizar y depurar registros solamente después de una respuesta válida y completa.
+- [x] Incorporar publicaciones de respuestas parciales y colaboraciones del perfil sin depurar registros anteriores.
 - [x] Invalidar el caché cuando una sincronización termine correctamente.
 - [x] Incorporar en el administrador una acción “Actualizar ahora” y mostrar el resultado o la fecha del último intento.
 - [x] Conservar las publicaciones manuales como respaldo cuando no haya contenido automático utilizable.

@@ -106,7 +106,7 @@ test('a failed public request keeps the last synced image and feed', function ()
     Storage::disk('public')->assertExists('instagram/old-post.png');
 });
 
-test('an incomplete public page does not prune stored posts', function () {
+test('a partial public page adds new posts without pruning stored posts', function () {
     Storage::fake('public');
     storedInstagramPost('old-post');
 
@@ -114,11 +114,14 @@ test('an incomplete public page does not prune stored posts', function () {
         'https://www.instagram.com/sr.repuestos/' => Http::response(instagramProfileHtml([instagramNode('new-post')], true)),
         'https://www.instagram.com/api/v1/users/web_profile_info/*' => Http::response([], 401),
         'https://i.instagram.com/api/v1/users/web_profile_info/*' => Http::response([], 401),
+        'https://scontent.cdninstagram.com/*' => Http::response(instagramPng(), 200, ['Content-Type' => 'image/png']),
     ]);
 
     app(InstagramFeedService::class)->syncLatestPosts('sr.repuestos', 12);
 
-    expect(Instagram::where('source', 'instagram_public')->pluck('external_id')->all())->toBe(['old-post']);
+    expect(app(InstagramFeedService::class)->getLatestPosts(8)->pluck('external_id')->all())
+        ->toBe(['new-post', 'old-post']);
+    expect(app(InstagramFeedService::class)->getSyncStatus()['message'])->toContain('feed recibido fue parcial');
 });
 
 test('an invalid downloaded image cannot replace the last good feed', function () {
@@ -267,4 +270,51 @@ test('a complete valid feed replaces stale synced posts only after images are st
     expect(Instagram::where('source', 'instagram_public')->pluck('external_id')->all())->toBe(['new-post']);
     Storage::disk('public')->assertExists('instagram/new-post.png');
     Storage::disk('public')->assertMissing('instagram/old-post.png');
+});
+
+test('a collaborator post shown on the account profile is synchronized', function () {
+    Storage::fake('public');
+    $collaboration = instagramNode('collab-post');
+    $collaboration['user'] = ['pk' => 'another-account', 'username' => 'partner.account'];
+
+    Http::fake([
+        'https://www.instagram.com/sr.repuestos/' => Http::response(instagramProfileHtml([$collaboration])),
+        'https://scontent.cdninstagram.com/*' => Http::response(instagramPng(), 200, ['Content-Type' => 'image/png']),
+    ]);
+
+    app(InstagramFeedService::class)->syncLatestPosts('sr.repuestos', 12);
+
+    expect(Instagram::where('external_id', 'collab-post')->exists())->toBeTrue();
+    Storage::disk('public')->assertExists('instagram/collab-post.png');
+});
+
+test('failed manual synchronization explains that Instagram was unreachable', function () {
+    Storage::fake('public');
+    storedInstagramPost('old-post');
+
+    Http::fake(function () {
+        throw new \Illuminate\Http\Client\ConnectionException('Connection timed out');
+    });
+
+    app(InstagramFeedService::class)->syncLatestPosts('sr.repuestos', 12);
+
+    $status = app(InstagramFeedService::class)->getSyncStatus();
+    expect($status['result'])->toBe('failed')
+        ->and($status['message'])->toContain('conectar con Instagram')
+        ->and(Instagram::where('external_id', 'old-post')->exists())->toBeTrue();
+});
+
+test('a successful manual check reports when the public feed has no new post', function () {
+    Storage::fake('public');
+    storedInstagramPost('old-post');
+
+    Http::fake([
+        'https://www.instagram.com/sr.repuestos/' => Http::response(instagramProfileHtml([instagramNode('old-post')])),
+    ]);
+
+    app(InstagramFeedService::class)->syncLatestPosts('sr.repuestos', 12);
+
+    $status = app(InstagramFeedService::class)->getSyncStatus();
+    expect($status['result'])->toBe('success')
+        ->and($status['message'])->toContain('no se encontraron publicaciones nuevas');
 });

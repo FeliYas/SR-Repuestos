@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Instagram;
 use Carbon\Carbon;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -77,11 +78,16 @@ class InstagramFeedService
             $cache->forever($this->statusKey($username), $status);
 
             try {
-                $posts = $this->fetchPublicFeed($username, $limit);
+                $feed = $this->fetchPublicFeed($username, $limit);
+                $posts = $feed['posts'];
+                $existingPostCount = Instagram::where('source', 'instagram_public')
+                    ->whereIn('external_id', array_column($posts, 'external_id'))
+                    ->count();
+                $newPostCount = count($posts) - $existingPostCount;
                 $downloadedPaths = [];
                 try {
                     $prepared = $this->preparePosts($posts, $downloadedPaths);
-                    $oldPosts = DB::transaction(function () use ($prepared) {
+                    $oldPosts = DB::transaction(function () use ($prepared, $feed) {
                         $ids = [];
                         foreach ($prepared as $post) {
                             $ids[] = $post['external_id'];
@@ -102,7 +108,15 @@ class InstagramFeedService
                         $old = Instagram::where('source', 'instagram_public')
                             ->whereNotIn('external_id', $ids)
                             ->get();
-                        Instagram::whereIn('id', $old->pluck('id'))->delete();
+                        if ($feed['complete']) {
+                            Instagram::whereIn('id', $old->pluck('id'))->delete();
+                        } else {
+                            foreach ($old->sortBy(fn (Instagram $post) => (int) $post->order)->values() as $index => $post) {
+                                $post->update(['order' => (string) (count($prepared) + $index + 1)]);
+                            }
+
+                            return collect();
+                        }
 
                         return $old;
                     });
@@ -122,7 +136,12 @@ class InstagramFeedService
 
                 $status['last_success_at'] = now()->toIso8601String();
                 $status['result'] = 'success';
-                $status['message'] = 'Publicaciones actualizadas.';
+                $status['message'] = $newPostCount > 0
+                    ? "Se incorporaron {$newPostCount} publicaciones nuevas."
+                    : 'Instagram respondió, pero no se encontraron publicaciones nuevas.';
+                if (!$feed['complete']) {
+                    $status['message'] .= ' El feed recibido fue parcial; se conservaron las publicaciones anteriores.';
+                }
                 $status['count'] = count($prepared);
                 $cache->forever($this->statusKey($username), $status);
                 $this->clearLatestPostsCache();
@@ -160,6 +179,8 @@ class InstagramFeedService
 
     private function fetchPublicFeed(string $username, int $limit): array
     {
+        $connectionFailures = 0;
+        $accessDenials = 0;
         $profileEndpoint = "https://www.instagram.com/{$username}/";
         try {
             $response = Http::timeout(12)->withHeaders($this->profileHeaders())->get($profileEndpoint);
@@ -170,9 +191,11 @@ class InstagramFeedService
                 }
                 $this->logFetchFailure($profileEndpoint, $response->status(), 'invalid_or_incomplete');
             } else {
+                $accessDenials += in_array($response->status(), [401, 403], true) ? 1 : 0;
                 $this->logFetchFailure($profileEndpoint, $response->status(), 'http_error');
             }
         } catch (Throwable $exception) {
+            $connectionFailures += $exception instanceof ConnectionException ? 1 : 0;
             $this->logFetchFailure($profileEndpoint, null, get_class($exception));
         }
 
@@ -189,6 +212,7 @@ class InstagramFeedService
                 ])->get($endpoint, ['username' => $username]);
 
                 if (!$response->successful()) {
+                    $accessDenials += in_array($response->status(), [401, 403], true) ? 1 : 0;
                     $this->logFetchFailure($endpoint, $response->status(), 'http_error');
                     continue;
                 }
@@ -199,8 +223,16 @@ class InstagramFeedService
                 }
                 $this->logFetchFailure($endpoint, $response->status(), 'invalid_or_incomplete');
             } catch (Throwable $exception) {
+                $connectionFailures += $exception instanceof ConnectionException ? 1 : 0;
                 $this->logFetchFailure($endpoint, null, get_class($exception));
             }
+        }
+
+        if ($connectionFailures === 3) {
+            throw new RuntimeException('No se pudo conectar con Instagram. Se conserva el contenido guardado.');
+        }
+        if ($accessDenials === 3) {
+            throw new RuntimeException('Instagram rechazó el acceso público a sus publicaciones. Se conserva el contenido guardado.');
         }
 
         throw new RuntimeException('Instagram no entregó un feed público completo.');
@@ -245,10 +277,6 @@ class InstagramFeedService
                 continue;
             }
 
-            if (($connection['page_info']['has_next_page'] ?? false) && count($edges) < $limit) {
-                continue;
-            }
-
             $posts = [];
             foreach (array_slice($edges, 0, $limit) as $index => $edge) {
                 $node = $edge['node'] ?? null;
@@ -256,9 +284,7 @@ class InstagramFeedService
                 $imageUrl = $node['display_uri'] ?? null;
                 if (!is_array($node) || !is_string($code)
                     || !preg_match('/^[A-Za-z0-9_-]+$/', $code)
-                    || !is_string($imageUrl) || !$this->isAllowedImageUrl($imageUrl)
-                    || (string) ($node['user']['pk'] ?? '') !== (string) ($user['pk'] ?? '')
-                    || strtolower((string) ($node['user']['username'] ?? '')) !== strtolower($username)) {
+                    || !is_string($imageUrl) || !$this->isAllowedImageUrl($imageUrl)) {
                     continue 2;
                 }
 
@@ -275,7 +301,10 @@ class InstagramFeedService
             }
 
             if (count(array_unique(array_column($posts, 'external_id'))) === count($posts)) {
-                return $posts;
+                return [
+                    'posts' => $posts,
+                    'complete' => !($connection['page_info']['has_next_page'] ?? false) || count($edges) >= $limit,
+                ];
             }
         }
 
@@ -307,10 +336,6 @@ class InstagramFeedService
         }
 
         $edges = $connection['edges'];
-        if (($connection['page_info']['has_next_page'] ?? false) && count($edges) < $limit) {
-            return null;
-        }
-
         $posts = [];
         foreach (array_slice($edges, 0, $limit) as $index => $edge) {
             $node = $edge['node'] ?? null;
@@ -334,7 +359,12 @@ class InstagramFeedService
             ];
         }
 
-        return count(array_unique(array_column($posts, 'external_id'))) === count($posts) ? $posts : null;
+        return count(array_unique(array_column($posts, 'external_id'))) === count($posts)
+            ? [
+                'posts' => $posts,
+                'complete' => !($connection['page_info']['has_next_page'] ?? false) || count($edges) >= $limit,
+            ]
+            : null;
     }
 
     private function preparePosts(array $posts, array &$downloadedPaths): array
