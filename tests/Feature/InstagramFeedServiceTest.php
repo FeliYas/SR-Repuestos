@@ -291,6 +291,32 @@ test('new manual posts are shown ahead of a stale automatic feed', function () {
     ]);
 });
 
+test('a successful check of an outdated feed keeps newer manual posts visible', function () {
+    Storage::fake('public');
+    $old = storedInstagramPost('old-post');
+    $old->update(['published_at' => now()->subDays(5)]);
+    Storage::disk('public')->put('images/manual-new.png', instagramPng());
+    Instagram::create([
+        'source' => 'manual',
+        'order' => '1',
+        'image' => 'images/manual-new.png',
+        'link' => 'https://www.instagram.com/p/new-post/',
+        'created_at' => now()->subHour(),
+    ]);
+    Cache::store('database')->forever('instagram.feed.status.sr.repuestos', [
+        'last_attempt_at' => now()->toIso8601String(),
+        'last_success_at' => now()->toIso8601String(),
+        'result' => 'success',
+        'message' => 'Sin novedades.',
+        'count' => 1,
+    ]);
+
+    expect(app(InstagramFeedService::class)->getLatestPosts()->pluck('link')->all())->toBe([
+        'https://www.instagram.com/p/new-post/',
+        'https://www.instagram.com/p/old-post/',
+    ]);
+});
+
 test('admin can force a sync and inspect its outcome while visitors cannot', function () {
     $this->withoutMiddleware(ValidateCsrfToken::class);
     Storage::fake('public');

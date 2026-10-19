@@ -565,9 +565,11 @@ class InstagramFeedService
             ->values();
 
         $lastSuccess = $this->getSyncStatus()['last_success_at'] ?? null;
+        $latestPublishedAt = $synced->max('published_at');
+        $manualAfter = $latestPublishedAt ?? ($lastSuccess ? Carbon::parse($lastSuccess) : null);
         $manual = Instagram::where('source', 'manual')
-            ->when($synced->isNotEmpty() && $lastSuccess, fn ($query) => $query
-                ->where('created_at', '>', Carbon::parse($lastSuccess)))
+            ->when($synced->isNotEmpty() && $manualAfter, fn ($query) => $query
+                ->where('created_at', '>', $manualAfter))
             ->orderByDesc('created_at')
             ->orderBy('order')
             ->get()
