@@ -52,15 +52,15 @@ class NovedadesPrivadasController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'image' => 'required|image|max:2048',
+            'image' => 'required|image|max:20480',
             'title' => 'required|string|max:255',
             'type' => 'required|string|max:255',
             'text' => 'required|string',
         ], [
             'image.required' => 'Seleccioná una imagen para la novedad.',
             'image.image' => 'El archivo debe ser una imagen.',
-            'image.max' => 'La imagen no puede superar los 2 MB.',
-            'image.uploaded' => 'No se pudo subir la imagen. Verificá que no supere los 2 MB.',
+            'image.max' => 'La imagen no puede superar los 20 MB.',
+            'image.uploaded' => 'No se pudo subir la imagen. Verificá que no supere los 20 MB.',
         ]);
 
         if ($request->hasFile('image')) {
@@ -77,14 +77,14 @@ class NovedadesPrivadasController extends Controller
         $novedadPrivada = NovedadPrivada::findOrFail($request->id);
 
         $data = $request->validate([
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:20480',
             'title' => 'sometimes|string|max:255',
             'type' => 'sometimes|string|max:255',
             'text' => 'sometimes|string',
         ], [
             'image.image' => 'El archivo debe ser una imagen.',
-            'image.max' => 'La imagen no puede superar los 2 MB.',
-            'image.uploaded' => 'No se pudo subir la imagen. Verificá que no supere los 2 MB.',
+            'image.max' => 'La imagen no puede superar los 20 MB.',
+            'image.uploaded' => 'No se pudo subir la imagen. Verificá que no supere los 20 MB.',
         ]);
 
         if ($request->hasFile('image')) {

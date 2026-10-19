@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 20 * 1024 * 1024;
 
 const firstError = (errors: Record<string, string>) => Object.values(errors)[0] || 'Error al actualizar marca';
 
@@ -115,7 +115,7 @@ export default function MarcasProductoAdminRow({ marca }) {
                                                 const image = e.target.files?.[0] || null;
 
                                                 if (image && image.size > MAX_IMAGE_SIZE) {
-                                                    toast.error('La imagen no puede superar los 2 MB.');
+                                                    toast.error('La imagen no puede superar los 20 MB.');
                                                     e.target.value = '';
                                                     updateForm.setData('image', null);
                                                     return;

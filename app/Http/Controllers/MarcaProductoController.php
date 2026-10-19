@@ -27,12 +27,12 @@ class MarcaProductoController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'image' => 'required|file|mimes:jpg,jpeg,png,webp,svg|max:2048',
+            'image' => 'required|file|mimes:jpg,jpeg,png,webp,svg|max:20480',
         ], [
             'image.required' => 'La imagen es obligatoria.',
             'image.file' => 'La imagen debe ser un archivo válido.',
             'image.mimes' => 'La imagen debe ser JPG, PNG, WEBP o SVG.',
-            'image.max' => 'La imagen no puede superar los 2 MB.',
+            'image.max' => 'La imagen no puede superar los 20 MB.',
             'name.required' => 'El nombre es obligatorio.',
         ]);
 
@@ -65,11 +65,11 @@ class MarcaProductoController extends Controller
         // Validate the request data
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'image' => 'sometimes|file|mimes:jpg,jpeg,png,webp,svg|max:2048',
+            'image' => 'sometimes|file|mimes:jpg,jpeg,png,webp,svg|max:20480',
         ], [
             'image.file' => 'La imagen debe ser un archivo válido.',
             'image.mimes' => 'La imagen debe ser JPG, PNG, WEBP o SVG.',
-            'image.max' => 'La imagen no puede superar los 2 MB.',
+            'image.max' => 'La imagen no puede superar los 20 MB.',
             'name.required' => 'El nombre es obligatorio.',
         ]);
 

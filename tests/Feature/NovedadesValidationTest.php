@@ -61,11 +61,20 @@ test('ambos formularios rechazan archivos que no son imagen con un mensaje claro
     ])->assertSessionHasErrors(['image' => 'El archivo debe ser una imagen.']);
 })->with(['admin.novedades.store', 'admin.novedadesprivadas.store']);
 
-test('ambos formularios indican el limite cuando la imagen es demasiado grande', function (string $routeName) {
+test('ambos formularios admiten imagenes de mas de 2 MB', function (string $routeName) {
     $this->post(route($routeName), [
         'image' => UploadedFile::fake()->image('grande.jpg')->size(2049),
         'title' => 'Novedad',
         'type' => 'Producto',
         'text' => 'Texto',
-    ])->assertSessionHasErrors(['image' => 'La imagen no puede superar los 2 MB.']);
+    ])->assertSessionHasNoErrors();
+})->with(['admin.novedades.store', 'admin.novedadesprivadas.store']);
+
+test('ambos formularios indican el nuevo limite cuando la imagen es demasiado grande', function (string $routeName) {
+    $this->post(route($routeName), [
+        'image' => UploadedFile::fake()->image('grande.jpg')->size(20481),
+        'title' => 'Novedad',
+        'type' => 'Producto',
+        'text' => 'Texto',
+    ])->assertSessionHasErrors(['image' => 'La imagen no puede superar los 20 MB.']);
 })->with(['admin.novedades.store', 'admin.novedadesprivadas.store']);

@@ -22,7 +22,7 @@ class ImagenProductoController extends Controller
         $validated = $request->validate([
             'target' => 'required|in:productos,subproductos',
             'archivos' => 'required|array|min:1',
-            'archivos.*' => 'required|file|max:10240',
+            'archivos.*' => 'required|file|max:20480',
         ]);
 
         $target = $validated['target'];

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import Dashboard from './dashboard';
 
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 20 * 1024 * 1024;
 
 const firstError = (errors: Record<string, string>) => Object.values(errors)[0] || 'Error al crear marca';
 
@@ -63,7 +63,7 @@ export default function MarcasProductoAdmin() {
                                         />
 
                                         <label htmlFor="imagenn">Imagen</label>
-                                        <span className="text-base font-normal">Resolución recomendada: 501x181px. Máximo 2 MB.</span>
+                                        <span className="text-base font-normal">Resolución recomendada: 501x181px. Máximo 20 MB.</span>
                                         <div className="flex flex-row">
                                             <input
                                                 type="file"
@@ -74,7 +74,7 @@ export default function MarcasProductoAdmin() {
                                                     const image = e.target.files?.[0] || null;
 
                                                     if (image && image.size > MAX_IMAGE_SIZE) {
-                                                        toast.error('La imagen no puede superar los 2 MB.');
+                                                        toast.error('La imagen no puede superar los 20 MB.');
                                                         e.target.value = '';
                                                         setData('image', null);
                                                         return;
