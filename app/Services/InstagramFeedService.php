@@ -458,14 +458,19 @@ class InstagramFeedService
             ->take($limit)
             ->values();
 
-        return $synced->isNotEmpty()
-            ? $synced
-            : Instagram::where('source', 'manual')
-                ->orderBy('order')
-                ->get()
-                ->filter(fn (Instagram $post) => $this->hasStoredImage($post))
-                ->take($limit)
-                ->values();
+        $lastSuccess = $this->getSyncStatus()['last_success_at'] ?? null;
+        $manual = Instagram::where('source', 'manual')
+            ->when($synced->isNotEmpty() && $lastSuccess, fn ($query) => $query
+                ->where('created_at', '>', Carbon::parse($lastSuccess)))
+            ->orderByDesc('created_at')
+            ->orderBy('order')
+            ->get()
+            ->filter(fn (Instagram $post) => $this->hasStoredImage($post));
+
+        return $manual->concat($synced)
+            ->unique('link')
+            ->take($limit)
+            ->values();
     }
 
     private function hasStoredImage(Instagram $post): bool

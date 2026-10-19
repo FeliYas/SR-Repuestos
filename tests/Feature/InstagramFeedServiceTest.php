@@ -152,6 +152,39 @@ test('manual posts remain visible when no usable automatic post exists', functio
     expect(app(InstagramFeedService::class)->getLatestPosts(8)->pluck('source')->all())->toBe(['manual']);
 });
 
+test('new manual posts are shown ahead of a stale automatic feed', function () {
+    Storage::fake('public');
+    storedInstagramPost('old-post');
+    Storage::disk('public')->put('images/manual-new.png', instagramPng());
+    Storage::disk('public')->put('images/manual-old.png', instagramPng());
+
+    Instagram::create([
+        'source' => 'manual',
+        'order' => '1',
+        'image' => 'images/manual-new.png',
+        'link' => 'https://www.instagram.com/p/new-post/',
+    ]);
+    Instagram::create([
+        'source' => 'manual',
+        'order' => '2',
+        'image' => 'images/manual-old.png',
+        'link' => 'https://www.instagram.com/p/old-manual/',
+        'created_at' => now()->subDays(2),
+    ]);
+    Cache::store('database')->forever('instagram.feed.status.sr.repuestos', [
+        'last_attempt_at' => now()->toIso8601String(),
+        'last_success_at' => now()->subDay()->toIso8601String(),
+        'result' => 'failed',
+        'message' => 'Instagram no está disponible.',
+        'count' => 0,
+    ]);
+
+    expect(app(InstagramFeedService::class)->getLatestPosts(8)->pluck('link')->all())->toBe([
+        'https://www.instagram.com/p/new-post/',
+        'https://www.instagram.com/p/old-post/',
+    ]);
+});
+
 test('admin can force a sync and inspect its outcome while visitors cannot', function () {
     $this->withoutMiddleware(ValidateCsrfToken::class);
     Storage::fake('public');
