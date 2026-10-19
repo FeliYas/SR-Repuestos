@@ -67,6 +67,84 @@ function storedInstagramPost(string $code): Instagram
     ]);
 }
 
+test('a missing Instagram post can be imported by URL and survives a stale feed sync', function () {
+    Storage::fake('public');
+    config()->set('services.instagram.scrapecreators_key', 'test-key');
+    $code = 'MissingPost123';
+
+    Http::fake([
+        'https://api.scrapecreators.com/v1/instagram/post*' => Http::response([
+            'success' => true,
+            'data' => ['xdt_shortcode_media' => [
+                'shortcode' => $code,
+                'owner' => ['id' => '29230060917', 'username' => 'sr.repuestos'],
+                'coauthor_producers' => [],
+                'display_url' => 'https://scontent.cdninstagram.com/missing.png',
+                'edge_media_to_caption' => ['edges' => [['node' => ['text' => 'Publicación faltante']]]],
+                'taken_at_timestamp' => 1792065600,
+                'is_video' => false,
+            ]],
+        ]),
+        'https://api.scrapecreators.com/v2/instagram/user/posts*' => Http::response([
+            'success' => true, 'more_available' => false, 'items' => [
+                ['code' => 'older-post', 'image_versions2' => ['candidates' => [['url' => 'https://scontent.cdninstagram.com/older.png']]], 'taken_at' => 1791806400],
+            ],
+        ]),
+        'https://scontent.cdninstagram.com/*' => Http::response(instagramPng(), 200, ['Content-Type' => 'image/png']),
+    ]);
+
+    $service = app(InstagramFeedService::class);
+    $service->importPostByUrl("https://www.instagram.com/p/{$code}/?igsh=test", 'sr.repuestos');
+    $service->syncLatestPosts('sr.repuestos');
+
+    expect($service->getLatestPosts()->pluck('external_id')->all())->toBe([$code, 'older-post']);
+    expect(Instagram::where('external_id', $code)->value('source'))->toBe('instagram_imported');
+    Storage::disk('public')->assertExists("instagram/{$code}.png");
+});
+
+test('URL import rejects posts from another Instagram account', function () {
+    Storage::fake('public');
+    config()->set('services.instagram.scrapecreators_key', 'test-key');
+
+    Http::fake(['https://api.scrapecreators.com/v1/instagram/post*' => Http::response([
+        'success' => true,
+        'data' => ['xdt_shortcode_media' => [
+            'shortcode' => 'ForeignPost123',
+            'owner' => ['id' => '111', 'username' => 'otra.cuenta'],
+            'coauthor_producers' => [],
+            'display_url' => 'https://scontent.cdninstagram.com/foreign.png',
+        ]],
+    ])]);
+
+    expect(fn () => app(InstagramFeedService::class)->importPostByUrl('https://www.instagram.com/p/ForeignPost123/', 'sr.repuestos'))
+        ->toThrow(RuntimeException::class, 'no pertenece');
+    expect(Instagram::count())->toBe(0);
+});
+
+test('only an authenticated admin can import an Instagram URL', function () {
+    $url = 'https://www.instagram.com/p/MissingPost123/';
+    $this->post(route('admin.instagram.import'), ['url' => $url])->assertRedirect(route('login'));
+
+    Storage::fake('public');
+    config()->set('services.instagram.scrapecreators_key', 'test-key');
+    Http::fake([
+        'https://api.scrapecreators.com/v1/instagram/post*' => Http::response([
+            'success' => true,
+            'data' => ['xdt_shortcode_media' => [
+                'shortcode' => 'MissingPost123',
+                'owner' => ['username' => 'sr.repuestos'],
+                'coauthor_producers' => [],
+                'display_url' => 'https://scontent.cdninstagram.com/missing.png',
+            ]],
+        ]),
+        'https://scontent.cdninstagram.com/*' => Http::response(instagramPng(), 200, ['Content-Type' => 'image/png']),
+    ]);
+
+    $admin = Admin::create(['name' => 'Administrador', 'password' => Hash::make('secret')]);
+    $this->actingAs($admin, 'admin')->post(route('admin.instagram.import'), ['url' => $url])->assertRedirect();
+    expect(Instagram::where('external_id', 'MissingPost123')->exists())->toBeTrue();
+});
+
 test('sync reads public profile images reels and carousels and stores their images locally', function () {
     Storage::fake('public');
     $nodes = [

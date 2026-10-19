@@ -47,6 +47,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('admin/bannerportada', [BannerPortadaController::class, 'update'])->name('admin.bannerportada.update');
     Route::get('admin/instagram', [InstagramController::class, 'index'])->name('admin.instagram');
     Route::post('admin/instagram/sync', [InstagramController::class, 'sync'])->name('admin.instagram.sync');
+    Route::post('admin/instagram/import', [InstagramController::class, 'import'])->name('admin.instagram.import');
     Route::post('admin/instagram', [InstagramController::class, 'store'])->name('admin.instagram.store');
     Route::post('admin/instagram/update', [InstagramController::class, 'update'])->name('admin.instagram.update');
     Route::delete('admin/instagram/destroy', [InstagramController::class, 'destroy'])->name('admin.instagram.destroy');

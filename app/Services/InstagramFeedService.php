@@ -121,6 +121,9 @@ class InstagramFeedService
                                         : null,
                                 ],
                             );
+                            Instagram::where('source', 'instagram_imported')
+                                ->where('external_id', $post['external_id'])
+                                ->delete();
                         }
 
                         $old = Instagram::where('source', 'instagram_public')
@@ -191,6 +194,74 @@ class InstagramFeedService
         for ($limit = 1; $limit <= $maxLimit; $limit++) {
             Cache::store('database')->forget("instagram.feed.latest.{$username}.{$limit}");
         }
+    }
+
+    public function importPostByUrl(string $url, string $username): bool
+    {
+        if (!$this->hasPublicDataProviderKey()) {
+            throw new RuntimeException('No está configurado el proveedor de Instagram.');
+        }
+
+        if (!preg_match('~^https://(?:www\.)?instagram\.com/(p|reel|tv)/([A-Za-z0-9_-]+)/?(?:\?[^#]*)?$~i', trim($url), $matches)) {
+            throw new RuntimeException('Ingresá un enlace válido de una publicación de Instagram.');
+        }
+
+        $code = $matches[2];
+        if (Instagram::where('external_id', $code)->whereIn('source', ['instagram_public', 'instagram_imported'])->exists()) {
+            return false;
+        }
+
+        $response = Http::timeout(25)
+            ->withHeaders(['x-api-key' => (string) config('services.instagram.scrapecreators_key')])
+            ->acceptJson()
+            ->get('https://api.scrapecreators.com/v1/instagram/post', [
+                'url' => "https://www.instagram.com/{$matches[1]}/{$code}/",
+            ]);
+
+        if (!$response->successful() || $response->json('success') !== true) {
+            throw new RuntimeException('No se pudo consultar esa publicación en Instagram.');
+        }
+
+        $media = $response->json('data.xdt_shortcode_media');
+        if (!is_array($media) || ($media['shortcode'] ?? null) !== $code) {
+            throw new RuntimeException('El proveedor no entregó la publicación solicitada.');
+        }
+
+        $accounts = array_merge([$media['owner'] ?? []], $media['coauthor_producers'] ?? []);
+        $belongsToAccount = collect($accounts)->contains(fn ($account) => is_array($account)
+            && strtolower((string) ($account['username'] ?? '')) === strtolower($username));
+        if (!$belongsToAccount) {
+            throw new RuntimeException('Esta publicación no pertenece a la cuenta de Instagram configurada.');
+        }
+
+        $imageUrl = $media['display_url'] ?? $media['thumbnail_src']
+            ?? $media['edge_sidecar_to_children']['edges'][0]['node']['display_url'] ?? null;
+        if (!is_string($imageUrl) || !$this->isAllowedImageUrl($imageUrl)) {
+            throw new RuntimeException('La publicación no tiene una imagen válida.');
+        }
+
+        $path = $this->downloadImage($imageUrl, $code);
+        try {
+            DB::transaction(function () use ($media, $code, $path) {
+                Instagram::create([
+                    'source' => 'instagram_imported',
+                    'external_id' => $code,
+                    'order' => '1',
+                    'image' => $path,
+                    'link' => 'https://www.instagram.com/'.(($media['is_video'] ?? false) ? 'reel' : 'p')."/{$code}/",
+                    'caption' => $media['edge_media_to_caption']['edges'][0]['node']['text'] ?? null,
+                    'published_at' => isset($media['taken_at_timestamp']) && is_numeric($media['taken_at_timestamp'])
+                        ? Carbon::createFromTimestamp((int) $media['taken_at_timestamp']) : null,
+                ]);
+            });
+        } catch (Throwable $exception) {
+            Storage::disk('public')->delete($path);
+            throw $exception;
+        }
+
+        $this->clearLatestPostsCache();
+
+        return true;
     }
 
     private function statusKey(string $username): string
@@ -558,9 +629,9 @@ class InstagramFeedService
 
     private function getStoredPosts(int $limit): Collection
     {
-        $synced = Instagram::where('source', 'instagram_public')->get()
+        $synced = Instagram::whereIn('source', ['instagram_public', 'instagram_imported'])->get()
             ->filter(fn (Instagram $post) => $this->hasStoredImage($post))
-            ->sortBy(fn (Instagram $post) => (int) $post->order)
+            ->sortByDesc(fn (Instagram $post) => $post->published_at?->timestamp ?? -(int) $post->order)
             ->take($limit)
             ->values();
 

@@ -52,6 +52,8 @@ class HandleInertiaRequests extends Middleware
                 'mass_upload_summary' => fn() => $request->session()->get('mass_upload_summary'),
                 'mass_upload_subproductos_summary' => fn() => $request->session()->get('mass_upload_subproductos_summary'),
                 'mass_upload_images_summary' => fn() => $request->session()->get('mass_upload_images_summary'),
+                'instagram_import_success' => fn() => $request->session()->get('instagram_import_success'),
+                'instagram_import_error' => fn() => $request->session()->get('instagram_import_error'),
             ],
             'ziggy' => fn(): array => [
                 ...(new Ziggy)->toArray(),

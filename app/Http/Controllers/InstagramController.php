@@ -7,6 +7,8 @@ use App\Services\InstagramFeedService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
+use RuntimeException;
+use Throwable;
 
 class InstagramController extends Controller
 {
@@ -96,6 +98,28 @@ class InstagramController extends Controller
             $status['result'] === 'success' ? 'success' : 'error',
             $status['message'] ?? 'No se pudo actualizar Instagram.'
         );
+    }
+
+    public function import(Request $request, InstagramFeedService $feed): \Illuminate\Http\RedirectResponse
+    {
+        $data = $request->validate(['url' => 'required|string|max:500']);
+
+        try {
+            $created = $feed->importPostByUrl(
+                $data['url'],
+                (string) config('services.instagram.public_username', 'sr.repuestos')
+            );
+        } catch (RuntimeException $exception) {
+            return redirect()->back()->with('instagram_import_error', $exception->getMessage());
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect()->back()->with('instagram_import_error', 'No se pudo importar la publicación. Intentá nuevamente.');
+        }
+
+        return redirect()->back()->with('instagram_import_success', $created
+            ? 'Publicación de Instagram incorporada correctamente.'
+            : 'Esta publicación ya estaba incorporada.');
     }
 
     /**
