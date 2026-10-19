@@ -33,7 +33,7 @@ class InstagramFeedService
             $status = $this->getSyncStatus();
             $lastAttempt = $status['last_attempt_at'];
             $retryAt = $status['retry_after_at'] ?? null;
-            $accessMode = $this->hasOfficialAccessToken() ? 'official' : 'public';
+            $accessMode = $this->hasPublicDataProviderKey() ? 'provider' : 'public';
             $modeChanged = ($status['access_mode'] ?? 'public') !== $accessMode;
             if ($modeChanged || ((!$retryAt || Carbon::parse($retryAt)->isPast())
                 && (!$lastAttempt || Carbon::parse($lastAttempt)->addMinutes($minimumMinutes)->isPast()))) {
@@ -82,22 +82,29 @@ class InstagramFeedService
                 'message' => 'Instagram no entregó un feed público completo.',
                 'count' => 0,
                 'retry_after_at' => null,
-                'access_mode' => $this->hasOfficialAccessToken() ? 'official' : 'public',
+                'access_mode' => $this->hasPublicDataProviderKey() ? 'provider' : 'public',
             ];
             $cache->forever($this->statusKey($username), $status);
 
             try {
-                $feed = $this->hasOfficialAccessToken()
-                    ? $this->fetchOfficialFeed($limit)
+                $feed = $this->hasPublicDataProviderKey()
+                    ? $this->fetchPublicDataProviderFeed($username, $limit)
                     : $this->fetchPublicFeed($username, $limit);
                 $posts = $feed['posts'];
-                $existingPostCount = Instagram::where('source', 'instagram_public')
-                    ->whereIn('external_id', array_column($posts, 'external_id'))
-                    ->count();
-                $newPostCount = count($posts) - $existingPostCount;
                 $downloadedPaths = [];
                 try {
-                    $prepared = $this->preparePosts($posts, $downloadedPaths);
+                    $failedImages = 0;
+                    $prepared = $this->preparePosts($posts, $downloadedPaths, $failedImages);
+                    if ($prepared === []) {
+                        throw new RuntimeException('No se pudo guardar ninguna imagen nueva. Se conserva el contenido anterior.');
+                    }
+                    if ($failedImages > 0) {
+                        $feed['complete'] = false;
+                    }
+                    $existingPostCount = Instagram::where('source', 'instagram_public')
+                        ->whereIn('external_id', array_column($prepared, 'external_id'))
+                        ->count();
+                    $newPostCount = count($prepared) - $existingPostCount;
                     $oldPosts = DB::transaction(function () use ($prepared, $feed) {
                         $ids = [];
                         foreach ($prepared as $post) {
@@ -191,79 +198,68 @@ class InstagramFeedService
         return "instagram.feed.status.{$username}";
     }
 
-    private function hasOfficialAccessToken(): bool
+    private function hasPublicDataProviderKey(): bool
     {
-        return trim((string) config('services.instagram.access_token')) !== '';
+        return trim((string) config('services.instagram.scrapecreators_key')) !== '';
     }
 
-    private function fetchOfficialFeed(int $limit): array
+    private function fetchPublicDataProviderFeed(string $username, int $limit): array
     {
-        $version = (string) config('services.instagram.api_version', 'v22.0');
-        if (!preg_match('/^v\d+\.\d+$/', $version)) {
-            throw new RuntimeException('La versión de la API de Instagram no es válida.');
-        }
-
-        $response = Http::timeout(15)
-            ->withToken((string) config('services.instagram.access_token'))
+        $response = Http::timeout(20)
+            ->withHeaders(['x-api-key' => (string) config('services.instagram.scrapecreators_key')])
             ->acceptJson()
-            ->get("https://graph.instagram.com/{$version}/me/media", [
-                'fields' => 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,children{media_type,media_url,thumbnail_url}',
-                'limit' => $limit,
-            ]);
+            ->get('https://api.scrapecreators.com/v2/instagram/user/posts', ['handle' => $username]);
 
-        if (in_array($response->status(), [401, 403], true)) {
-            throw new RuntimeException('Falló la autorización de Instagram. Hay que renovar el acceso de la cuenta.');
+        if ($response->status() === 401) {
+            throw new RuntimeException('La clave del proveedor de datos públicos no es válida.');
+        }
+        if ($response->status() === 402) {
+            throw new RuntimeException('El proveedor de datos públicos no tiene créditos disponibles.');
         }
         if ($response->status() === 429) {
-            throw new InstagramRateLimitException('Instagram limitó temporalmente las consultas a su API.');
+            throw new InstagramRateLimitException('El proveedor de datos públicos limitó temporalmente las consultas.');
         }
-        if (!$response->successful()) {
-            throw new RuntimeException('La API de Instagram no respondió correctamente. Se conserva el contenido guardado.');
+        if (!$response->successful() || $response->json('success') !== true) {
+            throw new RuntimeException('El proveedor de datos públicos no respondió correctamente. Se conserva el contenido guardado.');
         }
 
-        $data = $response->json('data');
-        if (!is_array($data) || $data === []) {
-            throw new RuntimeException('La API de Instagram no entregó publicaciones válidas.');
+        $items = $response->json('items');
+        if (!is_array($items) || $items === []) {
+            throw new RuntimeException('El proveedor de datos públicos no entregó publicaciones válidas.');
         }
 
         $posts = [];
-        foreach (array_slice($data, 0, $limit) as $index => $media) {
-            if (!is_array($media)) {
-                throw new RuntimeException('La API de Instagram entregó una publicación inválida.');
-            }
-            $link = $media['permalink'] ?? null;
-            if (!is_string($link)
-                || !preg_match('~^https://(?:www\.)?instagram\.com/(?:p|reel)/([A-Za-z0-9_-]+)/?(?:\?.*)?$~', $link, $matches)) {
-                throw new RuntimeException('La API de Instagram entregó un enlace inválido.');
+        foreach (array_slice($items, 0, $limit) as $index => $media) {
+            $code = $media['code'] ?? null;
+            if (!is_string($code) || !preg_match('/^[A-Za-z0-9_-]+$/', $code)) {
+                throw new RuntimeException('El proveedor entregó una publicación inválida.');
             }
 
-            $imageUrl = match ($media['media_type'] ?? null) {
-                'IMAGE' => $media['media_url'] ?? null,
-                'VIDEO' => $media['thumbnail_url'] ?? null,
-                'CAROUSEL_ALBUM' => $media['children']['data'][0]['media_url']
-                    ?? $media['children']['data'][0]['thumbnail_url']
-                    ?? $media['media_url'] ?? null,
-                default => null,
-            };
+            $imageUrl = $media['image_versions2']['candidates'][0]['url']
+                ?? $media['carousel_media'][0]['image_versions2']['candidates'][0]['url']
+                ?? null;
             if (!is_string($imageUrl) || !$this->isAllowedImageUrl($imageUrl)) {
-                throw new RuntimeException('La API de Instagram entregó una imagen inválida.');
+                throw new RuntimeException('El proveedor entregó una imagen inválida.');
             }
 
+            $isReel = ($media['product_type'] ?? '') === 'clips';
             $posts[] = [
-                'external_id' => $matches[1],
+                'external_id' => $code,
                 'order' => (string) ($index + 1),
                 'image_url' => $imageUrl,
-                'link' => $link,
-                'caption' => is_string($media['caption'] ?? null) ? $media['caption'] : null,
-                'timestamp' => isset($media['timestamp']) ? Carbon::parse($media['timestamp'])->timestamp : null,
+                'link' => 'https://www.instagram.com/'.($isReel ? 'reel' : 'p')."/{$code}/",
+                'caption' => is_string($media['caption']['text'] ?? null) ? $media['caption']['text'] : null,
+                'timestamp' => isset($media['taken_at']) && is_numeric($media['taken_at'])
+                    ? (int) $media['taken_at']
+                    : (isset($media['created_at']) ? Carbon::parse($media['created_at'])->timestamp : null),
             ];
         }
 
         if (count(array_unique(array_column($posts, 'external_id'))) !== count($posts)) {
-            throw new RuntimeException('La API de Instagram entregó publicaciones duplicadas.');
+            throw new RuntimeException('El proveedor entregó publicaciones duplicadas.');
         }
 
-        return ['posts' => $posts, 'complete' => !isset($response->json('paging')['next']) || count($data) >= $limit];
+        return ['posts' => $posts, 'complete' => $response->json('more_available') === false || count($items) >= $limit];
     }
 
     private function fetchPublicFeed(string $username, int $limit): array
@@ -468,7 +464,7 @@ class InstagramFeedService
             : null;
     }
 
-    private function preparePosts(array $posts, array &$downloadedPaths): array
+    private function preparePosts(array $posts, array &$downloadedPaths, int &$failedImages): array
     {
         $prepared = [];
         foreach ($posts as $post) {
@@ -478,8 +474,17 @@ class InstagramFeedService
             $path = $existing?->getRawOriginal('image');
 
             if (!$this->isLocalImage($path) || !Storage::disk('public')->exists($path)) {
-                $path = $this->downloadImage($post['image_url'], $post['external_id']);
-                $downloadedPaths[] = $path;
+                try {
+                    $path = $this->downloadImage($post['image_url'], $post['external_id']);
+                    $downloadedPaths[] = $path;
+                } catch (RuntimeException $exception) {
+                    $failedImages++;
+                    Log::warning('Se omitió una publicación de Instagram por su imagen.', [
+                        'external_id' => $post['external_id'],
+                        'reason' => $exception->getMessage(),
+                    ]);
+                    continue;
+                }
             }
 
             $post['image'] = $path;

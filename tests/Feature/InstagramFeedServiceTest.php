@@ -90,19 +90,18 @@ test('sync reads public profile images reels and carousels and stores their imag
     }
 });
 
-test('official API imports photos videos and carousels without requesting the public profile', function () {
+test('public data provider imports photos reels and carousels without using Meta API', function () {
     Storage::fake('public');
-    config()->set('services.instagram.access_token', 'test-token');
-    config()->set('services.instagram.api_version', 'v22.0');
+    config()->set('services.instagram.scrapecreators_key', 'test-key');
 
     Http::fake([
-        'https://graph.instagram.com/v22.0/me/media*' => Http::response(['data' => [
-            ['id' => '1', 'media_type' => 'IMAGE', 'media_url' => 'https://scontent.cdninstagram.com/photo.png', 'permalink' => 'https://www.instagram.com/p/photo-code/', 'caption' => 'Foto', 'timestamp' => '2026-10-19T12:00:00+0000'],
-            ['id' => '2', 'media_type' => 'VIDEO', 'thumbnail_url' => 'https://scontent.cdninstagram.com/reel.png', 'permalink' => 'https://www.instagram.com/reel/reel-code/'],
-            ['id' => '3', 'media_type' => 'CAROUSEL_ALBUM', 'children' => ['data' => [
-                ['media_type' => 'IMAGE', 'media_url' => 'https://scontent.cdninstagram.com/carousel.png'],
-            ]], 'permalink' => 'https://www.instagram.com/p/carousel-code/'],
-        ]]),
+        'https://api.scrapecreators.com/v2/instagram/user/posts*' => Http::response([
+            'success' => true, 'more_available' => true, 'items' => [
+                ['code' => 'photo-code', 'media_type' => 1, 'image_versions2' => ['candidates' => [['url' => 'https://scontent.cdninstagram.com/photo.png']]], 'caption' => ['text' => 'Foto'], 'taken_at' => 1792411200],
+                ['code' => 'reel-code', 'media_type' => 2, 'product_type' => 'clips', 'image_versions2' => ['candidates' => [['url' => 'https://scontent.cdninstagram.com/reel.png']]]],
+                ['code' => 'carousel-code', 'media_type' => 8, 'carousel_media' => [['image_versions2' => ['candidates' => [['url' => 'https://scontent.cdninstagram.com/carousel.png']]]]]],
+            ],
+        ]),
         'https://scontent.cdninstagram.com/*' => Http::response(instagramPng(), 200, ['Content-Type' => 'image/png']),
     ]);
 
@@ -110,22 +109,26 @@ test('official API imports photos videos and carousels without requesting the pu
 
     expect($posts->pluck('external_id')->all())->toBe(['photo-code', 'reel-code', 'carousel-code']);
     expect(Instagram::where('external_id', 'photo-code')->first()->published_at)->not->toBeNull();
+    expect(Instagram::where('external_id', 'reel-code')->value('link'))->toBe('https://www.instagram.com/reel/reel-code/');
     foreach (['photo-code', 'reel-code', 'carousel-code'] as $code) {
         Storage::disk('public')->assertExists("instagram/{$code}.png");
     }
-    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'www.instagram.com/sr.repuestos'));
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'api.scrapecreators.com')
+        && $request->hasHeader('x-api-key', 'test-key'));
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'graph.instagram.com')
+        || str_contains($request->url(), 'www.instagram.com/sr.repuestos'));
 });
 
-test('official API failure preserves locally stored publications', function () {
+test('public data provider failure preserves locally stored publications', function () {
     Storage::fake('public');
     storedInstagramPost('old-post');
-    config()->set('services.instagram.access_token', 'test-token');
-    Http::fake(['https://graph.instagram.com/*' => Http::response(['error' => ['message' => 'Expired token']], 401)]);
+    config()->set('services.instagram.scrapecreators_key', 'test-key');
+    Http::fake(['https://api.scrapecreators.com/*' => Http::response(['success' => false], 500)]);
 
     $posts = app(InstagramFeedService::class)->syncLatestPosts('sr.repuestos', 12);
 
     expect($posts->pluck('external_id')->all())->toBe(['old-post']);
-    expect(app(InstagramFeedService::class)->getSyncStatus()['message'])->toContain('autorización');
+    expect(app(InstagramFeedService::class)->getSyncStatus()['message'])->toContain('proveedor');
     Http::assertSentCount(1);
 });
 
@@ -150,7 +153,7 @@ test('public rate limit delays automatic retries while keeping manual retry avai
     Http::assertSentCount(2);
 });
 
-test('adding an official token bypasses an earlier public rate limit pause', function () {
+test('adding a public data provider key bypasses an earlier rate limit pause', function () {
     Storage::fake('public');
     Cache::store('database')->forever('instagram.feed.status.sr.repuestos', [
         'last_attempt_at' => now()->toIso8601String(),
@@ -161,13 +164,12 @@ test('adding an official token bypasses an earlier public rate limit pause', fun
         'retry_after_at' => now()->addHours(6)->toIso8601String(),
         'access_mode' => 'public',
     ]);
-    config()->set('services.instagram.access_token', 'test-token');
+    config()->set('services.instagram.scrapecreators_key', 'test-key');
     Http::fake([
-        'https://graph.instagram.com/*' => Http::response(['data' => [[
-            'id' => '1',
-            'media_type' => 'IMAGE',
-            'media_url' => 'https://scontent.cdninstagram.com/new.png',
-            'permalink' => 'https://www.instagram.com/p/new-post/',
+        'https://api.scrapecreators.com/*' => Http::response(['success' => true, 'more_available' => false, 'items' => [[
+            'code' => 'new-post',
+            'media_type' => 1,
+            'image_versions2' => ['candidates' => [['url' => 'https://scontent.cdninstagram.com/new.png']]],
         ]]]),
         'https://scontent.cdninstagram.com/*' => Http::response(instagramPng(), 200, ['Content-Type' => 'image/png']),
     ]);
@@ -222,6 +224,25 @@ test('an invalid downloaded image cannot replace the last good feed', function (
 
     expect(Instagram::where('source', 'instagram_public')->pluck('external_id')->all())->toBe(['old-post']);
     Storage::disk('public')->assertMissing('instagram/new-post.png');
+});
+
+test('one failed image does not block the other new posts or erase the saved feed', function () {
+    Storage::fake('public');
+    storedInstagramPost('old-post');
+    Http::fake([
+        'https://www.instagram.com/sr.repuestos/' => Http::response(instagramProfileHtml([
+            instagramNode('good-post'),
+            instagramNode('bad-post'),
+        ])),
+        'https://scontent.cdninstagram.com/good-post.png' => Http::response(instagramPng(), 200, ['Content-Type' => 'image/png']),
+        'https://scontent.cdninstagram.com/bad-post.png' => Http::response('blocked', 403),
+    ]);
+
+    $posts = app(InstagramFeedService::class)->syncLatestPosts('sr.repuestos', 12);
+
+    expect($posts->pluck('external_id')->all())->toBe(['good-post', 'old-post']);
+    expect(Instagram::where('external_id', 'bad-post')->exists())->toBeFalse();
+    expect(app(InstagramFeedService::class)->getSyncStatus()['message'])->toContain('parcial');
 });
 
 test('manual posts remain visible when no usable automatic post exists', function () {
