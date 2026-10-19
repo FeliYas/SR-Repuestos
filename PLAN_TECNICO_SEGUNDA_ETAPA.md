@@ -168,6 +168,7 @@ Otros puntos relacionados:
 - [x] Mostrar publicaciones manuales recientes antes del feed automático antiguo durante una falla.
 - [x] Incorporar lectura por ScrapeCreators cuando exista su clave, sin consultar endpoints públicos de Instagram en ese caso.
 - [x] Pausar seis horas las consultas automáticas después de un 429 y conservar el contenido guardado.
+- [x] Si falla la descarga de una imagen, incorporar las demás publicaciones válidas y conservar el feed anterior.
 - [ ] Configurar `INSTAGRAM_SCRAPECREATORS_KEY` en producción y verificar una sincronización real con las publicaciones recientes. La clave se obtiene en una cuenta gratuita de ScrapeCreators, sin acceso a Meta.
 
 ### Restricción conocida
