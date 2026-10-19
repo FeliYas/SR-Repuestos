@@ -33,8 +33,10 @@ class InstagramFeedService
             $status = $this->getSyncStatus();
             $lastAttempt = $status['last_attempt_at'];
             $retryAt = $status['retry_after_at'] ?? null;
-            if ((!$retryAt || Carbon::parse($retryAt)->isPast())
-                && (!$lastAttempt || Carbon::parse($lastAttempt)->addMinutes($minimumMinutes)->isPast())) {
+            $accessMode = $this->hasOfficialAccessToken() ? 'official' : 'public';
+            $modeChanged = ($status['access_mode'] ?? 'public') !== $accessMode;
+            if ($modeChanged || ((!$retryAt || Carbon::parse($retryAt)->isPast())
+                && (!$lastAttempt || Carbon::parse($lastAttempt)->addMinutes($minimumMinutes)->isPast()))) {
                 $this->syncLatestPosts($username, self::MAX_SYNCED_POSTS);
             }
         } catch (Throwable $exception) {
@@ -57,6 +59,7 @@ class InstagramFeedService
             'message' => null,
             'count' => 0,
             'retry_after_at' => null,
+            'access_mode' => 'public',
         ]);
     }
 
@@ -79,6 +82,7 @@ class InstagramFeedService
                 'message' => 'Instagram no entregó un feed público completo.',
                 'count' => 0,
                 'retry_after_at' => null,
+                'access_mode' => $this->hasOfficialAccessToken() ? 'official' : 'public',
             ];
             $cache->forever($this->statusKey($username), $status);
 

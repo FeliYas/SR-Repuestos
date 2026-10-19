@@ -150,6 +150,31 @@ test('public rate limit delays automatic retries while keeping manual retry avai
     Http::assertSentCount(2);
 });
 
+test('adding an official token bypasses an earlier public rate limit pause', function () {
+    Storage::fake('public');
+    Cache::store('database')->forever('instagram.feed.status.sr.repuestos', [
+        'last_attempt_at' => now()->toIso8601String(),
+        'last_success_at' => null,
+        'result' => 'failed',
+        'message' => 'Instagram limitó temporalmente el acceso público.',
+        'count' => 0,
+        'retry_after_at' => now()->addHours(6)->toIso8601String(),
+        'access_mode' => 'public',
+    ]);
+    config()->set('services.instagram.access_token', 'test-token');
+    Http::fake([
+        'https://graph.instagram.com/*' => Http::response(['data' => [[
+            'id' => '1',
+            'media_type' => 'IMAGE',
+            'media_url' => 'https://scontent.cdninstagram.com/new.png',
+            'permalink' => 'https://www.instagram.com/p/new-post/',
+        ]]]),
+        'https://scontent.cdninstagram.com/*' => Http::response(instagramPng(), 200, ['Content-Type' => 'image/png']),
+    ]);
+
+    expect(app(InstagramFeedService::class)->getLatestPosts()->pluck('external_id')->all())->toBe(['new-post']);
+});
+
 test('a failed public request keeps the last synced image and feed', function () {
     Storage::fake('public');
     storedInstagramPost('old-post');
