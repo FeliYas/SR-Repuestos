@@ -90,6 +90,66 @@ test('sync reads public profile images reels and carousels and stores their imag
     }
 });
 
+test('official API imports photos videos and carousels without requesting the public profile', function () {
+    Storage::fake('public');
+    config()->set('services.instagram.access_token', 'test-token');
+    config()->set('services.instagram.api_version', 'v22.0');
+
+    Http::fake([
+        'https://graph.instagram.com/v22.0/me/media*' => Http::response(['data' => [
+            ['id' => '1', 'media_type' => 'IMAGE', 'media_url' => 'https://scontent.cdninstagram.com/photo.png', 'permalink' => 'https://www.instagram.com/p/photo-code/', 'caption' => 'Foto', 'timestamp' => '2026-10-19T12:00:00+0000'],
+            ['id' => '2', 'media_type' => 'VIDEO', 'thumbnail_url' => 'https://scontent.cdninstagram.com/reel.png', 'permalink' => 'https://www.instagram.com/reel/reel-code/'],
+            ['id' => '3', 'media_type' => 'CAROUSEL_ALBUM', 'children' => ['data' => [
+                ['media_type' => 'IMAGE', 'media_url' => 'https://scontent.cdninstagram.com/carousel.png'],
+            ]], 'permalink' => 'https://www.instagram.com/p/carousel-code/'],
+        ]]),
+        'https://scontent.cdninstagram.com/*' => Http::response(instagramPng(), 200, ['Content-Type' => 'image/png']),
+    ]);
+
+    $posts = app(InstagramFeedService::class)->syncLatestPosts('sr.repuestos', 12);
+
+    expect($posts->pluck('external_id')->all())->toBe(['photo-code', 'reel-code', 'carousel-code']);
+    expect(Instagram::where('external_id', 'photo-code')->first()->published_at)->not->toBeNull();
+    foreach (['photo-code', 'reel-code', 'carousel-code'] as $code) {
+        Storage::disk('public')->assertExists("instagram/{$code}.png");
+    }
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'www.instagram.com/sr.repuestos'));
+});
+
+test('official API failure preserves locally stored publications', function () {
+    Storage::fake('public');
+    storedInstagramPost('old-post');
+    config()->set('services.instagram.access_token', 'test-token');
+    Http::fake(['https://graph.instagram.com/*' => Http::response(['error' => ['message' => 'Expired token']], 401)]);
+
+    $posts = app(InstagramFeedService::class)->syncLatestPosts('sr.repuestos', 12);
+
+    expect($posts->pluck('external_id')->all())->toBe(['old-post']);
+    expect(app(InstagramFeedService::class)->getSyncStatus()['message'])->toContain('autorización');
+    Http::assertSentCount(1);
+});
+
+test('public rate limit delays automatic retries while keeping manual retry available', function () {
+    Storage::fake('public');
+    storedInstagramPost('old-post');
+    Http::fake([
+        'https://www.instagram.com/sr.repuestos/' => Http::response('blocked', 429),
+        'https://www.instagram.com/api/v1/users/web_profile_info/*' => Http::response([], 429),
+        'https://i.instagram.com/api/v1/users/web_profile_info/*' => Http::response([], 429),
+    ]);
+
+    $service = app(InstagramFeedService::class);
+    $service->getLatestPosts();
+    expect($service->getSyncStatus()['message'])->toContain('limitó');
+
+    $this->travel(61)->minutes();
+    $service->getLatestPosts();
+    Http::assertSentCount(1);
+
+    $service->syncLatestPosts('sr.repuestos');
+    Http::assertSentCount(2);
+});
+
 test('a failed public request keeps the last synced image and feed', function () {
     Storage::fake('public');
     storedInstagramPost('old-post');

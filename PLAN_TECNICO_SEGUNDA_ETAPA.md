@@ -40,7 +40,7 @@ Esta división define el orden de ejecución. Las casillas de cada tarea en «Es
 | 2026-10-13 | 3. Instagram | Implementada y verificada localmente | Los endpoints JSON anteriores responden 401. El perfil HTML público entrega el feed actual; la sincronización real guardó 12 publicaciones y sus imágenes locales. Actualización por primera visita luego de una hora, botón manual con estado y retención del feed ante fallos. |
 | 2026-10-13 | Ajustes adicionales solicitados | Implementados | Las tarjetas públicas y privadas estiran la imagen para ocupar toda el área disponible; los bordes que vengan dentro del archivo se muestran tal como fueron subidos; la importación de subproductos permite vaciar Medida, Componente y Características cuando la columna existe en el Excel. |
 | 2026-10-14 | Ajuste final de tarjetas de novedades | Completa | La imagen subida se estira hasta ocupar toda la zona de la tarjeta, sin recortes ni fondos agregados. Los bordes incorporados en el archivo se conservan. |
-| 2026-10-14 | Incidencia de Instagram en producción | En diagnóstico | El inicio público conserva publicaciones antiguas pese a una publicación nueva. Se corrigieron localmente la lectura de publicaciones colaborativas y de respuestas parciales, sin eliminar el contenido guardado; el panel distingue conexión fallida de una consulta sin novedades. Falta confirmar el motivo concreto en producción y verificar allí la publicación nueva. |
+| 2026-10-19 | Incidencia de Instagram en producción | Parcialmente resuelta | Diagnóstico remoto: los endpoints públicos responden 429; el servidor puede escribir imágenes de prueba, por lo que no se comprobó un límite de peso como causa. Se desplegó el respaldo manual para mostrar publicaciones nuevas sobre el feed antiguo. Se preparó la lectura por la API oficial y una pausa de seis horas tras un 429. Queda obtener y configurar la autorización de la cuenta para reactivar la actualización automática, y cargar los tres posteos recientes con sus imágenes/enlaces. |
 | 2026-10-13 | 8. Verificación de cierre | Parcial | Suite PHP: 72 pruebas y 433 aserciones. Build Vite correcto en `/tmp` por permisos de `public/build`. Revisión visual de novedades públicas y privadas, sincronización real y botón de administración. Sin migraciones pendientes. Sigue pendiente `npm run types` por 466 errores heredados en 64 archivos y el recorrido manual de las cuatro listas privadas y los detalles de novedades. |
 
 ## Decisiones ya tomadas
@@ -50,7 +50,7 @@ Esta división define el orden de ejecución. Las casillas de cada tarea en «Es
 - Los precios iguales a cero no se mostrarán; el subproducto ofrecerá «Consultar» y no podrá agregarse al carrito desde el catálogo.
 - La búsqueda será tolerante con mayúsculas, minúsculas, acentos, separadores, singular/plural y coincidencias parciales. No se incluirá corrección de errores de tipeo.
 - Los subproductos se ordenarán por descripción y, en caso de empate, por código.
-- Instagram seguirá usando acceso público. La API oficial de Meta no forma parte del alcance. El primer visitante tras una hora dispara el intento de sincronización; el administrador puede hacerlo antes con «Actualizar ahora».
+- Ante el bloqueo 429 del acceso público, se incorporó soporte para la API oficial de Meta. Requiere autorización de la cuenta y un token válido; hasta configurarlo, el primer visitante tras una hora puede iniciar una consulta pública, con pausa automática de seis horas si Instagram limita el acceso. El administrador puede iniciar una consulta manual antes.
 - En Novedades se rediseñará principalmente el detalle. La imagen dejará de ocupar el encabezado como banner.
 - Las tarjetas de productos se corregirán en todos los listados. Las tarjetas de categorías del inicio no forman parte de este cambio.
 - La columna `order` permanecerá físicamente en la base de datos, pero dejará de usarse para categorías, marcas, productos, subproductos y novedades.
@@ -165,6 +165,10 @@ Otros puntos relacionados:
 - [x] Invalidar el caché cuando una sincronización termine correctamente.
 - [x] Incorporar en el administrador una acción “Actualizar ahora” y mostrar el resultado o la fecha del último intento.
 - [x] Conservar las publicaciones manuales como respaldo cuando no haya contenido automático utilizable.
+- [x] Mostrar publicaciones manuales recientes antes del feed automático antiguo durante una falla.
+- [x] Incorporar lectura por API oficial cuando exista un token, sin consultar endpoints públicos en ese caso.
+- [x] Pausar seis horas las consultas automáticas después de un 429 y conservar el contenido guardado.
+- [ ] Autorizar la cuenta profesional de Instagram, configurar el token en producción y verificar una sincronización real con las publicaciones recientes.
 
 ### Restricción conocida
 

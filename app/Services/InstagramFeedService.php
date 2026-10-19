@@ -30,8 +30,11 @@ class InstagramFeedService
         $minimumMinutes = max((int) config('services.instagram.cache_minutes', 60), 60);
 
         try {
-            $lastAttempt = $this->getSyncStatus()['last_attempt_at'];
-            if (!$lastAttempt || Carbon::parse($lastAttempt)->addMinutes($minimumMinutes)->isPast()) {
+            $status = $this->getSyncStatus();
+            $lastAttempt = $status['last_attempt_at'];
+            $retryAt = $status['retry_after_at'] ?? null;
+            if ((!$retryAt || Carbon::parse($retryAt)->isPast())
+                && (!$lastAttempt || Carbon::parse($lastAttempt)->addMinutes($minimumMinutes)->isPast())) {
                 $this->syncLatestPosts($username, self::MAX_SYNCED_POSTS);
             }
         } catch (Throwable $exception) {
@@ -53,6 +56,7 @@ class InstagramFeedService
             'result' => null,
             'message' => null,
             'count' => 0,
+            'retry_after_at' => null,
         ]);
     }
 
@@ -74,11 +78,14 @@ class InstagramFeedService
                 'result' => 'failed',
                 'message' => 'Instagram no entregó un feed público completo.',
                 'count' => 0,
+                'retry_after_at' => null,
             ];
             $cache->forever($this->statusKey($username), $status);
 
             try {
-                $feed = $this->fetchPublicFeed($username, $limit);
+                $feed = $this->hasOfficialAccessToken()
+                    ? $this->fetchOfficialFeed($limit)
+                    : $this->fetchPublicFeed($username, $limit);
                 $posts = $feed['posts'];
                 $existingPostCount = Instagram::where('source', 'instagram_public')
                     ->whereIn('external_id', array_column($posts, 'external_id'))
@@ -149,6 +156,9 @@ class InstagramFeedService
                 $status['message'] = $exception instanceof RuntimeException
                     ? $exception->getMessage()
                     : 'No se pudo completar la actualización de Instagram.';
+                if ($exception instanceof InstagramRateLimitException) {
+                    $status['retry_after_at'] = now()->addHours(6)->toIso8601String();
+                }
                 $cache->forever($this->statusKey($username), $status);
                 Log::warning('Falló la sincronización pública de Instagram.', [
                     'username' => $username,
@@ -177,6 +187,81 @@ class InstagramFeedService
         return "instagram.feed.status.{$username}";
     }
 
+    private function hasOfficialAccessToken(): bool
+    {
+        return trim((string) config('services.instagram.access_token')) !== '';
+    }
+
+    private function fetchOfficialFeed(int $limit): array
+    {
+        $version = (string) config('services.instagram.api_version', 'v22.0');
+        if (!preg_match('/^v\d+\.\d+$/', $version)) {
+            throw new RuntimeException('La versión de la API de Instagram no es válida.');
+        }
+
+        $response = Http::timeout(15)
+            ->withToken((string) config('services.instagram.access_token'))
+            ->acceptJson()
+            ->get("https://graph.instagram.com/{$version}/me/media", [
+                'fields' => 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,children{media_type,media_url,thumbnail_url}',
+                'limit' => $limit,
+            ]);
+
+        if (in_array($response->status(), [401, 403], true)) {
+            throw new RuntimeException('Falló la autorización de Instagram. Hay que renovar el acceso de la cuenta.');
+        }
+        if ($response->status() === 429) {
+            throw new InstagramRateLimitException('Instagram limitó temporalmente las consultas a su API.');
+        }
+        if (!$response->successful()) {
+            throw new RuntimeException('La API de Instagram no respondió correctamente. Se conserva el contenido guardado.');
+        }
+
+        $data = $response->json('data');
+        if (!is_array($data) || $data === []) {
+            throw new RuntimeException('La API de Instagram no entregó publicaciones válidas.');
+        }
+
+        $posts = [];
+        foreach (array_slice($data, 0, $limit) as $index => $media) {
+            if (!is_array($media)) {
+                throw new RuntimeException('La API de Instagram entregó una publicación inválida.');
+            }
+            $link = $media['permalink'] ?? null;
+            if (!is_string($link)
+                || !preg_match('~^https://(?:www\.)?instagram\.com/(?:p|reel)/([A-Za-z0-9_-]+)/?(?:\?.*)?$~', $link, $matches)) {
+                throw new RuntimeException('La API de Instagram entregó un enlace inválido.');
+            }
+
+            $imageUrl = match ($media['media_type'] ?? null) {
+                'IMAGE' => $media['media_url'] ?? null,
+                'VIDEO' => $media['thumbnail_url'] ?? null,
+                'CAROUSEL_ALBUM' => $media['children']['data'][0]['media_url']
+                    ?? $media['children']['data'][0]['thumbnail_url']
+                    ?? $media['media_url'] ?? null,
+                default => null,
+            };
+            if (!is_string($imageUrl) || !$this->isAllowedImageUrl($imageUrl)) {
+                throw new RuntimeException('La API de Instagram entregó una imagen inválida.');
+            }
+
+            $posts[] = [
+                'external_id' => $matches[1],
+                'order' => (string) ($index + 1),
+                'image_url' => $imageUrl,
+                'link' => $link,
+                'caption' => is_string($media['caption'] ?? null) ? $media['caption'] : null,
+                'timestamp' => isset($media['timestamp']) ? Carbon::parse($media['timestamp'])->timestamp : null,
+            ];
+        }
+
+        if (count(array_unique(array_column($posts, 'external_id'))) !== count($posts)) {
+            throw new RuntimeException('La API de Instagram entregó publicaciones duplicadas.');
+        }
+
+        return ['posts' => $posts, 'complete' => !isset($response->json('paging')['next']) || count($data) >= $limit];
+    }
+
     private function fetchPublicFeed(string $username, int $limit): array
     {
         $connectionFailures = 0;
@@ -191,10 +276,16 @@ class InstagramFeedService
                 }
                 $this->logFetchFailure($profileEndpoint, $response->status(), 'invalid_or_incomplete');
             } else {
+                if ($response->status() === 429) {
+                    throw new InstagramRateLimitException('Instagram limitó temporalmente el acceso público. Se conserva el contenido guardado.');
+                }
                 $accessDenials += in_array($response->status(), [401, 403], true) ? 1 : 0;
                 $this->logFetchFailure($profileEndpoint, $response->status(), 'http_error');
             }
         } catch (Throwable $exception) {
+            if ($exception instanceof InstagramRateLimitException) {
+                throw $exception;
+            }
             $connectionFailures += $exception instanceof ConnectionException ? 1 : 0;
             $this->logFetchFailure($profileEndpoint, null, get_class($exception));
         }
@@ -212,6 +303,9 @@ class InstagramFeedService
                 ])->get($endpoint, ['username' => $username]);
 
                 if (!$response->successful()) {
+                    if ($response->status() === 429) {
+                        throw new InstagramRateLimitException('Instagram limitó temporalmente el acceso público. Se conserva el contenido guardado.');
+                    }
                     $accessDenials += in_array($response->status(), [401, 403], true) ? 1 : 0;
                     $this->logFetchFailure($endpoint, $response->status(), 'http_error');
                     continue;
@@ -223,6 +317,9 @@ class InstagramFeedService
                 }
                 $this->logFetchFailure($endpoint, $response->status(), 'invalid_or_incomplete');
             } catch (Throwable $exception) {
+                if ($exception instanceof InstagramRateLimitException) {
+                    throw $exception;
+                }
                 $connectionFailures += $exception instanceof ConnectionException ? 1 : 0;
                 $this->logFetchFailure($endpoint, null, get_class($exception));
             }
