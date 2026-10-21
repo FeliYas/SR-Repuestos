@@ -1,5 +1,4 @@
 import { useForm, usePage } from '@inertiajs/react';
-import { useEffect } from 'react';
 
 interface PrivateSearchProps {
     [key: string]: unknown;
@@ -10,27 +9,26 @@ interface PrivateSearchProps {
 }
 
 export default function SearchBarPrivate() {
-    const { categorias, allcategorias, marcas, filters } = usePage<PrivateSearchProps>().props;
+    const { categorias, allcategorias, marcas } = usePage<PrivateSearchProps>().props;
 
     const { data, setData, get, processing } = useForm({
-        categoria: filters?.categoria ?? '',
-        marca: filters?.marca ?? '',
-        codigo: filters?.codigo ?? '',
+        categoria: '',
+        marca: '',
+        codigo: '',
     });
-
-    useEffect(() => {
-        setData({
-            categoria: filters?.categoria ?? '',
-            marca: filters?.marca ?? '',
-            codigo: filters?.codigo ?? '',
-        });
-    }, [filters?.categoria, filters?.marca, filters?.codigo]);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         get(route('privada.productos.buscar'), {
             preserveState: true,
             preserveScroll: true,
+            onSuccess: () => {
+                setData({
+                    categoria: '',
+                    marca: '',
+                    codigo: '',
+                });
+            },
         });
     };
 
