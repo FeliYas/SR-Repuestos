@@ -138,7 +138,6 @@ export default function ProductoShow() {
                     <CatalogSidebarSection
                         title="Categorias"
                         items={categorias}
-                        activeId={producto?.categoria?.id}
                         isOpen={categoriasDropdown}
                         onToggle={() => setCategoriasDropdown(!categoriasDropdown)}
                         searchPlaceholder="Buscar categoría"

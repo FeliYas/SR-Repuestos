@@ -20,7 +20,7 @@ export default function SearchBarPrivate() {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         get(route('privada.productos.buscar'), {
-            preserveState: true,
+            preserveState: false,
             preserveScroll: true,
             onSuccess: () => {
                 setData({

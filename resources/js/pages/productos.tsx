@@ -26,14 +26,14 @@ interface ProductosPageProps {
     };
     id: number | string;
     metadatos?: { description?: string; keywords?: string };
-    marca_id?: number | string | null;
     privateCatalog?: boolean;
 }
 
 export default function Productos() {
     const page = usePage<ProductosPageProps>();
-    const { categorias, marcas, productos, id, metadatos, marca_id, privateCatalog } = page.props;
+    const { categorias, marcas, productos, id, metadatos, privateCatalog } = page.props;
     const catalogBase = privateCatalog ? '/privada/productos' : '/productos';
+    const searchBase = privateCatalog ? '/privada/busqueda' : '/busqueda';
     const categoryHref = (categoryId: number | string) =>
         privateCatalog ? `${catalogBase}/categoria/${categoryId}` : `${catalogBase}/${categoryId}`;
     const detailHref = (productoId: number) => {
@@ -70,7 +70,6 @@ export default function Productos() {
                     <CatalogSidebarSection
                         title="Categorias"
                         items={categorias}
-                        activeId={id}
                         isOpen={categoriasDropdown}
                         onToggle={() => setCategoriasDropdown(!categoriasDropdown)}
                         searchPlaceholder="Buscar categoría"
@@ -80,13 +79,11 @@ export default function Productos() {
                     <CatalogSidebarSection
                         title="Marcas"
                         items={marcas}
-                        activeId={marca_id}
                         isOpen={marcasDropdown}
                         onToggle={() => setMarcasDropdown(!marcasDropdown)}
                         searchPlaceholder="Buscar marca"
                         emptyMessage="Sin marcas coincidentes."
-                        getHref={() => categoryHref(id)}
-                        getData={(marca) => ({ marca: marca.id })}
+                        getHref={(marca) => `${searchBase}?${new URLSearchParams({ marca: String(marca.id) })}`}
                     />
                 </div>
 

@@ -19,12 +19,6 @@ interface Product {
     imagenes?: Array<{ image?: string }>;
 }
 
-interface SearchFilters {
-    categoria: string;
-    marca: string;
-    codigo: string;
-}
-
 interface SearchPageProps {
     [key: string]: unknown;
     productos: {
@@ -34,28 +28,18 @@ interface SearchPageProps {
     };
     categorias: CatalogItem[];
     marcas: CatalogItem[];
-    filters: SearchFilters;
     privateCatalog?: boolean;
 }
 
 export default function ProductoSearch() {
     const page = usePage<SearchPageProps>();
-    const { productos, categorias, marcas, filters, privateCatalog } = page.props;
+    const { productos, categorias, marcas, privateCatalog } = page.props;
     const searchBase = privateCatalog ? '/privada/busqueda' : '/busqueda';
     const [categoriasDropdown, setCategoriasDropdown] = useState(true);
     const [marcasDropdown, setMarcasDropdown] = useState(true);
 
     const filterHref = (changedFilter: 'categoria' | 'marca', value: number) => {
-        const params = new URLSearchParams();
-        const nextFilters = { ...filters, [changedFilter]: String(value) };
-
-        Object.entries(nextFilters).forEach(([key, filterValue]) => {
-            if (filterValue) {
-                params.set(key, filterValue);
-            }
-        });
-
-        return `${searchBase}?${params.toString()}`;
+        return `${searchBase}?${new URLSearchParams({ [changedFilter]: String(value) })}`;
     };
 
     const productHref = (producto: Product) => {
@@ -72,7 +56,6 @@ export default function ProductoSearch() {
                     <CatalogSidebarSection
                         title="Categorias"
                         items={categorias}
-                        activeId={filters.categoria}
                         isOpen={categoriasDropdown}
                         onToggle={() => setCategoriasDropdown((open) => !open)}
                         searchPlaceholder="Buscar categoría"
@@ -82,7 +65,6 @@ export default function ProductoSearch() {
                     <CatalogSidebarSection
                         title="Marcas"
                         items={marcas}
-                        activeId={filters.marca}
                         isOpen={marcasDropdown}
                         onToggle={() => setMarcasDropdown((open) => !open)}
                         searchPlaceholder="Buscar marca"

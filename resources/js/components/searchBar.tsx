@@ -31,8 +31,15 @@ export default function SearchBar() {
     const handleSubmit = (e) => {
         e.preventDefault();
         get(route('searchproducts'), {
-            preserveState: true,
+            preserveState: false,
             preserveScroll: true,
+            onSuccess: () => {
+                setData({
+                    categoria: '',
+                    marca: '',
+                    codigo: '',
+                });
+            },
         });
     };
 
